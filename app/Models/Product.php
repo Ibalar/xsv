@@ -120,6 +120,11 @@ class Product extends Model
         return $this->hasMany(ProductAttributeValue::class);
     }
 
+    public function leadRequests(): HasMany
+    {
+        return $this->hasMany(LeadRequest::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
