@@ -73,11 +73,10 @@ class Attribute extends Model
         return $query->orderBy('sort_order')->orderBy('id');
     }
 
-    // TODO: Раскомментировать после создания ProductAttributeValue
-    // public function values(): HasMany
-    // {
-    //     return $this->hasMany(ProductAttributeValue::class);
-    // }
+    public function values(): HasMany
+    {
+        return $this->hasMany(ProductAttributeValue::class);
+    }
 
     protected static function boot(): void
     {
