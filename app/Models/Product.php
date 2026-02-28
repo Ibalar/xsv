@@ -1,0 +1,186 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
+
+class Product extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'category_id',
+        'name',
+        'slug',
+        'sku',
+        'short_description',
+        'description',
+        'image',
+        'gallery',
+        'price',
+        'old_price',
+        'wholesale_price',
+        'wholesale_min_quantity',
+        'stock',
+        'in_stock',
+        'is_active',
+        'is_featured',
+        'is_new',
+        'is_bestseller',
+        'sort_order',
+        'views',
+        'seo_title',
+        'seo_h1',
+        'seo_description',
+        'attributes',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'gallery' => 'array',
+            'attributes' => 'array',
+            'price' => 'decimal:2',
+            'old_price' => 'decimal:2',
+            'wholesale_price' => 'decimal:2',
+            'in_stock' => 'boolean',
+            'is_active' => 'boolean',
+            'is_featured' => 'boolean',
+            'is_new' => 'boolean',
+            'is_bestseller' => 'boolean',
+        ];
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function (self $product) {
+            if (empty($product->slug)) {
+                $product->slug = static::generateUniqueSlug($product->name);
+            }
+            if (empty($product->sku)) {
+                $product->sku = static::generateUniqueSku();
+            }
+        });
+
+        static::updating(function (self $product) {
+            if ($product->isDirty('name') && empty($product->slug)) {
+                $product->slug = static::generateUniqueSlug($product->name);
+            }
+        });
+    }
+
+    protected static function generateUniqueSlug(string $name): string
+    {
+        $slug = Str::slug($name);
+        $original = $slug;
+        $count = 1;
+
+        while (static::where('slug', $slug)->exists()) {
+            $slug = "{$original}-{$count}";
+            $count++;
+        }
+
+        return $slug;
+    }
+
+    protected static function generateUniqueSku(): string
+    {
+        do {
+            $sku = strtoupper(Str::random(8));
+        } while (static::where('sku', $sku)->exists());
+
+        return $sku;
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeFeatured($query)
+    {
+        return $query->where('is_featured', true);
+    }
+
+    public function scopeNew($query)
+    {
+        return $query->where('is_new', true);
+    }
+
+    public function scopeBestseller($query)
+    {
+        return $query->where('is_bestseller', true);
+    }
+
+    public function scopeInStock($query)
+    {
+        return $query->where('in_stock', true);
+    }
+
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function scopePopular($query)
+    {
+        return $query->orderByDesc('views');
+    }
+
+    public function incrementViews(): void
+    {
+        $this->increment('views');
+    }
+
+    public function getEffectivePriceFor(int $quantity): string
+    {
+        if (
+            $this->wholesale_price !== null &&
+            $this->wholesale_min_quantity !== null &&
+            $quantity >= $this->wholesale_min_quantity
+        ) {
+            return $this->wholesale_price;
+        }
+
+        return $this->price;
+    }
+
+    public function hasDiscount(): bool
+    {
+        return $this->old_price !== null && $this->old_price > $this->price;
+    }
+
+    public function getDiscountPercent(): int
+    {
+        if (! $this->hasDiscount()) {
+            return 0;
+        }
+
+        return (int) round((1 - $this->price / $this->old_price) * 100);
+    }
+
+    public function getSeoTitle(): string
+    {
+        return $this->seo_title ?: $this->name;
+    }
+
+    public function getSeoH1(): string
+    {
+        return $this->seo_h1 ?: $this->name;
+    }
+
+    public function getSeoDescription(): ?string
+    {
+        return $this->seo_description ?: $this->short_description;
+    }
+}
