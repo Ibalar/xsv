@@ -202,53 +202,22 @@ final class ProductFormPage extends FormPage
 
     protected function getAttributesField(): RelationRepeater
     {
-        return RelationRepeater::make('Атрибуты', 'productAttributeValues')
+        return RelationRepeater::make(
+            'Атрибуты',
+            'productAttributeValues',
+            resource: AttributeValueResource::class
+        )
             ->fields([
                 Select::make('Атрибут', 'attribute_id')
-                    ->options(
-                        Attribute::active()
-                            ->ordered()
-                            ->pluck('name', 'id')
-                            ->toArray()
-                    )
+                    ->options(Attribute::active()->pluck('name', 'id')->toArray())
                     ->required()
                     ->searchable()
-                    ->creatable(
-                        AttributeResource::class,
-                        'name',
-                        static fn ($data) => [
-                            'name' => $data['name'] ?? null,
-                            'type' => Attribute::TYPE_SELECT,
-                            'is_active' => true,
-                            'is_filterable' => false,
-                        ]
-                    ),
+                    ->selectCreatable(AttributeResource::class, true, false),
 
                 Select::make('Значение', 'attribute_value_id')
-                    ->options([])
+                    ->options(AttributeValue::pluck('value', 'id')->toArray()) // ВСЕ значения
                     ->searchable()
-                    ->dependsOn(
-                        'attribute_id',
-                        function (Select $field, $value) {
-                            if (! $value) {
-                                return $field->options([]);
-                            }
-
-                            $options = AttributeValue::where('attribute_id', $value)
-                                ->pluck('value', 'id')
-                                ->toArray();
-
-                            return $field->options($options);
-                        }
-                    )
-                    ->creatable(
-                        AttributeValueResource::class,
-                        'value',
-                        static fn ($data, ?array $allData) => [
-                            'value' => $data['value'] ?? null,
-                            'attribute_id' => $allData['attribute_id'] ?? null,
-                        ]
-                    ),
+                    ->selectCreatable(AttributeValueResource::class, true, false),
             ])
             ->creatable()
             ->removable();
