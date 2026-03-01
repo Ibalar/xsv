@@ -24,7 +24,7 @@ final class CategoryIndexPage extends IndexPage
     {
         return [
             ID::make()->sortable(),
-            Text::make('Название', 'name')->sortable()->searchable(),
+            Text::make('Название', 'name')->sortable(),
             Text::make('Slug', 'slug')->sortable(),
             Switcher::make('Активна', 'is_active'),
             Number::make('Сортировка', 'sort_order')->sortable(),

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Layouts;
 
+use App\Models\Category;
+use App\MoonShine\Resources\CategoryResource\CategoryResource;
 use MoonShine\Laravel\Layouts\AppLayout;
 use MoonShine\ColorManager\Palettes\PurplePalette;
 use MoonShine\ColorManager\ColorManager;
 use MoonShine\Contracts\ColorManager\ColorManagerContract;
 use MoonShine\Contracts\ColorManager\PaletteContract;
+use MoonShine\MenuManager\MenuItem;
 
 final class MoonShineLayout extends AppLayout
 {
@@ -27,6 +30,7 @@ final class MoonShineLayout extends AppLayout
     protected function menu(): array
     {
         return [
+            MenuItem::make(CategoryResource::class),
             ...parent::menu(),
         ];
     }

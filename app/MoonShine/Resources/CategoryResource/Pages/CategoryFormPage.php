@@ -12,7 +12,7 @@ use App\MoonShine\Resources\CategoryResource\CategoryResource;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
-use MoonShine\UI\Fields\Slug;
+use MoonShine\Laravel\Fields\Slug;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use MoonShine\UI\Fields\Textarea;
