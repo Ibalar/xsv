@@ -43,10 +43,7 @@ final class ProductFormPage extends FormPage
                         ID::make(),
 
                         Text::make('Название', 'name')
-                            ->required()
-                            ->onAfterWrite(
-                                static fn ($field) => $field->autoGenerateSlug('slug')
-                            ),
+                            ->required(),
 
                         Slug::make('Slug', 'slug')
                             ->from('name')
@@ -142,20 +139,15 @@ final class ProductFormPage extends FormPage
                             ->allowedExtensions(['jpg', 'png', 'jpeg', 'gif', 'webp'])
                             ->removable(),
 
-                        Textarea::make('Краткое описание', 'short_description')
-                            ->rows(3),
+                        Textarea::make('Краткое описание', 'short_description'),
 
-                        Textarea::make('Описание', 'description')
-                            ->rows(6)
-                            ->cast(fn ($value) => htmlspecialchars($value ?? ''))
-                            ->unwrap(),
+                        Textarea::make('Описание', 'description'),
                     ])->icon('document-text'),
 
                     Tab::make('Атрибуты', [
                         Box::make('Дополнительные характеристики', [
                             Textarea::make('Атрибуты (JSON)', 'attributes')
-                                ->hint('JSON формат: {"цвет": "красный", "размер": "M"}')
-                                ->rows(5),
+                                ->hint('JSON формат: {"цвет": "красный", "размер": "M"}'),
                         ]),
                     ])->icon('cog'),
 
@@ -165,8 +157,7 @@ final class ProductFormPage extends FormPage
 
                             Text::make('SEO H1', 'seo_h1'),
 
-                            Textarea::make('SEO Description', 'seo_description')
-                                ->rows(3),
+                            Textarea::make('SEO Description', 'seo_description'),
                         ]),
                     ])->icon('globe'),
                 ]),

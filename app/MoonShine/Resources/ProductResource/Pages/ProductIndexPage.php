@@ -33,8 +33,7 @@ final class ProductIndexPage extends IndexPage
             ID::make()->sortable(),
 
             Text::make('Название', 'name')
-                ->sortable()
-                ->searchable(),
+                ->sortable(),
 
             BelongsTo::make(
                 'Категория',
@@ -43,14 +42,11 @@ final class ProductIndexPage extends IndexPage
             )->badge('info'),
 
             Number::make('Цена', 'price')
-                ->sortable()
-                ->formatted(fn ($value) => number_format($value, 2, ',', ' ') . ' ₽'),
+                ->sortable(),
 
-            Number::make('Старая цена', 'old_price')
-                ->formatted(fn ($value) => $value ? number_format($value, 2, ',', ' ') . ' ₽' : '-'),
+            Number::make('Старая цена', 'old_price'),
 
-            Text::make('Артикул', 'sku')
-                ->searchable(),
+            Text::make('Артикул', 'sku'),
 
             Number::make('Остаток', 'stock')
                 ->sortable(),
