@@ -6,6 +6,7 @@ namespace App\MoonShine\Resources\ProductResource\Pages;
 
 use App\Models\Attribute;
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\ProductAttributeValue;
 use Illuminate\Contracts\Database\Eloquent\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder;
@@ -136,14 +137,13 @@ final class ProductIndexPage extends IndexPage
     {
         $filters = [];
 
-        $attributes = Attribute::query()
-            ->filterable()
-            ->ordered()
-            ->get();
+        $categoryIds = $this->getCategoryIdsFromRequest();
+
+        $attributes = $this->getAttributesForCategory($categoryIds);
 
         foreach ($attributes as $attribute) {
             $filter = match ($attribute->type) {
-                Attribute::TYPE_SELECT => $this->createSelectFilter($attribute),
+                Attribute::TYPE_SELECT => $this->createSelectFilter($attribute, $categoryIds),
                 Attribute::TYPE_BOOLEAN => $this->createBooleanFilter($attribute),
                 Attribute::TYPE_NUMBER => $this->createNumberFilter($attribute),
                 default => $this->createTextFilter($attribute),
@@ -155,11 +155,85 @@ final class ProductIndexPage extends IndexPage
         return $filters;
     }
 
-    protected function createSelectFilter(Attribute $attribute): Select
+    /**
+     * Get category IDs from the current request filter.
+     *
+     * @return array<int, int>
+     */
+    protected function getCategoryIdsFromRequest(): array
     {
-        $values = ProductAttributeValue::query()
-            ->where('attribute_id', $attribute->id)
+        $request = request();
+
+        $categoryId = $request->input('filters.category');
+
+        if (empty($categoryId)) {
+            return [];
+        }
+
+        $category = Category::find($categoryId);
+
+        if (! $category) {
+            return [];
+        }
+
+        return $category->getAllDescendantIds();
+    }
+
+    /**
+     * Get attributes that are used by products in the given categories.
+     *
+     * @param  array<int, int>  $categoryIds
+     * @return \Illuminate\Database\Eloquent\Collection<int, Attribute>
+     */
+    protected function getAttributesForCategory(array $categoryIds): \Illuminate\Database\Eloquent\Collection
+    {
+        if (empty($categoryIds)) {
+            return Attribute::query()
+                ->filterable()
+                ->ordered()
+                ->get();
+        }
+
+        $productIds = Product::query()
+            ->whereIn('category_id', $categoryIds)
+            ->pluck('id');
+
+        if ($productIds->isEmpty()) {
+            return new \Illuminate\Database\Eloquent\Collection();
+        }
+
+        $attributeIds = ProductAttributeValue::query()
+            ->whereIn('product_id', $productIds)
             ->distinct()
+            ->pluck('attribute_id')
+            ->filter()
+            ->values();
+
+        if ($attributeIds->isEmpty()) {
+            return new \Illuminate\Database\Eloquent\Collection();
+        }
+
+        return Attribute::query()
+            ->filterable()
+            ->whereIn('id', $attributeIds)
+            ->ordered()
+            ->get();
+    }
+
+    protected function createSelectFilter(Attribute $attribute, array $categoryIds = []): Select
+    {
+        $query = ProductAttributeValue::query()
+            ->where('attribute_id', $attribute->id);
+
+        if (! empty($categoryIds)) {
+            $productIds = Product::query()
+                ->whereIn('category_id', $categoryIds)
+                ->pluck('id');
+
+            $query->whereIn('product_id', $productIds);
+        }
+
+        $values = $query->distinct()
             ->pluck('value', 'value')
             ->toArray();
 
