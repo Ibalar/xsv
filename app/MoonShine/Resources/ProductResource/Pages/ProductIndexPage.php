@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\ProductResource\Pages;
 
 use App\Models\Attribute;
+use App\Models\Category;
 use App\Models\ProductAttributeValue;
 use Illuminate\Contracts\Database\Eloquent\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder;
@@ -76,9 +77,24 @@ final class ProductIndexPage extends IndexPage
                 'Категория',
                 'category',
                 resource: CategoryResource::class,
-            )->valuesQuery(
-                static fn (BuilderContract $q) => $q->active()->select(['id', 'name'])
-            ),
+            )
+                ->valuesQuery(
+                    static fn (BuilderContract $q) => $q->active()->select(['id', 'name'])
+                )
+                ->onApply(function (Builder $query, $value): Builder {
+                    if (empty($value)) {
+                        return $query;
+                    }
+
+                    $categoryIds = [$value];
+                    $category = Category::find($value);
+
+                    if ($category) {
+                        $categoryIds = $category->getAllDescendantIds();
+                    }
+
+                    return $query->whereIn('category_id', $categoryIds);
+                }),
 
             BelongsTo::make(
                 'Поставщик',
