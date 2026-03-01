@@ -5,17 +5,16 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources\CategoryResource;
 
 use App\Models\Category;
-use MoonShine\Laravel\Resources\ModelResource;
 use App\MoonShine\Resources\CategoryResource\Pages\CategoryDetailPage;
 use App\MoonShine\Resources\CategoryResource\Pages\CategoryFormPage;
-use App\MoonShine\Resources\CategoryResource\Pages\CategoryIndexPage;
+use Leeto\MoonShineTree\Resources\TreeResource;
 use MoonShine\Support\Attributes\Icon;
 
 /**
- * @extends ModelResource<Category, CategoryIndexPage, CategoryFormPage, CategoryDetailPage>
+ * @extends TreeResource<Category, CategoryFormPage, CategoryDetailPage>
  */
 #[Icon('folder')]
-class CategoryResource extends ModelResource
+class CategoryResource extends TreeResource
 {
     protected string $model = Category::class;
 
@@ -28,13 +27,14 @@ class CategoryResource extends ModelResource
         return 'Категории';
     }
 
-    protected function pages(): array
+    public function treeKey(): ?string
     {
-        return [
-            CategoryIndexPage::class,
-            CategoryFormPage::class,
-            CategoryDetailPage::class,
-        ];
+        return 'parent_id';
+    }
+
+    public function sortKey(): string
+    {
+        return 'sort_order';
     }
 
     protected function search(): array
