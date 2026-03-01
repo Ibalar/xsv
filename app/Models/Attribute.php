@@ -78,6 +78,11 @@ class Attribute extends Model
         return $this->hasMany(ProductAttributeValue::class);
     }
 
+    public function attributeValues(): HasMany
+    {
+        return $this->hasMany(AttributeValue::class);
+    }
+
     protected static function boot(): void
     {
         parent::boot();
