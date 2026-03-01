@@ -14,7 +14,7 @@ use MoonShine\Support\Attributes\Icon;
 /**
  * @extends ModelResource<Product, ProductIndexPage, ProductFormPage, ProductDetailPage>
  */
-#[Icon('shopping-bag')]
+#[Icon('heroicons.shopping-bag')]
 class ProductResource extends ModelResource
 {
     protected string $model = Product::class;
