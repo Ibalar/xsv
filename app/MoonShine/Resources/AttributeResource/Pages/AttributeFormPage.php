@@ -49,6 +49,9 @@ final class AttributeFormPage extends FormPage
                 Switcher::make('Фильтруемый', 'is_filterable')
                     ->default(false),
 
+                Switcher::make('Активен', 'is_active')
+                    ->default(true),
+
                 Number::make('Сортировка', 'sort_order')
                     ->default(0),
             ]),

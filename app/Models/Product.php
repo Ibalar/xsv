@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class Product extends Model
@@ -75,10 +74,6 @@ class Product extends Model
                 $product->slug = static::generateUniqueSlug($product->name);
             }
         });
-
-        static::saved(function (self $product) {
-            $product->syncAttributeValues();
-        });
     }
 
     protected static function generateUniqueSlug(string $name): string
@@ -142,7 +137,7 @@ class Product extends Model
             return;
         }
 
-        $data = request()->input('attribute_value_options', []);
+        $data = request()->input('attributes', []);
 
         if (empty($data)) {
             $this->productAttributeValues()->delete();
@@ -150,77 +145,35 @@ class Product extends Model
             return;
         }
 
-        $syncData = [];
-
-        foreach ($data as $attributeValueId) {
-            if (empty($attributeValueId)) {
-                continue;
-            }
-
-            $attributeValue = AttributeValue::find($attributeValueId);
-
-            if (! $attributeValue) {
-                continue;
-            }
-
-            $syncData[$attributeValueId] = [
-                'attribute_id' => $attributeValue->attribute_id,
-                'value' => $attributeValue->value,
-            ];
-        }
-
+        // Delete existing product attribute values
         $this->productAttributeValues()->delete();
 
-        foreach ($syncData as $attributeValueId => $pivotData) {
-            $this->productAttributeValues()->create([
-                'attribute_id' => $pivotData['attribute_id'],
-                'attribute_value_id' => $attributeValueId,
-                'value' => $pivotData['value'],
-            ]);
-        }
-    }
+        // Create new entries from Repeater data
+        foreach ($data as $row) {
+            $attributeId = $row['attribute_id'] ?? null;
+            $valueIds = $row['value_ids'] ?? [];
 
-    public function saveAttributeValueOptions(Request $request): void
-    {
-        if (! $this->exists) {
-            return;
-        }
-
-        $data = $request->input('attribute_value_options', []);
-
-        if (empty($data)) {
-            $this->productAttributeValues()->delete();
-
-            return;
-        }
-
-        $syncData = [];
-
-        foreach ($data as $attributeValueId) {
-            if (empty($attributeValueId)) {
+            if (empty($attributeId) || empty($valueIds)) {
                 continue;
             }
 
-            $attributeValue = AttributeValue::find($attributeValueId);
+            foreach ($valueIds as $valueId) {
+                if (empty($valueId)) {
+                    continue;
+                }
 
-            if (! $attributeValue) {
-                continue;
+                $attributeValue = AttributeValue::find($valueId);
+
+                if (! $attributeValue) {
+                    continue;
+                }
+
+                $this->productAttributeValues()->create([
+                    'attribute_id' => $attributeId,
+                    'attribute_value_id' => $valueId,
+                    'value' => $attributeValue->value,
+                ]);
             }
-
-            $syncData[$attributeValueId] = [
-                'attribute_id' => $attributeValue->attribute_id,
-                'value' => $attributeValue->value,
-            ];
-        }
-
-        $this->productAttributeValues()->delete();
-
-        foreach ($syncData as $attributeValueId => $pivotData) {
-            $this->productAttributeValues()->create([
-                'attribute_id' => $pivotData['attribute_id'],
-                'attribute_value_id' => $attributeValueId,
-                'value' => $pivotData['value'],
-            ]);
         }
     }
 

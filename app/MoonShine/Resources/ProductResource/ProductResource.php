@@ -21,7 +21,7 @@ class ProductResource extends ModelResource
 
     protected string $column = 'name';
 
-    protected array $with = ['category', 'supplier', 'country', 'attributeValueOptions'];
+    protected array $with = ['category', 'supplier', 'country'];
 
     protected bool $simplePaginate = true;
 
@@ -48,8 +48,8 @@ class ProductResource extends ModelResource
         ];
     }
 
-    protected function beforeSave(Model $item): void
+    protected function afterSave(Model $item): void
     {
-        $item->saveAttributeValueOptions(request());
+        $item->syncAttributeValues();
     }
 }
