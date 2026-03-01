@@ -150,15 +150,18 @@ final class ProductIndexPage extends IndexPage
         return Select::make($attribute->name, "attribute_{$attribute->slug}")
             ->options($values)
             ->nullable()
+            ->multiple()
             ->customAttributes(['data-attribute-id' => $attribute->id])
             ->onApply(function (Builder $query, $value) use ($attribute): Builder {
                 if (empty($value)) {
                     return $query;
                 }
 
-                return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $value): void {
+                $values = is_array($value) ? $value : [$value];
+
+                return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $values): void {
                     $q->where('attribute_id', $attribute->id)
-                        ->where('value', $value);
+                        ->whereIn('value', $values);
                 });
             });
     }
