@@ -6,7 +6,9 @@ namespace App\MoonShine\Resources\ProductResource\Pages;
 
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
+use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Pages\Crud\DetailPage;
+use App\MoonShine\Resources\AttributeValueResource\AttributeValueResource;
 use App\MoonShine\Resources\CategoryResource\CategoryResource;
 use App\MoonShine\Resources\CountryResource\CountryResource;
 use App\MoonShine\Resources\ProductResource\ProductResource;
@@ -86,8 +88,11 @@ final class ProductDetailPage extends DetailPage
             ]),
 
             Box::make('Атрибуты', [
-                Textarea::make('Атрибуты', 'attributes')
-                    ->formatted(fn ($value) => is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : $value),
+                BelongsToMany::make(
+                    'Значения атрибутов',
+                    'attributeValueOptions',
+                    resource: AttributeValueResource::class,
+                ),
             ]),
         ];
     }

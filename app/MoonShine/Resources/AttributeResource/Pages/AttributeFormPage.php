@@ -6,9 +6,11 @@ namespace App\MoonShine\Resources\AttributeResource\Pages;
 
 use App\Models\Attribute;
 use App\MoonShine\Resources\AttributeResource\AttributeResource;
+use App\MoonShine\Resources\AttributeValueResource\AttributeValueResource;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Laravel\Fields\Relationships\HasMany;
 use MoonShine\Laravel\Fields\Slug;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\UI\Components\Layout\Box;
@@ -49,6 +51,16 @@ final class AttributeFormPage extends FormPage
 
                 Number::make('Сортировка', 'sort_order')
                     ->default(0),
+            ]),
+
+            Box::make('Значения', [
+                HasMany::make(
+                    'Значения',
+                    'attributeValues',
+                    resource: AttributeValueResource::class,
+                )
+                    ->creatable()
+                    ->removable(),
             ]),
         ];
     }

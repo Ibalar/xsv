@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class Product extends Model
@@ -142,6 +143,50 @@ class Product extends Model
         }
 
         $data = request()->input('attribute_value_options', []);
+
+        if (empty($data)) {
+            $this->productAttributeValues()->delete();
+
+            return;
+        }
+
+        $syncData = [];
+
+        foreach ($data as $attributeValueId) {
+            if (empty($attributeValueId)) {
+                continue;
+            }
+
+            $attributeValue = AttributeValue::find($attributeValueId);
+
+            if (! $attributeValue) {
+                continue;
+            }
+
+            $syncData[$attributeValueId] = [
+                'attribute_id' => $attributeValue->attribute_id,
+                'value' => $attributeValue->value,
+            ];
+        }
+
+        $this->productAttributeValues()->delete();
+
+        foreach ($syncData as $attributeValueId => $pivotData) {
+            $this->productAttributeValues()->create([
+                'attribute_id' => $pivotData['attribute_id'],
+                'attribute_value_id' => $attributeValueId,
+                'value' => $pivotData['value'],
+            ]);
+        }
+    }
+
+    public function saveAttributeValueOptions(Request $request): void
+    {
+        if (! $this->exists) {
+            return;
+        }
+
+        $data = $request->input('attribute_value_options', []);
 
         if (empty($data)) {
             $this->productAttributeValues()->delete();
