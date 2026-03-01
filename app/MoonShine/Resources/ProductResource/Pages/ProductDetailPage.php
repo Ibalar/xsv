@@ -19,7 +19,7 @@ use MoonShine\UI\Fields\Textarea;
 /**
  * @extends DetailPage<ProductResource>
  */
-final class DetailPage extends DetailPage
+final class ProductDetailPage extends DetailPage
 {
     /**
      * @return list<FieldContract>
