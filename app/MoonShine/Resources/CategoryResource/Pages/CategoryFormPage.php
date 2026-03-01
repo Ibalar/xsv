@@ -36,7 +36,8 @@ final class CategoryFormPage extends FormPage
                 Image::make('Изображение', 'image')
                     ->disk(moonshineConfig()->getDisk())
                     ->dir('categories')
-                    ->allowedExtensions(['jpg', 'png', 'jpeg', 'gif']),
+                    ->allowedExtensions(['jpg', 'png', 'jpeg', 'gif', 'webp'])
+                    ->removable(),
                 BelongsTo::make(
                     'Родитель',
                     'parent',
