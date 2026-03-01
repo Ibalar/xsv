@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\ProductResource\Pages;
 
+use App\Models\Attribute;
+use App\Models\AttributeValue;
+use App\Models\Product;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
@@ -11,7 +14,7 @@ use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Pages\Crud\FormPage;
-use App\Models\AttributeValue;
+use App\MoonShine\Resources\AttributeResource\AttributeResource;
 use App\MoonShine\Resources\AttributeValueResource\AttributeValueResource;
 use App\MoonShine\Resources\CategoryResource\CategoryResource;
 use App\MoonShine\Resources\CountryResource\CountryResource;
@@ -25,6 +28,7 @@ use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Image;
 use MoonShine\UI\Fields\Number;
 use MoonShine\Laravel\Fields\Slug;
+use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use MoonShine\UI\Fields\Textarea;
@@ -148,18 +152,8 @@ final class ProductFormPage extends FormPage
                     ]),
 
                     Tab::make('Атрибуты', [
-                        Box::make('Значения атрибутов', [
-                            BelongsToMany::make(
-                                'Значения атрибутов',
-                                'attributeValueOptions',
-                                resource: AttributeValueResource::class,
-                            )
-                                ->multiple()
-                                ->nullable()
-                                ->searchable()
-                                ->valuesQuery(
-                                    static fn (Builder $q) => $q->with('attribute')->select(['id', 'attribute_id', 'value'])
-                                ),
+                        Box::make('Атрибуты товара', [
+                            $this->getAttributesField(),
                         ]),
                     ]),
 
@@ -200,5 +194,27 @@ final class ProductFormPage extends FormPage
             'seo_h1' => 'nullable',
             'seo_description' => 'nullable',
         ];
+    }
+
+    protected function getAttributesField(): BelongsToMany
+    {
+        return BelongsToMany::make(
+            'Значения атрибутов',
+            'attributeValueOptions',
+            resource: AttributeValueResource::class,
+        )
+            ->multiple()
+            ->nullable()
+            ->searchable()
+            ->creatable(
+                AttributeValueResource::class,
+                'value',
+                static fn ($data) => [
+                    'attribute_id' => $data['attribute_id'] ?? null,
+                ]
+            )
+            ->valuesQuery(
+                static fn (Builder $q) => $q->with('attribute')->select(['id', 'attribute_id', 'value'])
+            );
     }
 }

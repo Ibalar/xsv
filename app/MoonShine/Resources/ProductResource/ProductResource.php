@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\MoonShine\Resources\ProductResource\Pages\ProductDetailPage;
 use App\MoonShine\Resources\ProductResource\Pages\ProductFormPage;
 use App\MoonShine\Resources\ProductResource\Pages\ProductIndexPage;
+use Illuminate\Database\Eloquent\Model;
 use MoonShine\Laravel\Resources\ModelResource;
 
 /**
@@ -45,5 +46,10 @@ class ProductResource extends ModelResource
             'name',
             'sku',
         ];
+    }
+
+    protected function beforeSave(Model $item): void
+    {
+        $item->saveAttributeValueOptions(request());
     }
 }
