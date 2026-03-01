@@ -9,6 +9,7 @@ use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Pages\Crud\DetailPage;
 use App\MoonShine\Resources\CategoryResource\CategoryResource;
 use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Image;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
@@ -28,6 +29,7 @@ final class CategoryDetailPage extends DetailPage
             ID::make(),
             Text::make('Название', 'name'),
             Text::make('Slug', 'slug'),
+            Image::make('Изображение', 'image'),
             BelongsTo::make(
                 'Родитель',
                 'parent',

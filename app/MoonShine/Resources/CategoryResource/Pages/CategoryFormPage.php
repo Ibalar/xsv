@@ -14,6 +14,7 @@ use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
 use MoonShine\Laravel\Fields\Slug;
 use MoonShine\UI\Fields\Switcher;
+use MoonShine\UI\Fields\Image;
 use MoonShine\UI\Fields\Text;
 use MoonShine\UI\Fields\Textarea;
 
@@ -32,6 +33,10 @@ final class CategoryFormPage extends FormPage
                 ID::make(),
                 Text::make('Название', 'name')->required(),
                 Slug::make('Slug', 'slug')->from('name')->required(),
+                Image::make('Изображение', 'image')
+                    ->disk(moonshineConfig()->getDisk())
+                    ->dir('categories')
+                    ->allowedExtensions(['jpg', 'png', 'jpeg', 'gif']),
                 BelongsTo::make(
                     'Родитель',
                     'parent',
