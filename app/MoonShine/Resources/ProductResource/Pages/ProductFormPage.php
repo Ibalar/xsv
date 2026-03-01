@@ -13,7 +13,7 @@ use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
-use MoonShine\UI\Fields\Repeater;
+use MoonShine\Laravel\Fields\Relationships\RelationRepeater;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use App\MoonShine\Resources\AttributeResource\AttributeResource;
 use App\MoonShine\Resources\AttributeValueResource\AttributeValueResource;
@@ -194,39 +194,15 @@ final class ProductFormPage extends FormPage
             'seo_title' => 'nullable',
             'seo_h1' => 'nullable',
             'seo_description' => 'nullable',
-            'attributes' => 'nullable|array',
-            'attributes.*.attribute_id' => 'nullable|exists:attributes,id',
-            'attributes.*.value_ids' => 'nullable|array',
-            'attributes.*.value_ids.*' => 'nullable|exists:attribute_values,id',
+            'productAttributeValues' => 'nullable|array',
+            'productAttributeValues.*.attribute_id' => 'required_with:productAttributeValues.*|exists:attributes,id',
+            'productAttributeValues.*.attribute_value_id' => 'required_with:productAttributeValues.*|exists:attribute_values,id',
         ];
     }
 
-    protected function getAttributesField(): Repeater
+    protected function getAttributesField(): RelationRepeater
     {
-        return Repeater::make('Атрибуты', 'attributes')
-            ->creatable()
-            ->removable()
-            ->fill(static function (Repeater $field, $item) {
-                if (! $item?->exists) {
-                    return;
-                }
-
-                // Load existing product attribute values
-                $productAttributeValues = $item->productAttributeValues()
-                    ->get()
-                    ->groupBy('attribute_id');
-
-                // Format for Repeater: group values by attribute_id
-                $attributesData = [];
-                foreach ($productAttributeValues as $attributeId => $values) {
-                    $attributesData[] = [
-                        'attribute_id' => $attributeId,
-                        'value_ids' => $values->pluck('attribute_value_id')->toArray(),
-                    ];
-                }
-
-                $field->setValue($attributesData);
-            })
+        return RelationRepeater::make('Атрибуты', 'productAttributeValues')
             ->fields([
                 Select::make('Атрибут', 'attribute_id')
                     ->options(
@@ -248,31 +224,23 @@ final class ProductFormPage extends FormPage
                         ]
                     ),
 
-                Select::make('Значения', 'value_ids')
+                Select::make('Значение', 'attribute_value_id')
                     ->options([])
-                    ->multiple()
                     ->searchable()
-                    ->dependsOn('attribute_id', function (Select $field, ?string $value, ?array $data) {
-                        if (empty($value)) {
-                            $field->options([]);
+                    ->dependsOn(
+                        'attribute_id',
+                        function (Select $field, $value) {
+                            if (! $value) {
+                                return $field->options([]);
+                            }
 
-                            return;
-                        }
-
-                        $attribute = Attribute::find($value);
-
-                        if (! $attribute) {
-                            $field->options([]);
-
-                            return;
-                        }
-
-                        $field->options(
-                            $attribute->attributeValues()
+                            $options = AttributeValue::where('attribute_id', $value)
                                 ->pluck('value', 'id')
-                                ->toArray()
-                        );
-                    })
+                                ->toArray();
+
+                            return $field->options($options);
+                        }
+                    )
                     ->creatable(
                         AttributeValueResource::class,
                         'value',
@@ -281,6 +249,8 @@ final class ProductFormPage extends FormPage
                             'attribute_id' => $allData['attribute_id'] ?? null,
                         ]
                     ),
-            ]);
+            ])
+            ->creatable()
+            ->removable();
     }
 }
