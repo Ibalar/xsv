@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Layouts;
 
-use App\Models\Category;
 use App\MoonShine\Resources\CategoryResource\CategoryResource;
+use App\MoonShine\Resources\CountryResource\CountryResource;
 use App\MoonShine\Resources\ProductResource\ProductResource;
+use App\MoonShine\Resources\SupplierResource\SupplierResource;
 use MoonShine\Laravel\Layouts\AppLayout;
 use MoonShine\ColorManager\Palettes\PurplePalette;
 use MoonShine\ColorManager\ColorManager;
@@ -32,6 +33,8 @@ final class MoonShineLayout extends AppLayout
     {
         return [
             MenuItem::make(CategoryResource::class),
+            MenuItem::make(SupplierResource::class),
+            MenuItem::make(CountryResource::class),
             MenuItem::make(ProductResource::class),
             ...parent::menu(),
         ];

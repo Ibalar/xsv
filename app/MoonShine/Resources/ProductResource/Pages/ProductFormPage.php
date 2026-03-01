@@ -10,7 +10,10 @@ use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Pages\Crud\FormPage;
+use App\MoonShine\Resources\CategoryResource\CategoryResource;
+use App\MoonShine\Resources\CountryResource\CountryResource;
 use App\MoonShine\Resources\ProductResource\ProductResource;
+use App\MoonShine\Resources\SupplierResource\SupplierResource;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Components\Layout\Flex;
 use MoonShine\UI\Components\Tabs;
@@ -53,7 +56,7 @@ final class ProductFormPage extends FormPage
                             BelongsTo::make(
                                 'Категория',
                                 'category',
-                                formatted: static fn ($model) => $model?->name,
+                                resource: CategoryResource::class,
                             )
                                 ->nullable()
                                 ->searchable()
@@ -64,7 +67,7 @@ final class ProductFormPage extends FormPage
                             BelongsTo::make(
                                 'Поставщик',
                                 'supplier',
-                                formatted: static fn ($model) => $model?->name,
+                                resource: SupplierResource::class,
                             )
                                 ->nullable()
                                 ->searchable()
@@ -75,7 +78,7 @@ final class ProductFormPage extends FormPage
                             BelongsTo::make(
                                 'Страна',
                                 'country',
-                                formatted: static fn ($model) => $model?->name,
+                                resource: CountryResource::class,
                             )
                                 ->nullable()
                                 ->searchable()
