@@ -9,12 +9,10 @@ use App\MoonShine\Resources\CategoryResource\Pages\CategoryDetailPage;
 use App\MoonShine\Resources\CategoryResource\Pages\CategoryFormPage;
 use App\MoonShine\Resources\CategoryResource\Pages\CategoryIndexPage;
 use MoonShine\Laravel\Resources\ModelResource;
-use MoonShine\Support\Attributes\Icon;
 
 /**
  * @extends ModelResource<Category, CategoryIndexPage, CategoryFormPage, CategoryDetailPage>
  */
-#[Icon('heroicons.folder')]
 class CategoryResource extends ModelResource
 {
     protected string $model = Category::class;

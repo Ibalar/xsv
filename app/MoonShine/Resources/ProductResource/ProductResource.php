@@ -9,7 +9,6 @@ use App\MoonShine\Resources\ProductResource\Pages\ProductDetailPage;
 use App\MoonShine\Resources\ProductResource\Pages\ProductFormPage;
 use App\MoonShine\Resources\ProductResource\Pages\ProductIndexPage;
 use MoonShine\Laravel\Resources\ModelResource;
-use MoonShine\Support\Attributes\Icon;
 
 /**
  * @extends ModelResource<Product, ProductIndexPage, ProductFormPage, ProductDetailPage>

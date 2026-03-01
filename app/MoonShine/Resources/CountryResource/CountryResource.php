@@ -9,12 +9,10 @@ use App\MoonShine\Resources\CountryResource\Pages\CountryDetailPage;
 use App\MoonShine\Resources\CountryResource\Pages\CountryFormPage;
 use App\MoonShine\Resources\CountryResource\Pages\CountryIndexPage;
 use MoonShine\Laravel\Resources\ModelResource;
-use MoonShine\Support\Attributes\Icon;
 
 /**
  * @extends ModelResource<Country, CountryIndexPage, CountryFormPage, CountryDetailPage>
  */
-#[Icon('heroicons.globe-alt')]
 class CountryResource extends ModelResource
 {
     protected string $model = Country::class;

@@ -9,12 +9,10 @@ use App\MoonShine\Resources\SupplierResource\Pages\SupplierDetailPage;
 use App\MoonShine\Resources\SupplierResource\Pages\SupplierFormPage;
 use App\MoonShine\Resources\SupplierResource\Pages\SupplierIndexPage;
 use MoonShine\Laravel\Resources\ModelResource;
-use MoonShine\Support\Attributes\Icon;
 
 /**
  * @extends ModelResource<Supplier, SupplierIndexPage, SupplierFormPage, SupplierDetailPage>
  */
-#[Icon('heroicons.truck')]
 class SupplierResource extends ModelResource
 {
     protected string $model = Supplier::class;
