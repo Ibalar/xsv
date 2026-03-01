@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\ProductResource\Pages;
 
-use Illuminate\Contracts\Database\Eloquent\Builder;
+use App\Models\Attribute;
+use App\Models\ProductAttributeValue;
+use Illuminate\Contracts\Database\Eloquent\Builder as BuilderContract;
+use Illuminate\Database\Eloquent\Builder;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
@@ -16,6 +19,7 @@ use App\MoonShine\Resources\SupplierResource\SupplierResource;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
+use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 
@@ -67,13 +71,13 @@ final class ProductIndexPage extends IndexPage
 
     protected function filters(): iterable
     {
-        return [
+        $filters = [
             BelongsTo::make(
                 'Категория',
                 'category',
                 resource: CategoryResource::class,
             )->valuesQuery(
-                static fn (Builder $q) => $q->active()->select(['id', 'name'])
+                static fn (BuilderContract $q) => $q->active()->select(['id', 'name'])
             ),
 
             BelongsTo::make(
@@ -81,7 +85,7 @@ final class ProductIndexPage extends IndexPage
                 'supplier',
                 resource: SupplierResource::class,
             )->valuesQuery(
-                static fn (Builder $q) => $q->active()->select(['id', 'name'])
+                static fn (BuilderContract $q) => $q->active()->select(['id', 'name'])
             ),
 
             BelongsTo::make(
@@ -89,7 +93,7 @@ final class ProductIndexPage extends IndexPage
                 'country',
                 resource: CountryResource::class,
             )->valuesQuery(
-                static fn (Builder $q) => $q->active()->select(['id', 'name'])
+                static fn (BuilderContract $q) => $q->active()->select(['id', 'name'])
             ),
 
             Switcher::make('Активен', 'is_active'),
@@ -100,6 +104,116 @@ final class ProductIndexPage extends IndexPage
             Text::make('Артикул', 'sku'),
             Text::make('Название', 'name'),
         ];
+
+        $attributeFilters = $this->getAttributeFilters();
+        foreach ($attributeFilters as $filter) {
+            $filters[] = $filter;
+        }
+
+        return $filters;
+    }
+
+    /**
+     * @return list<FieldContract>
+     */
+    protected function getAttributeFilters(): iterable
+    {
+        $filters = [];
+
+        $attributes = Attribute::query()
+            ->filterable()
+            ->ordered()
+            ->get();
+
+        foreach ($attributes as $attribute) {
+            $filter = match ($attribute->type) {
+                Attribute::TYPE_SELECT => $this->createSelectFilter($attribute),
+                Attribute::TYPE_BOOLEAN => $this->createBooleanFilter($attribute),
+                Attribute::TYPE_NUMBER => $this->createNumberFilter($attribute),
+                default => $this->createTextFilter($attribute),
+            };
+
+            $filters[] = $filter;
+        }
+
+        return $filters;
+    }
+
+    protected function createSelectFilter(Attribute $attribute): Select
+    {
+        $values = ProductAttributeValue::query()
+            ->where('attribute_id', $attribute->id)
+            ->distinct()
+            ->pluck('value', 'value')
+            ->toArray();
+
+        return Select::make($attribute->name, "attribute_{$attribute->slug}")
+            ->options($values)
+            ->nullable()
+            ->customAttributes(['data-attribute-id' => $attribute->id])
+            ->onApply(function (Builder $query, $value) use ($attribute): Builder {
+                if (empty($value)) {
+                    return $query;
+                }
+
+                return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $value): void {
+                    $q->where('attribute_id', $attribute->id)
+                        ->where('value', $value);
+                });
+            });
+    }
+
+    protected function createBooleanFilter(Attribute $attribute): Select
+    {
+        return Select::make($attribute->name, "attribute_{$attribute->slug}")
+            ->options([
+                '1' => 'Да',
+                '0' => 'Нет',
+            ])
+            ->nullable()
+            ->customAttributes(['data-attribute-id' => $attribute->id])
+            ->onApply(function (Builder $query, $value) use ($attribute): Builder {
+                if ($value === null || $value === '') {
+                    return $query;
+                }
+
+                return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $value): void {
+                    $q->where('attribute_id', $attribute->id)
+                        ->where('value', $value === '1' ? '1' : '0');
+                });
+            });
+    }
+
+    protected function createNumberFilter(Attribute $attribute): Text
+    {
+        return Text::make($attribute->name, "attribute_{$attribute->slug}")
+            ->customAttributes(['type' => 'number', 'data-attribute-id' => $attribute->id])
+            ->onApply(function (Builder $query, $value) use ($attribute): Builder {
+                if (empty($value)) {
+                    return $query;
+                }
+
+                return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $value): void {
+                    $q->where('attribute_id', $attribute->id)
+                        ->where('value', $value);
+                });
+            });
+    }
+
+    protected function createTextFilter(Attribute $attribute): Text
+    {
+        return Text::make($attribute->name, "attribute_{$attribute->slug}")
+            ->customAttributes(['data-attribute-id' => $attribute->id])
+            ->onApply(function (Builder $query, $value) use ($attribute): Builder {
+                if (empty($value)) {
+                    return $query;
+                }
+
+                return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $value): void {
+                    $q->where('attribute_id', $attribute->id)
+                        ->where('value', 'LIKE', "%{$value}%");
+                });
+            });
     }
 
     /**
