@@ -9,7 +9,10 @@ use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
+use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Pages\Crud\FormPage;
+use App\Models\AttributeValue;
+use App\MoonShine\Resources\AttributeValueResource\AttributeValueResource;
 use App\MoonShine\Resources\CategoryResource\CategoryResource;
 use App\MoonShine\Resources\CountryResource\CountryResource;
 use App\MoonShine\Resources\ProductResource\ProductResource;
@@ -145,9 +148,18 @@ final class ProductFormPage extends FormPage
                     ]),
 
                     Tab::make('Атрибуты', [
-                        Box::make('Дополнительные характеристики', [
-                            Textarea::make('Атрибуты (JSON)', 'attributes')
-                                ->hint('JSON формат: {"цвет": "красный", "размер": "M"}'),
+                        Box::make('Значения атрибутов', [
+                            BelongsToMany::make(
+                                'Значения атрибутов',
+                                'attributeValueOptions',
+                                resource: AttributeValueResource::class,
+                            )
+                                ->multiple()
+                                ->nullable()
+                                ->searchable()
+                                ->valuesQuery(
+                                    static fn (Builder $q) => $q->with('attribute')->select(['id', 'attribute_id', 'value'])
+                                ),
                         ]),
                     ]),
 

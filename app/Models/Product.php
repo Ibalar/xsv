@@ -39,14 +39,12 @@ class Product extends Model
         'seo_title',
         'seo_h1',
         'seo_description',
-        'attributes',
     ];
 
     protected function casts(): array
     {
         return [
             'gallery' => 'array',
-            'attributes' => 'array',
             'price' => 'decimal:2',
             'old_price' => 'decimal:2',
             'wholesale_price' => 'decimal:2',
@@ -75,6 +73,10 @@ class Product extends Model
             if ($product->isDirty('name') && empty($product->slug)) {
                 $product->slug = static::generateUniqueSlug($product->name);
             }
+        });
+
+        static::saved(function (self $product) {
+            $product->syncAttributeValues();
         });
     }
 
@@ -119,6 +121,62 @@ class Product extends Model
     public function attributeValues(): HasMany
     {
         return $this->hasMany(ProductAttributeValue::class);
+    }
+
+    public function productAttributeValues(): HasMany
+    {
+        return $this->hasMany(ProductAttributeValue::class);
+    }
+
+    public function attributeValueOptions(): BelongsToMany
+    {
+        return $this->belongsToMany(AttributeValue::class, 'product_attribute_values', 'product_id', 'attribute_value_id')
+            ->withPivot('value')
+            ->withTimestamps();
+    }
+
+    public function syncAttributeValues(): void
+    {
+        if (! $this->exists) {
+            return;
+        }
+
+        $data = request()->input('attribute_value_options', []);
+
+        if (empty($data)) {
+            $this->productAttributeValues()->delete();
+
+            return;
+        }
+
+        $syncData = [];
+
+        foreach ($data as $attributeValueId) {
+            if (empty($attributeValueId)) {
+                continue;
+            }
+
+            $attributeValue = AttributeValue::find($attributeValueId);
+
+            if (! $attributeValue) {
+                continue;
+            }
+
+            $syncData[$attributeValueId] = [
+                'attribute_id' => $attributeValue->attribute_id,
+                'value' => $attributeValue->value,
+            ];
+        }
+
+        $this->productAttributeValues()->delete();
+
+        foreach ($syncData as $attributeValueId => $pivotData) {
+            $this->productAttributeValues()->create([
+                'attribute_id' => $pivotData['attribute_id'],
+                'attribute_value_id' => $attributeValueId,
+                'value' => $pivotData['value'],
+            ]);
+        }
     }
 
     public function attributes(): BelongsToMany
