@@ -9,7 +9,10 @@ use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
+use App\MoonShine\Resources\CategoryResource\CategoryResource;
+use App\MoonShine\Resources\CountryResource\CountryResource;
 use App\MoonShine\Resources\ProductResource\ProductResource;
+use App\MoonShine\Resources\SupplierResource\SupplierResource;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
@@ -36,7 +39,7 @@ final class ProductIndexPage extends IndexPage
             BelongsTo::make(
                 'Категория',
                 'category',
-                formatted: static fn ($model) => $model?->name,
+                resource: CategoryResource::class,
             )->badge('info'),
 
             Number::make('Цена', 'price')
@@ -72,7 +75,7 @@ final class ProductIndexPage extends IndexPage
             BelongsTo::make(
                 'Категория',
                 'category',
-                formatted: static fn ($model) => $model?->name,
+                resource: CategoryResource::class,
             )->valuesQuery(
                 static fn (Builder $q) => $q->active()->select(['id', 'name'])
             ),
@@ -80,7 +83,7 @@ final class ProductIndexPage extends IndexPage
             BelongsTo::make(
                 'Поставщик',
                 'supplier',
-                formatted: static fn ($model) => $model?->name,
+                resource: SupplierResource::class,
             )->valuesQuery(
                 static fn (Builder $q) => $q->active()->select(['id', 'name'])
             ),
@@ -88,7 +91,7 @@ final class ProductIndexPage extends IndexPage
             BelongsTo::make(
                 'Страна',
                 'country',
-                formatted: static fn ($model) => $model?->name,
+                resource: CountryResource::class,
             )->valuesQuery(
                 static fn (Builder $q) => $q->active()->select(['id', 'name'])
             ),

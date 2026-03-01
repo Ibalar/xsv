@@ -7,7 +7,10 @@ namespace App\MoonShine\Resources\ProductResource\Pages;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Pages\Crud\DetailPage;
+use App\MoonShine\Resources\CategoryResource\CategoryResource;
+use App\MoonShine\Resources\CountryResource\CountryResource;
 use App\MoonShine\Resources\ProductResource\ProductResource;
+use App\MoonShine\Resources\SupplierResource\SupplierResource;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Image;
@@ -35,17 +38,17 @@ final class ProductDetailPage extends DetailPage
                 BelongsTo::make(
                     'Категория',
                     'category',
-                    formatted: static fn ($model) => $model?->name,
+                    resource: CategoryResource::class,
                 ),
                 BelongsTo::make(
                     'Поставщик',
                     'supplier',
-                    formatted: static fn ($model) => $model?->name,
+                    resource: SupplierResource::class,
                 ),
                 BelongsTo::make(
                     'Страна',
                     'country',
-                    formatted: static fn ($model) => $model?->name,
+                    resource: CountryResource::class,
                 ),
             ]),
 
