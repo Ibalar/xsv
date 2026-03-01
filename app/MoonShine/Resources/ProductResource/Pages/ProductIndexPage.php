@@ -144,12 +144,14 @@ final class ProductIndexPage extends IndexPage
         foreach ($attributes as $attribute) {
             $filter = match ($attribute->type) {
                 Attribute::TYPE_SELECT => $this->createSelectFilter($attribute, $categoryIds),
-                Attribute::TYPE_BOOLEAN => $this->createBooleanFilter($attribute),
+                Attribute::TYPE_BOOLEAN => $this->createBooleanFilter($attribute, $categoryIds),
                 Attribute::TYPE_NUMBER => $this->createNumberFilter($attribute),
                 default => $this->createTextFilter($attribute),
             };
 
-            $filters[] = $filter;
+            if ($filter) {
+                $filters[] = $filter;
+            }
         }
 
         return $filters;
@@ -220,7 +222,10 @@ final class ProductIndexPage extends IndexPage
             ->get();
     }
 
-    protected function createSelectFilter(Attribute $attribute, array $categoryIds = []): Select
+    /**
+     * @return list<string>
+     */
+    protected function getAttributeValues(Attribute $attribute, array $categoryIds = []): array
     {
         $query = ProductAttributeValue::query()
             ->where('attribute_id', $attribute->id);
@@ -230,15 +235,36 @@ final class ProductIndexPage extends IndexPage
                 ->whereIn('category_id', $categoryIds)
                 ->pluck('id');
 
+            if ($productIds->isEmpty()) {
+                return [];
+            }
+
             $query->whereIn('product_id', $productIds);
         }
 
-        $values = $query->distinct()
-            ->pluck('value', 'value')
+        return $query->distinct()
+            ->pluck('value')
+            ->filter(static fn ($value) => $value !== null && $value !== '')
+            ->map(static fn ($value) => (string) $value)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function createSelectFilter(Attribute $attribute, array $categoryIds = []): ?Select
+    {
+        $values = $this->getAttributeValues($attribute, $categoryIds);
+
+        if ($values === []) {
+            return null;
+        }
+
+        $options = collect($values)
+            ->mapWithKeys(static fn ($value) => [$value => $value])
             ->toArray();
 
         return Select::make($attribute->name, "attribute_{$attribute->slug}")
-            ->options($values)
+            ->options($options)
             ->nullable()
             ->multiple()
             ->customAttributes(['data-attribute-id' => $attribute->id])
@@ -256,13 +282,26 @@ final class ProductIndexPage extends IndexPage
             });
     }
 
-    protected function createBooleanFilter(Attribute $attribute): Select
+    protected function createBooleanFilter(Attribute $attribute, array $categoryIds = []): ?Select
     {
+        $values = $this->getAttributeValues($attribute, $categoryIds);
+
+        $options = [];
+
+        if (in_array('1', $values, true)) {
+            $options['1'] = 'Да';
+        }
+
+        if (in_array('0', $values, true)) {
+            $options['0'] = 'Нет';
+        }
+
+        if ($options === []) {
+            return null;
+        }
+
         return Select::make($attribute->name, "attribute_{$attribute->slug}")
-            ->options([
-                '1' => 'Да',
-                '0' => 'Нет',
-            ])
+            ->options($options)
             ->nullable()
             ->customAttributes(['data-attribute-id' => $attribute->id])
             ->onApply(function (Builder $query, $value) use ($attribute): Builder {
