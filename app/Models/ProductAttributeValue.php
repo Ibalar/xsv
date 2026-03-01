@@ -13,6 +13,7 @@ class ProductAttributeValue extends Model
     protected $fillable = [
         'product_id',
         'attribute_id',
+        'attribute_value_id',
         'value',
     ];
 
@@ -21,6 +22,7 @@ class ProductAttributeValue extends Model
         return [
             'product_id' => 'integer',
             'attribute_id' => 'integer',
+            'attribute_value_id' => 'integer',
         ];
     }
 
@@ -32,5 +34,10 @@ class ProductAttributeValue extends Model
     public function attribute(): BelongsTo
     {
         return $this->belongsTo(Attribute::class);
+    }
+
+    public function attributeValue(): BelongsTo
+    {
+        return $this->belongsTo(AttributeValue::class);
     }
 }

@@ -20,7 +20,7 @@ class ProductResource extends ModelResource
 
     protected string $column = 'name';
 
-    protected array $with = ['category', 'supplier', 'country'];
+    protected array $with = ['category', 'supplier', 'country', 'attributeValueOptions'];
 
     protected bool $simplePaginate = true;
 
