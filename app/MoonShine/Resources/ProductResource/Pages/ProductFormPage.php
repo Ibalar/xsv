@@ -130,7 +130,7 @@ final class ProductFormPage extends FormPage
                             Switcher::make('В наличии', 'in_stock')
                                 ->default(true),
                         ]),
-                    ])->icon('catalog'),
+                    ]),
 
                     Tab::make('Контент', [
                         Image::make('Изображение', 'image')
@@ -142,14 +142,14 @@ final class ProductFormPage extends FormPage
                         Textarea::make('Краткое описание', 'short_description'),
 
                         Textarea::make('Описание', 'description'),
-                    ])->icon('document-text'),
+                    ]),
 
                     Tab::make('Атрибуты', [
                         Box::make('Дополнительные характеристики', [
                             Textarea::make('Атрибуты (JSON)', 'attributes')
                                 ->hint('JSON формат: {"цвет": "красный", "размер": "M"}'),
                         ]),
-                    ])->icon('cog'),
+                    ]),
 
                     Tab::make('SEO', [
                         Box::make('Мета-теги', [
@@ -159,7 +159,7 @@ final class ProductFormPage extends FormPage
 
                             Textarea::make('SEO Description', 'seo_description'),
                         ]),
-                    ])->icon('globe'),
+                    ]),
                 ]),
             ]),
         ];
