@@ -13,6 +13,7 @@ use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
+use MoonShine\UI\Fields\Repeater;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use App\MoonShine\Resources\AttributeResource\AttributeResource;
 use App\MoonShine\Resources\AttributeValueResource\AttributeValueResource;
@@ -193,28 +194,93 @@ final class ProductFormPage extends FormPage
             'seo_title' => 'nullable',
             'seo_h1' => 'nullable',
             'seo_description' => 'nullable',
+            'attributes' => 'nullable|array',
+            'attributes.*.attribute_id' => 'nullable|exists:attributes,id',
+            'attributes.*.value_ids' => 'nullable|array',
+            'attributes.*.value_ids.*' => 'nullable|exists:attribute_values,id',
         ];
     }
 
-    protected function getAttributesField(): BelongsToMany
+    protected function getAttributesField(): Repeater
     {
-        return BelongsToMany::make(
-            'Значения атрибутов',
-            'attributeValueOptions',
-            resource: AttributeValueResource::class,
-        )
-            ->multiple()
-            ->nullable()
-            ->searchable()
-            ->creatable(
-                AttributeValueResource::class,
-                'value',
-                static fn ($data) => [
-                    'attribute_id' => $data['attribute_id'] ?? null,
-                ]
-            )
-            ->valuesQuery(
-                static fn (Builder $q) => $q->with('attribute')->select(['id', 'attribute_id', 'value'])
-            );
+        return Repeater::make('Атрибуты', 'attributes')
+            ->creatable()
+            ->removable()
+            ->fill(static function (Repeater $field, $item) {
+                if (! $item?->exists) {
+                    return;
+                }
+
+                // Load existing product attribute values
+                $productAttributeValues = $item->productAttributeValues()
+                    ->get()
+                    ->groupBy('attribute_id');
+
+                // Format for Repeater: group values by attribute_id
+                $attributesData = [];
+                foreach ($productAttributeValues as $attributeId => $values) {
+                    $attributesData[] = [
+                        'attribute_id' => $attributeId,
+                        'value_ids' => $values->pluck('attribute_value_id')->toArray(),
+                    ];
+                }
+
+                $field->setValue($attributesData);
+            })
+            ->fields([
+                Select::make('Атрибут', 'attribute_id')
+                    ->options(
+                        Attribute::active()
+                            ->ordered()
+                            ->pluck('name', 'id')
+                            ->toArray()
+                    )
+                    ->required()
+                    ->searchable()
+                    ->creatable(
+                        AttributeResource::class,
+                        'name',
+                        static fn ($data) => [
+                            'name' => $data['name'] ?? null,
+                            'type' => Attribute::TYPE_SELECT,
+                            'is_active' => true,
+                            'is_filterable' => false,
+                        ]
+                    ),
+
+                Select::make('Значения', 'value_ids')
+                    ->options([])
+                    ->multiple()
+                    ->searchable()
+                    ->dependsOn('attribute_id', function (Select $field, ?string $value, ?array $data) {
+                        if (empty($value)) {
+                            $field->options([]);
+
+                            return;
+                        }
+
+                        $attribute = Attribute::find($value);
+
+                        if (! $attribute) {
+                            $field->options([]);
+
+                            return;
+                        }
+
+                        $field->options(
+                            $attribute->attributeValues()
+                                ->pluck('value', 'id')
+                                ->toArray()
+                        );
+                    })
+                    ->creatable(
+                        AttributeValueResource::class,
+                        'value',
+                        static fn ($data, ?array $allData) => [
+                            'value' => $data['value'] ?? null,
+                            'attribute_id' => $allData['attribute_id'] ?? null,
+                        ]
+                    ),
+            ]);
     }
 }

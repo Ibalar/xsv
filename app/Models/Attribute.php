@@ -28,6 +28,7 @@ class Attribute extends Model
         'type',
         'is_filterable',
         'sort_order',
+        'is_active',
     ];
 
     /**
@@ -40,6 +41,7 @@ class Attribute extends Model
         return [
             'is_filterable' => 'boolean',
             'sort_order' => 'integer',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -64,6 +66,14 @@ class Attribute extends Model
     public function scopeFilterable($query)
     {
         return $query->where('is_filterable', true);
+    }
+
+    /**
+     * Scope for active attributes.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 
     /**
