@@ -14,7 +14,7 @@ use MoonShine\Support\Attributes\Icon;
 /**
  * @extends ModelResource<Supplier, SupplierIndexPage, SupplierFormPage, SupplierDetailPage>
  */
-#[Icon('truck')]
+#[Icon('heroicons.truck')]
 class SupplierResource extends ModelResource
 {
     protected string $model = Supplier::class;

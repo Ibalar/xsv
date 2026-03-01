@@ -14,7 +14,7 @@ use MoonShine\Support\Attributes\Icon;
 /**
  * @extends ModelResource<Country, CountryIndexPage, CountryFormPage, CountryDetailPage>
  */
-#[Icon('globe-alt')]
+#[Icon('heroicons.globe-alt')]
 class CountryResource extends ModelResource
 {
     protected string $model = Country::class;

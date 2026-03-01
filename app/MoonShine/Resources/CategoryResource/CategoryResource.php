@@ -14,7 +14,7 @@ use MoonShine\Support\Attributes\Icon;
 /**
  * @extends ModelResource<Category, CategoryIndexPage, CategoryFormPage, CategoryDetailPage>
  */
-#[Icon('folder')]
+#[Icon('heroicons.folder')]
 class CategoryResource extends ModelResource
 {
     protected string $model = Category::class;

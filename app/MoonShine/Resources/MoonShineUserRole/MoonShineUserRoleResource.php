@@ -17,7 +17,7 @@ use MoonShine\Support\ListOf;
 /**
  * @extends ModelResource<MoonshineUserRole, MoonShineUserRoleIndexPage, MoonShineUserRoleFormPage, null>
  */
-#[Icon('bookmark')]
+#[Icon('heroicons.bookmark')]
 #[Group('moonshine::ui.resource.system', 'users', translatable: true)]
 #[Order(1)]
 class MoonShineUserRoleResource extends ModelResource
