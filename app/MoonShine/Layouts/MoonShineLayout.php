@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Layouts;
 
+use App\MoonShine\Resources\AttributeResource\AttributeResource;
+use App\MoonShine\Resources\AttributeValueResource\AttributeValueResource;
 use App\MoonShine\Resources\CategoryResource\CategoryResource;
 use App\MoonShine\Resources\CountryResource\CountryResource;
 use App\MoonShine\Resources\ProductResource\ProductResource;
@@ -36,6 +38,8 @@ final class MoonShineLayout extends AppLayout
             MenuItem::make(SupplierResource::class),
             MenuItem::make(CountryResource::class),
             MenuItem::make(ProductResource::class),
+            MenuItem::make(AttributeResource::class),
+            MenuItem::make(AttributeValueResource::class),
             ...parent::menu(),
         ];
     }
