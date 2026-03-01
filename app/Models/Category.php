@@ -161,4 +161,21 @@ class Category extends Model
     {
         return $this->seo_description ?: $this->description;
     }
+
+    /**
+     * Get all descendant category IDs including self.
+     *
+     * @return list<int>
+     */
+    public function getAllDescendantIds(): array
+    {
+        $ids = [$this->id];
+
+        $children = $this->children;
+        foreach ($children as $child) {
+            $ids = array_merge($ids, $child->getAllDescendantIds());
+        }
+
+        return $ids;
+    }
 }
