@@ -11,31 +11,20 @@ use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Text;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Number;
+use Leeto\MoonShineTree\View\Components\TreeComponent;
 
 /**
  * @extends IndexPage<CategoryResource>
  */
-final class CategoryIndexPage extends IndexPage
+class CategoryIndexPage extends IndexPage
 {
-    /**
-     * @return list<FieldContract>
-     */
-    protected function fields(): iterable
+    protected function mainLayer(): array
     {
         return [
-            ID::make()->sortable(),
-
-            Text::make('Название', 'name')
-                ->sortable(),
-
-            Text::make('Slug', 'slug')
-                ->sortable(),
-
-            Switcher::make('Активна', 'is_active')
-                ->sortable(),
-
-            Number::make('Сортировка', 'sort_order')
-                ->sortable(),
+            TreeComponent::make($this->getResource()),
         ];
     }
+
+
+
 }

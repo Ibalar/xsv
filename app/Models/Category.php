@@ -178,4 +178,9 @@ class Category extends Model
 
         return $ids;
     }
+
+    public function childrenRecursive()
+    {
+        return $this->children()->with('childrenRecursive');
+    }
 }

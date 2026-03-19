@@ -21,6 +21,7 @@ use App\MoonShine\Resources\CategoryResource\CategoryResource;
 use App\MoonShine\Resources\CountryResource\CountryResource;
 use App\MoonShine\Resources\ProductResource\ProductResource;
 use App\MoonShine\Resources\SupplierResource\SupplierResource;
+use MoonShine\TinyMce\Fields\TinyMce;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Components\Layout\Flex;
 use MoonShine\UI\Components\Tabs;
@@ -51,11 +52,21 @@ final class ProductFormPage extends FormPage
                         ID::make(),
 
                         Text::make('Название', 'name')
+                            ->when(
+                                fn() => $this->getResource()->isCreateFormPage(),
+                                fn(Text $field) => $field->reactive(),
+                                fn(Text $field) => $field
+                            )
                             ->required(),
 
                         Slug::make('Slug', 'slug')
-                            ->from('name')
-                            ->required(),
+                            ->unique()
+                            ->locked()
+                            ->when(
+                                fn() => $this->getResource()->isCreateFormPage(),
+                                fn(Slug $field) => $field->from('name')->live(),
+                                fn(Slug $field) => $field->readonly()
+                            ),
 
                         Flex::make([
                             BelongsTo::make(
@@ -142,6 +153,7 @@ final class ProductFormPage extends FormPage
 
                     Tab::make('Контент', [
                         Image::make('Изображение', 'image')
+                            ->multiple()
                             ->disk(moonshineConfig()->getDisk())
                             ->dir('products')
                             ->allowedExtensions(['jpg', 'png', 'jpeg', 'gif', 'webp'])
@@ -149,7 +161,7 @@ final class ProductFormPage extends FormPage
 
                         Textarea::make('Краткое описание', 'short_description'),
 
-                        Textarea::make('Описание', 'description'),
+                        TinyMce::make('Описание', 'description'),
                     ]),
 
                     Tab::make('Атрибуты', [

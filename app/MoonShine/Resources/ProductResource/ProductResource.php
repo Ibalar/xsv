@@ -6,19 +6,32 @@ namespace App\MoonShine\Resources\ProductResource;
 
 use App\Models\AttributeValue;
 use App\Models\Product;
+use App\MoonShine\Resources\CategoryResource\CategoryResource;
 use App\MoonShine\Resources\ProductResource\Pages\ProductDetailPage;
 use App\MoonShine\Resources\ProductResource\Pages\ProductFormPage;
 use App\MoonShine\Resources\ProductResource\Pages\ProductIndexPage;
 use MoonShine\Contracts\Core\DependencyInjection\FieldsContract;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
+use MoonShine\Laravel\Fields\Relationships\BelongsTo;
+use MoonShine\Laravel\Fields\Slug;
 use MoonShine\Laravel\Resources\ModelResource;
+use MoonShine\ImportExport\Contracts\HasImportExportContract;
+use MoonShine\ImportExport\Traits\ImportExportConcern;
+use MoonShine\TinyMce\Fields\TinyMce;
+use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Image;
+use MoonShine\UI\Fields\Number;
+use MoonShine\UI\Fields\Switcher;
+use MoonShine\UI\Fields\Text;
 
 /**
  * @extends ModelResource<Product, ProductIndexPage, ProductFormPage, ProductDetailPage>
  */
 
-class ProductResource extends ModelResource
+class ProductResource extends ModelResource implements HasImportExportContract
 {
+    use ImportExportConcern;
+
     protected string $model = Product::class;
 
     protected string $column = 'name';
@@ -53,7 +66,7 @@ class ProductResource extends ModelResource
     protected function afterSave(DataWrapperContract $item, FieldsContract $fields): DataWrapperContract
     {
         $product = $item->getOriginal();
-        
+
         $attributes = request()->input('attributes', []);
 
         $sync = [];
@@ -84,4 +97,30 @@ class ProductResource extends ModelResource
 
         return $item;
     }
+
+    protected function importFields(): iterable
+    {
+        return [
+            ID::make(),
+            Text::make('Название', 'name'),
+            Slug::make('Slug', 'slug'),
+            Text::make('SEO Title', 'seo_title'),
+            Text::make('Артикул', 'sku'),
+            Switcher::make('Активен', 'is_active'),
+            Number::make('Цена', 'price'),
+            Image::make('Изображение', 'image')
+                ->multiple()
+                ->disk(moonshineConfig()->getDisk())
+                ->dir('products')
+                ->allowedExtensions(['jpg', 'png', 'jpeg', 'gif', 'webp'])
+                ->removable(),
+            TinyMce::make('Описание', 'description'),
+            BelongsTo::make(
+                'Категория',
+                'category',
+                resource: CategoryResource::class,
+            ),
+        ];
+    }
+
 }
