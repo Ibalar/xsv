@@ -23,32 +23,42 @@ class AppServiceProvider extends ServiceProvider
     {
         View::composer('*', function ($view) {
 
-            $categories = \App\Models\Category::query()
-                ->active()
-                ->whereNull('parent_id')
-                ->with('childrenRecursive')
-                ->ordered()
-                ->get();
+            $categories = cache()->remember('menu_categories', 3600, function () {
+                return \App\Models\Category::query()
+                    ->active()
+                    ->whereNull('parent_id')
+                    ->with('childrenRecursive')
+                    ->ordered()
+                    ->get();
+            });
 
+            // 👉 для мобильного меню
+            $view->with('headerCategories', $categories);
+
+            $footerCategories = cache()->remember('footer_categories', 3600, function () {
+                return \App\Models\Category::query()
+                    ->active()
+                    ->whereNull('parent_id')
+                    ->ordered()
+                    ->get();
+            });
+
+            $view->with('footerCategories', $footerCategories);
+
+            // 👉 логика колонок
             $columns = [];
 
             $count = $categories->count();
 
             if ($count <= 4) {
-                // просто по одной категории в колонку
                 foreach ($categories as $category) {
                     $columns[] = collect([$category]);
                 }
             } else {
-                // 🔥 сложная логика
-
-                // первые 2 категории — отдельные колонки
                 $columns[] = collect([$categories[0]]);
                 $columns[] = collect([$categories[1]]);
 
-                // остальные делим пополам
                 $rest = $categories->slice(2)->values();
-
                 $chunks = $rest->chunk(ceil($rest->count() / 2));
 
                 $columns[] = $chunks[0] ?? collect();

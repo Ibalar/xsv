@@ -8,7 +8,17 @@
         </button>
 
         <!-- Navbar brand (Logo) -->
-        <a class="navbar-brand fs-2 p-0 pe-lg-2 pe-xxl-0 me-0 me-sm-3 me-md-4 me-xxl-5" href="index.html">Cartzilla</a>
+        @if(request()->routeIs('home'))
+            <span class="navbar-brand fs-2 p-0 pe-lg-2 pe-xxl-0 me-0 me-sm-3 me-md-4 me-xxl-5">
+                XSV.BY
+            </span>
+        @else
+            <a class="navbar-brand fs-2 p-0 pe-lg-2 pe-xxl-0 me-0 me-sm-3 me-md-4 me-xxl-5"
+               href="{{ route('home') }}">
+                XSV.BY
+            </a>
+        @endif
+
 
         <!-- Categories dropdown visible on screens > 991px wide (lg breakpoint) -->
         <div class="dropdown d-none d-lg-block w-100 me-4" style="max-width: 200px">
@@ -62,22 +72,13 @@
 
         <!-- Search bar visible on screens > 768px wide (md breakpoint) -->
         <div class="position-relative w-100 d-none d-md-block me-3 me-xl-4">
-            <input type="search" class="form-control form-control-lg rounded-pill" placeholder="Search for products" aria-label="Search">
+            <input type="search" class="form-control form-control-lg rounded-pill" placeholder="Поиск по сайту" aria-label="Search">
             <button type="button" class="btn btn-icon btn-ghost fs-lg btn-secondary text-bo border-0 position-absolute top-0 end-0 rounded-circle mt-1 me-1" aria-label="Search button">
                 <i class="ci-search"></i>
             </button>
         </div>
 
-        <!-- Delivery options toggle visible on screens > 1200px wide (xl breakpoint) -->
-        <div class="nav me-4 me-xxl-5 d-none d-xl-block">
-            <a class="nav-link flex-column align-items-start animate-underline p-0" href="#deliveryOptions" data-bs-toggle="offcanvas" aria-controls="deliveryOptions">
-                <div class="h6 fs-sm mb-0">Delivery</div>
-                <div class="d-flex align-items-center fs-sm fw-normal text-body">
-                    <span class="animate-target text-nowrap">Set your address</span>
-                    <i class="ci-chevron-down fs-base ms-1"></i>
-                </div>
-            </a>
-        </div>
+
 
         <!-- Button group -->
         <div class="d-flex align-items-center gap-md-1 gap-lg-2 ms-auto">
@@ -137,9 +138,9 @@
             </a>
 
             <!-- Cart button -->
-            <button type="button" class="btn btn-icon fs-xl btn-outline-secondary position-relative border-0 rounded-circle animate-scale" data-bs-toggle="offcanvas" data-bs-target="#shoppingCart" aria-controls="shoppingCart" aria-label="Shopping cart">
-                <span class="position-absolute top-0 start-100 badge fs-xs text-bg-primary rounded-pill ms-n3 z-2" style="--cz-badge-padding-y: .25em; --cz-badge-padding-x: .42em">8</span>
-                <i class="ci-shopping-cart animate-target"></i>
+            <button type="button" class="btn btn-icon fs-xl btn-outline-secondary position-relative border-0 rounded-circle animate-scale" data-bs-toggle="offcanvas" data-bs-target="#shoppingCart" aria-controls="shoppingCart" aria-label="Shopping cart" title="Заявка на заказ">
+                <span class="position-absolute top-0 start-100 badge fs-xs text-bg-primary rounded-pill ms-n3 z-2" style="--cz-badge-padding-y: .25em; --cz-badge-padding-x: .42em">0</span>
+                <i class="ci-file-text animate-target"></i>
             </button>
         </div>
     </div>

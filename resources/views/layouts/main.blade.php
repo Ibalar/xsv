@@ -21,8 +21,7 @@
     <!-- Theme switcher (color modes) -->
     <script src="{{ asset('assets/js/theme-switcher.js') }}"></script>
 
-    <!-- Preloaded local web font (Inter) -->
-    <link rel="preload" href="{{ asset('assets/fonts/InterVariable.woff2') }}" as="font" type="font/woff2" crossorigin>
+
 
     <!-- Font icons -->
     <link rel="preload" href="{{ asset('assets/icons/cartzilla-icons.woff2') }}" as="font" type="font/woff2" crossorigin>
@@ -44,7 +43,9 @@
     @stack('styles')
 </head>
 <body>
+    @include('partials.menu-offcanvas')
 
+    @include('partials.top-bar')
     <!-- Header -->
     @include('partials.header')
 
@@ -54,7 +55,7 @@
     </main>
 
     <!-- Footer -->
-
+    @include('partials.footer')
 
     <!-- Back to top button -->
     <div class="floating-buttons position-fixed top-50 end-0 z-sticky me-3 me-xl-4 pb-4">

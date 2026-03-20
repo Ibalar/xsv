@@ -54,20 +54,19 @@ final class ProductIndexPage extends IndexPage
 
             Text::make('Артикул', 'sku'),
 
-            Number::make('Остаток', 'stock')
-                ->sortable(),
+
 
             Switcher::make('Активен', 'is_active')
                 ->sortable(),
 
             Switcher::make('Хит', 'is_featured')
+                ->updateOnPreview()
                 ->sortable(),
 
             Switcher::make('Новинка', 'is_new')
+                ->updateOnPreview()
                 ->sortable(),
 
-            Number::make('Просмотры', 'views')
-                ->sortable(),
         ];
     }
 
