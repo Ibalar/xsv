@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\ProductAttributeValue\Pages;
 
+use App\MoonShine\Resources\AttributeResource\AttributeResource;
 use App\MoonShine\Resources\AttributeValueResource\AttributeValueResource;
+use Illuminate\Database\Eloquent\Builder;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\Contracts\UI\ComponentContract;
@@ -33,10 +35,22 @@ class ProductAttributeValueFormPage extends FormPage
             Box::make([
                 ID::make(),
                 BelongsTo::make(
+                    'Атрибут',
+                    'attribute',
+                    resource: AttributeResource::class
+                )
+                    ->reactive()
+                    ->required(),
+
+                BelongsTo::make(
                     'Значение',
                     'attributeValue',
                     resource: AttributeValueResource::class
                 )
+                    ->reactive()
+                    ->valuesQuery(static function (Builder $query, FieldContract $field): Builder {
+                        return $query->where('attribute_id', $field->getReactiveValue('attribute_id'));
+                    })
                     ->searchable()
                     ->required(),
             ]),

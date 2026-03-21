@@ -26,6 +26,17 @@ class ProductAttributeValue extends Model
         ];
     }
 
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::saving(static function (self $item) {
+            if ($item->attributeValue && empty($item->value)) {
+                $item->value = $item->attributeValue->value;
+            }
+        });
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
