@@ -10,7 +10,7 @@ class ProductController extends Controller
     public function show(string $slug)
     {
         // Загружаем продукт с атрибутами
-        $product = Product::with(['productAttributeValues.attribute'])
+        $product = Product::with(['productAttributeValues.attributeValue.attribute'])
             ->active()
             ->where('slug', $slug)
             ->firstOrFail();
@@ -45,8 +45,8 @@ class ProductController extends Controller
 
         // Группировка атрибутов
         $attributes = $product->productAttributeValues
-            ->filter(fn($pav) => $pav->attribute) // убираем пустые
-            ->groupBy(fn($pav) => $pav->attribute->name);
+            ->filter(fn($pav) => $pav->attributeValue && $pav->attributeValue->attribute) // убираем пустые
+            ->groupBy(fn($pav) => $pav->attributeValue->attribute->name);
 
         return view('products.show', compact('product', 'images', 'relatedProducts', 'attributes'));
     }
