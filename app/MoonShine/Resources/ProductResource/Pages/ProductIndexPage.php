@@ -204,9 +204,10 @@ final class ProductIndexPage extends IndexPage
         }
 
         $attributeIds = ProductAttributeValue::query()
+            ->join('attribute_values', 'product_attribute_values.attribute_value_id', '=', 'attribute_values.id')
             ->whereIn('product_id', $productIds)
             ->distinct()
-            ->pluck('attribute_id')
+            ->pluck('attribute_values.attribute_id')
             ->filter()
             ->values();
 
@@ -227,7 +228,8 @@ final class ProductIndexPage extends IndexPage
     protected function getAttributeValues(Attribute $attribute, array $categoryIds = []): array
     {
         $query = ProductAttributeValue::query()
-            ->where('attribute_id', $attribute->id);
+            ->join('attribute_values', 'product_attribute_values.attribute_value_id', '=', 'attribute_values.id')
+            ->where('attribute_values.attribute_id', $attribute->id);
 
         if (! empty($categoryIds)) {
             $productIds = Product::query()
@@ -275,7 +277,9 @@ final class ProductIndexPage extends IndexPage
                 $values = is_array($value) ? $value : [$value];
 
                 return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $values): void {
-                    $q->where('attribute_id', $attribute->id)
+                    $q->whereHas('attributeValue', function (Builder $aq) use ($attribute) {
+                        $aq->where('attribute_id', $attribute->id);
+                    })
                         ->whereIn('value', $values);
                 });
             });
@@ -309,7 +313,9 @@ final class ProductIndexPage extends IndexPage
                 }
 
                 return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $value): void {
-                    $q->where('attribute_id', $attribute->id)
+                    $q->whereHas('attributeValue', function (Builder $aq) use ($attribute) {
+                        $aq->where('attribute_id', $attribute->id);
+                    })
                         ->where('value', $value === '1' ? '1' : '0');
                 });
             });
@@ -325,7 +331,9 @@ final class ProductIndexPage extends IndexPage
                 }
 
                 return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $value): void {
-                    $q->where('attribute_id', $attribute->id)
+                    $q->whereHas('attributeValue', function (Builder $aq) use ($attribute) {
+                        $aq->where('attribute_id', $attribute->id);
+                    })
                         ->where('value', $value);
                 });
             });
@@ -341,7 +349,9 @@ final class ProductIndexPage extends IndexPage
                 }
 
                 return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $value): void {
-                    $q->where('attribute_id', $attribute->id)
+                    $q->whereHas('attributeValue', function (Builder $aq) use ($attribute) {
+                        $aq->where('attribute_id', $attribute->id);
+                    })
                         ->where('value', 'LIKE', "%{$value}%");
                 });
             });

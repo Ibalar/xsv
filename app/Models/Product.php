@@ -131,13 +131,6 @@ class Product extends Model
             ->withTimestamps();
     }
 
-    public function attributes(): BelongsToMany
-    {
-        return $this->belongsToMany(Attribute::class, 'product_attribute_values', 'product_id', 'attribute_id')
-            ->withPivot('value')
-            ->withTimestamps();
-    }
-
     public function leadRequests(): HasMany
     {
         return $this->hasMany(LeadRequest::class);
