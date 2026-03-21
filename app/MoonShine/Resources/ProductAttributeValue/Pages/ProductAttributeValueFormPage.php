@@ -35,22 +35,11 @@ class ProductAttributeValueFormPage extends FormPage
             Box::make([
                 ID::make(),
                 BelongsTo::make(
-                    'Атрибут',
-                    'attribute',
-                    resource: AttributeResource::class
-                )
-                    ->reactive()
-                    ->required(),
-
-                BelongsTo::make(
                     'Значение',
                     'attributeValue',
                     resource: AttributeValueResource::class
                 )
                     ->reactive()
-                    ->valuesQuery(static function (Builder $query, FieldContract $field): Builder {
-                        return $query->where('attribute_id', $field->getReactiveValue('attribute_id'));
-                    })
                     ->searchable()
                     ->required(),
             ]),

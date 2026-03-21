@@ -35,6 +35,7 @@ use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use MoonShine\UI\Fields\Textarea;
+use MoonShine\Support\AlpineJs;
 
 /**
  * @extends FormPage<ProductResource, Product>
@@ -216,7 +217,7 @@ final class ProductFormPage extends FormPage
             'seo_h1' => 'nullable',
             'seo_description' => 'nullable',
             'productAttributeValues' => 'nullable|array',
-            'productAttributeValues.*.attribute_id' => 'required_with:productAttributeValues.*|exists:attributes,id',
+            'productAttributeValues.*._attribute_id' => 'required_with:productAttributeValues.*|exists:attributes,id',
             'productAttributeValues.*.attribute_value_id' => 'required_with:productAttributeValues.*|exists:attribute_values,id',
         ];
     }
@@ -229,6 +230,38 @@ final class ProductFormPage extends FormPage
             resource: ProductAttributeValueResource::class
         )
             ->creatable()
-            ->removable();
+            ->removable()
+            ->fields([
+                Select::make('Атрибут', '_attribute_id')
+                    ->options(Attribute::query()->active()->ordered()->pluck('name', 'id')->toArray())
+                    ->reactive()
+                    ->required()
+                    ->afterFill(function (Select $field, DataWrapperContract $data) {
+                        // Set the attribute select value from the related attributeValue
+                        if ($data->attributeValue && $data->attributeValue->attribute) {
+                            $field->setValue($data->attributeValue->attribute_id);
+                        }
+                    }),
+
+                BelongsTo::make(
+                    'Значение',
+                    'attributeValue',
+                    resource: AttributeValueResource::class
+                )
+                    ->reactive()
+                    ->valuesQuery(static function (Builder $query, FieldContract $field): Builder {
+                        // Filter attribute values by the selected attribute
+                        $attributeId = $field->getReactiveValue('_attribute_id');
+
+                        if ($attributeId) {
+                            return $query->where('attribute_id', $attributeId);
+                        }
+
+                        return $query;
+                    })
+                    ->searchable()
+                    ->required()
+                    ->with('attribute'),
+            ]);
     }
 }

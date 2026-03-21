@@ -131,52 +131,6 @@ class Product extends Model
             ->withTimestamps();
     }
 
-    public function syncAttributeValues(): void
-    {
-        if (! $this->exists) {
-            return;
-        }
-
-        $data = request()->input('attributes', []);
-
-        if (empty($data)) {
-            $this->productAttributeValues()->delete();
-
-            return;
-        }
-
-        // Delete existing product attribute values
-        $this->productAttributeValues()->delete();
-
-        // Create new entries from Repeater data
-        foreach ($data as $row) {
-            $attributeId = $row['attribute_id'] ?? null;
-            $valueIds = $row['value_ids'] ?? [];
-
-            if (empty($attributeId) || empty($valueIds)) {
-                continue;
-            }
-
-            foreach ($valueIds as $valueId) {
-                if (empty($valueId)) {
-                    continue;
-                }
-
-                $attributeValue = AttributeValue::find($valueId);
-
-                if (! $attributeValue) {
-                    continue;
-                }
-
-                $this->productAttributeValues()->create([
-                    'attribute_id' => $attributeId,
-                    'attribute_value_id' => $valueId,
-                    'value' => $attributeValue->value,
-                ]);
-            }
-        }
-    }
-
     public function attributes(): BelongsToMany
     {
         return $this->belongsToMany(Attribute::class, 'product_attribute_values', 'product_id', 'attribute_id')

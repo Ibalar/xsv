@@ -12,7 +12,6 @@ class ProductAttributeValue extends Model
 
     protected $fillable = [
         'product_id',
-        'attribute_id',
         'attribute_value_id',
         'value',
     ];
@@ -21,7 +20,6 @@ class ProductAttributeValue extends Model
     {
         return [
             'product_id' => 'integer',
-            'attribute_id' => 'integer',
             'attribute_value_id' => 'integer',
         ];
     }
@@ -35,6 +33,13 @@ class ProductAttributeValue extends Model
                 $item->value = $item->attributeValue->value;
             }
         });
+
+        static::saved(static function (self $item) {
+            // Update the attribute_id column in the database to maintain the relationship
+            if ($item->attributeValue) {
+                $item->update(['attribute_id' => $item->attributeValue->attribute_id]);
+            }
+        });
     }
 
     public function product(): BelongsTo
@@ -42,13 +47,13 @@ class ProductAttributeValue extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function attribute(): BelongsTo
-    {
-        return $this->belongsTo(Attribute::class);
-    }
-
     public function attributeValue(): BelongsTo
     {
         return $this->belongsTo(AttributeValue::class);
+    }
+
+    public function attribute(): Attribute
+    {
+        return $this->attributeValue->attribute ?? new Attribute();
     }
 }
