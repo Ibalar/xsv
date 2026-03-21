@@ -237,9 +237,14 @@ final class ProductFormPage extends FormPage
                     ->reactive()
                     ->required()
                     ->afterFill(function (Select $field, DataWrapperContract $data) {
-                        // Set the attribute select value from the related attributeValue
-                        if ($data->attributeValue && $data->attributeValue->attribute) {
-                            $field->setValue($data->attributeValue->attribute_id);
+                        // Use getOriginal() to safely access the original attribute_value_id
+                        $original = $data->getOriginal();
+                        if (!empty($original['attribute_value_id'])) {
+                            // Load the attributeValue relationship to get the attribute_id
+                            $data->load('attributeValue.attribute');
+                            if ($data->attributeValue && $data->attributeValue->attribute) {
+                                $field->setValue($data->attributeValue->attribute->id);
+                            }
                         }
                     }),
 
@@ -260,8 +265,7 @@ final class ProductFormPage extends FormPage
                         return $query;
                     })
                     ->searchable()
-                    ->required()
-                    ->with('attribute'),
+                    ->required(),
             ]);
     }
 }

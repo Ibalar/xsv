@@ -33,13 +33,6 @@ class ProductAttributeValue extends Model
                 $item->value = $item->attributeValue->value;
             }
         });
-
-        static::saved(static function (self $item) {
-            // Update the attribute_id column in the database to maintain the relationship
-            if ($item->attributeValue) {
-                $item->update(['attribute_id' => $item->attributeValue->attribute_id]);
-            }
-        });
     }
 
     public function product(): BelongsTo
