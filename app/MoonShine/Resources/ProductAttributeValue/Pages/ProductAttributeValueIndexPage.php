@@ -34,7 +34,12 @@ class ProductAttributeValueIndexPage extends IndexPage
     {
         return [
             ID::make(),
-            Text::make('Атрибут', 'attributeValue.attribute.name'),
+            Text::make('Атрибут', function (mixed $data): string {
+                if (!$data->relationLoaded('attributeValue') && !$data->relationLoaded('attributeValue.attribute')) {
+                    return '-';
+                }
+                return $data->attributeValue?->attribute?->name ?? '-';
+            }),
             BelongsTo::make(
                 'Значение',
                 'attributeValue',
