@@ -7233,6 +7233,9 @@ fieldset:disabled .btn {
 .top-0 {
     top: 0 !important;
 }
+.top-40 {
+    top: 40% !important;
+}
 .top-50 {
     top: 50% !important;
 }

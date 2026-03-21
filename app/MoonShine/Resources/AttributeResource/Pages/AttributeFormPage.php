@@ -35,11 +35,21 @@ final class AttributeFormPage extends FormPage
                 ID::make(),
 
                 Text::make('Название', 'name')
+                    ->when(
+                        fn() => $this->getResource()->isCreateFormPage(),
+                        fn(Text $field) => $field->reactive(),
+                        fn(Text $field) => $field
+                    )
                     ->required(),
 
                 Slug::make('Slug', 'slug')
-                    ->from('name')
-                    ->required(),
+                    ->unique()
+                    ->locked()
+                    ->when(
+                        fn() => $this->getResource()->isCreateFormPage(),
+                        fn(Slug $field) => $field->from('name')->live(),
+                        fn(Slug $field) => $field->readonly()
+                    ),
 
                 Select::make('Тип', 'type')
                     ->options(Attribute::getTypes())
@@ -56,15 +66,12 @@ final class AttributeFormPage extends FormPage
                     ->default(0),
             ]),
 
-            Box::make('Значения', [
-                HasMany::make(
-                    'Значения',
-                    'attributeValues',
-                    resource: AttributeValueResource::class,
-                )
-                    ->creatable()
-                    ->removable(),
-            ]),
+            HasMany::make(
+                'Значения',
+                'attributeValues',
+                resource: AttributeValueResource::class,
+            )
+                ->creatable(),
         ];
     }
 

@@ -67,5 +67,24 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('menuColumns', $columns);
         });
+
+        View::composer('*', function ($view) {
+            if (isset($view->product)) {
+                $product = $view->product;
+                $items = ['Главная' => route('home')];
+
+                if ($product->category) {
+                    $categories = $product->category->getAncestorsAndSelf();
+
+                    foreach ($categories as $cat) {
+                        $items[$cat->name] = route('catalog.show', $cat->slug);
+                    }
+                }
+
+                $items[$product->name] = null;
+
+                $view->with('breadcrumbs', $items);
+            }
+        });
     }
 }

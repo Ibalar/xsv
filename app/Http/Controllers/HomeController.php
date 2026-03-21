@@ -12,10 +12,27 @@ class HomeController extends Controller
         // Получаем популярные товары
         $featuredProducts = Product::query()
             ->where('is_featured', true)
-            ->with('category') // если нужно
-            ->take(12)         // количество слайдов, можно менять
+            ->where('in_stock', true)
+            ->with('category')
+            ->take(12)
             ->get();
 
-        return view('home', compact('featuredProducts'));
+        $newProducts = Product::query()
+            ->where('is_new', true)
+            ->where('in_stock', true)
+            ->where('is_active', true)
+            ->with('category')
+            ->take(12)
+            ->get();
+
+        $inStockProducts = Product::query()
+            ->where('is_active', true)
+            ->where('in_stock', true)
+            ->with('category')
+            ->latest()
+            ->take(8)
+            ->get();
+
+        return view('home', compact('featuredProducts', 'newProducts', 'inStockProducts'));
     }
 }

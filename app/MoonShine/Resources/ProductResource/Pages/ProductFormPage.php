@@ -7,6 +7,7 @@ namespace App\MoonShine\Resources\ProductResource\Pages;
 use App\Models\Attribute;
 use App\Models\AttributeValue;
 use App\Models\Product;
+use App\MoonShine\Resources\ProductAttributeValue\ProductAttributeValueResource;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
@@ -153,8 +154,16 @@ final class ProductFormPage extends FormPage
 
                     Tab::make('Контент', [
                         Image::make('Изображение', 'image')
+                            ->disk(moonshineConfig()->getDisk())
+                            ->keepOriginalFileName()
+                            ->dir('products')
+                            ->allowedExtensions(['jpg', 'png', 'jpeg', 'gif', 'webp'])
+                            ->removable(),
+
+                        Image::make('Галерея', 'gallery')
                             ->multiple()
                             ->disk(moonshineConfig()->getDisk())
+                            ->keepOriginalFileName()
                             ->dir('products')
                             ->allowedExtensions(['jpg', 'png', 'jpeg', 'gif', 'webp'])
                             ->removable(),
@@ -165,9 +174,9 @@ final class ProductFormPage extends FormPage
                     ]),
 
                     Tab::make('Атрибуты', [
-                        Box::make('Атрибуты товара', [
+
                             $this->getAttributesField(),
-                        ]),
+
                     ]),
 
                     Tab::make('SEO', [
@@ -217,19 +226,15 @@ final class ProductFormPage extends FormPage
         return RelationRepeater::make(
             'Атрибуты',
             'productAttributeValues',
-            resource: AttributeValueResource::class
+            resource: ProductAttributeValueResource::class // ✅ ВАЖНО
         )
             ->fields([
-                Select::make('Атрибут', 'attribute_id')
-                    ->options(Attribute::active()->pluck('name', 'id')->toArray())
-                    ->required()
+                BelongsTo::make(
+                    'Значение',
+                    'attributeValue',
+                    resource: AttributeValueResource::class
+                )
                     ->searchable()
-                    ->selectCreatable(AttributeResource::class, true, false),
-
-                Select::make('Значение', 'attribute_value_id')
-                    ->options(AttributeValue::pluck('value', 'id')->toArray()) // ВСЕ значения
-                    ->searchable()
-                    ->selectCreatable(AttributeValueResource::class, true, false),
             ])
             ->creatable()
             ->removable();

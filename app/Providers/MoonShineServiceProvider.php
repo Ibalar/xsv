@@ -16,6 +16,7 @@ use App\MoonShine\Resources\CategoryResource\CategoryResource;
 use App\MoonShine\Resources\CountryResource\CountryResource;
 use App\MoonShine\Resources\ProductResource\ProductResource;
 use App\MoonShine\Resources\SupplierResource\SupplierResource;
+use App\MoonShine\Resources\ProductAttributeValue\ProductAttributeValueResource;
 
 class MoonShineServiceProvider extends ServiceProvider
 {
@@ -34,6 +35,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 ProductResource::class,
                 AttributeResource::class,
                 AttributeValueResource::class,
+                ProductAttributeValueResource::class,
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),

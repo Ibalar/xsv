@@ -183,4 +183,21 @@ class Category extends Model
     {
         return $this->children()->with('childrenRecursive');
     }
+
+    /**
+     * Возвращает массив всех родителей до корня (от корня к текущей категории)
+     */
+    public function getAncestorsAndSelf(): array
+    {
+        $categories = [];
+        $category = $this;
+
+        // собираем всех родителей
+        while ($category) {
+            array_unshift($categories, $category); // вставляем в начало
+            $category = $category->parent;
+        }
+
+        return $categories;
+    }
 }

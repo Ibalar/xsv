@@ -270,4 +270,9 @@ class Product extends Model
     {
         return $this->seo_description ?: $this->short_description;
     }
+
+    public function getNameAttribute($value): string
+    {
+        return html_entity_decode($value);
+    }
 }
