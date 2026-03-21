@@ -30,11 +30,7 @@ class ProductAttributeValueDetailPage extends DetailPage
     {
         return [
             ID::make(),
-            BelongsTo::make(
-                'Атрибут',
-                'attribute',
-                resource: AttributeResource::class
-            ),
+            Text::make('Атрибут', 'attributeValue.attribute.name'),
             BelongsTo::make(
                 'Значение',
                 'attributeValue',

@@ -22,7 +22,9 @@ class ProductAttributeValueResource extends ModelResource
 
     protected string $title = 'Атрибуты товара';
 
-    protected string $column = 'name';
+    protected string $column = 'id';
+
+    protected array $with = ['attributeValue.attribute'];
 
     /**
      * @return list<class-string<PageContract>>
