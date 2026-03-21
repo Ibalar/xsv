@@ -226,16 +226,8 @@ final class ProductFormPage extends FormPage
         return RelationRepeater::make(
             'Атрибуты',
             'productAttributeValues',
-            resource: ProductAttributeValueResource::class // ✅ ВАЖНО
+            resource: ProductAttributeValueResource::class
         )
-            ->fields([
-                BelongsTo::make(
-                    'Значение',
-                    'attributeValue',
-                    resource: AttributeValueResource::class
-                )
-                    ->searchable()
-            ])
             ->creatable()
             ->removable();
     }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\ProductResource;
 
-use App\Models\AttributeValue;
 use App\Models\Product;
 use App\MoonShine\Resources\CategoryResource\CategoryResource;
 use App\MoonShine\Resources\ProductResource\Pages\ProductDetailPage;
@@ -61,41 +60,6 @@ class ProductResource extends ModelResource implements HasImportExportContract
             'name',
             'sku',
         ];
-    }
-
-    protected function afterSave(DataWrapperContract $item, FieldsContract $fields): DataWrapperContract
-    {
-        $product = $item->getOriginal();
-
-        $attributes = request()->input('attributes', []);
-
-        $sync = [];
-
-        foreach ($attributes as $attributeRow) {
-            if (!empty($attributeRow['attribute_id']) && !empty($attributeRow['value_ids'])) {
-                foreach ($attributeRow['value_ids'] as $valueId) {
-                    $attributeValue = AttributeValue::find($valueId);
-                    if ($attributeValue) {
-                        $sync[$valueId] = [
-                            'attribute_id' => $attributeRow['attribute_id'],
-                            'value' => $attributeValue->value,
-                        ];
-                    }
-                }
-            }
-        }
-
-        $product->productAttributeValues()->delete();
-
-        foreach ($sync as $valueId => $pivotData) {
-            $product->productAttributeValues()->create([
-                'attribute_id' => $pivotData['attribute_id'],
-                'attribute_value_id' => $valueId,
-                'value' => $pivotData['value'],
-            ]);
-        }
-
-        return $item;
     }
 
     protected function importFields(): iterable

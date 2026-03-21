@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\ProductAttributeValue\Pages;
 
+use App\MoonShine\Resources\AttributeResource\AttributeResource;
+use App\MoonShine\Resources\AttributeValueResource\AttributeValueResource;
+use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Pages\Crud\DetailPage;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\UI\Components\Table\TableBuilder;
@@ -11,6 +14,7 @@ use MoonShine\Contracts\UI\FieldContract;
 use App\MoonShine\Resources\ProductAttributeValue\ProductAttributeValueResource;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Text;
 use Throwable;
 
 
@@ -26,6 +30,17 @@ class ProductAttributeValueDetailPage extends DetailPage
     {
         return [
             ID::make(),
+            BelongsTo::make(
+                'Атрибут',
+                'attribute',
+                resource: AttributeResource::class
+            ),
+            BelongsTo::make(
+                'Значение',
+                'attributeValue',
+                resource: AttributeValueResource::class
+            ),
+            Text::make('Доп. значение', 'value'),
         ];
     }
 
