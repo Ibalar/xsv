@@ -238,12 +238,12 @@ final class ProductFormPage extends FormPage
                     ->required()
                     ->afterFill(function (Select $field, DataWrapperContract $data) {
                         // Use getOriginal() to safely access the underlying model
-                        $model = $data->getOriginal();
-                        if (!empty($model['attribute_value_id'])) {
+                        $original = $data->getOriginal();
+                        if (!empty($original->attribute_value_id)) {
                             // Load the attributeValue relationship on the underlying model
-                            $model->load('attributeValue.attribute');
-                            if ($model->attributeValue && $model->attributeValue->attribute) {
-                                $field->setValue($model->attributeValue->attribute->id);
+                            $original->loadMissing('attributeValue.attribute');
+                            if ($original->attributeValue && $original->attributeValue->attribute) {
+                                $field->setValue($original->attributeValue->attribute->id);
                             }
                         }
                     }),
