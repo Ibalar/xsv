@@ -237,13 +237,13 @@ final class ProductFormPage extends FormPage
                     ->reactive()
                     ->required()
                     ->afterFill(function (Select $field, DataWrapperContract $data) {
-                        // Use getOriginal() to safely access the original attribute_value_id
-                        $original = $data->getOriginal();
-                        if (!empty($original['attribute_value_id'])) {
-                            // Load the attributeValue relationship to get the attribute_id
-                            $data->load('attributeValue.attribute');
-                            if ($data->attributeValue && $data->attributeValue->attribute) {
-                                $field->setValue($data->attributeValue->attribute->id);
+                        // Use getOriginal() to safely access the underlying model
+                        $model = $data->getOriginal();
+                        if (!empty($model['attribute_value_id'])) {
+                            // Load the attributeValue relationship on the underlying model
+                            $model->load('attributeValue.attribute');
+                            if ($model->attributeValue && $model->attributeValue->attribute) {
+                                $field->setValue($model->attributeValue->attribute->id);
                             }
                         }
                     }),
