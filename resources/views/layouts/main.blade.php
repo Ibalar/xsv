@@ -57,6 +57,19 @@
     <!-- Footer -->
     @include('partials.footer')
 
+    @isset($category)
+        <!-- Filter offcanvas toggle visible on screens < 992px -->
+        <button type="button"
+                class="fixed-bottom z-sticky w-100 btn btn-lg btn-dark border-0 border-top border-light border-opacity-10 rounded-0 pb-4 d-lg-none"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#filterSidebar"
+                aria-controls="filterSidebar"
+                data-bs-theme="light">
+            <i class="ci-filter fs-base me-2"></i>
+            Фильтр товаров
+        </button>
+    @endisset
+
     <!-- Back to top button -->
     <div class="floating-buttons position-fixed top-50 end-0 z-sticky me-3 me-xl-4 pb-4">
         <a class="btn-scroll-top btn btn-sm bg-body border-0 rounded-pill shadow animate-slide-end" href="#top">

@@ -10,6 +10,7 @@ use App\MoonShine\Resources\ProductAttributeValue\Pages\ProductAttributeValueInd
 use App\MoonShine\Resources\ProductAttributeValue\Pages\ProductAttributeValueFormPage;
 use App\MoonShine\Resources\ProductAttributeValue\Pages\ProductAttributeValueDetailPage;
 
+use Illuminate\Database\Query\Builder;
 use MoonShine\Laravel\Resources\ModelResource;
 use MoonShine\Contracts\Core\PageContract;
 

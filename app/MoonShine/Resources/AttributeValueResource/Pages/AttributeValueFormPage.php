@@ -11,6 +11,7 @@ use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
+use MoonShine\Laravel\Fields\Slug;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Fields\ID;
@@ -37,7 +38,21 @@ final class AttributeValueFormPage extends FormPage
                 )->required()->searchable(),
 
                 Text::make('Значение', 'value')
+                    ->when(
+                        fn() => $this->getResource()->isCreateFormPage(),
+                        fn(Text $field) => $field->reactive(),
+                        fn(Text $field) => $field
+                    )
                     ->required(),
+
+                Slug::make('Slug', 'slug')
+                    ->unique()
+                    ->locked()
+                    ->when(
+                        fn() => $this->getResource()->isCreateFormPage(),
+                        fn(Slug $field) => $field->from('value')->live(),
+                        fn(Slug $field) => $field->readonly()
+                    ),
             ]),
         ];
     }

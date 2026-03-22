@@ -9,8 +9,10 @@ class ProductController extends Controller
 {
     public function show(string $slug)
     {
-        // Загружаем продукт с атрибутами
-        $product = Product::with(['productAttributeValues.attributeValue.attribute'])
+        $product = Product::with([
+            'category',
+            'productAttributeValues.attributeValue.attribute'
+        ])
             ->active()
             ->where('slug', $slug)
             ->firstOrFail();
@@ -19,33 +21,47 @@ class ProductController extends Controller
 
         // Галерея
         $images = [];
+
         if ($product->image) {
-            $images[] = $product->image;
+            $mainImage = is_array($product->image)
+                ? $product->image[0] ?? null
+                : $product->image;
+
+            if ($mainImage) {
+                $images[] = $mainImage;
+            }
         }
+
         if (!empty($product->gallery) && is_array($product->gallery)) {
             $images = array_merge($images, $product->gallery);
         }
 
-        // Связанные товары
+        // Категории
         $categoryIds = [];
+
         if ($product->category) {
             $ancestors = $product->category->getAncestorsAndSelf();
+
             foreach ($ancestors as $cat) {
                 $categoryIds = array_merge($categoryIds, $cat->getAllDescendantIds());
             }
+
             $categoryIds = array_unique($categoryIds);
         }
 
+        // Связанные товары
         $relatedProducts = Product::active()
-            ->whereIn('category_id', $categoryIds)
+            ->when(!empty($categoryIds), function ($query) use ($categoryIds) {
+                $query->whereIn('category_id', $categoryIds);
+            })
             ->where('id', '!=', $product->id)
             ->inRandomOrder()
             ->take(2)
             ->get();
 
-        // Группировка атрибутов
+        // Атрибуты
         $attributes = $product->productAttributeValues
-            ->filter(fn($pav) => $pav->attributeValue && $pav->attributeValue->attribute) // убираем пустые
+            ->filter(fn($pav) => $pav->attributeValue?->attribute)
             ->groupBy(fn($pav) => $pav->attributeValue->attribute->name);
 
         return view('products.show', compact('product', 'images', 'relatedProducts', 'attributes'));

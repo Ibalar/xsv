@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 
@@ -69,22 +70,59 @@ class AppServiceProvider extends ServiceProvider
         });
 
         View::composer('*', function ($view) {
+
+            $items = [];
+
+            // Если есть товар на странице
             if (isset($view->product)) {
                 $product = $view->product;
-                $items = ['Главная' => route('home')];
 
+                // Главная
+                $items[] = [
+                    'title' => 'Главная',
+                    'url' => route('home'),
+                ];
+
+                // Категории
                 if ($product->category) {
                     $categories = $product->category->getAncestorsAndSelf();
 
                     foreach ($categories as $cat) {
-                        $items[$cat->name] = route('catalog.show', $cat->slug);
+                        $items[] = [
+                            'title' => $cat->name,
+                            'url' => route('catalog.show', $cat->getFullPath()), // полный путь для SEO
+                        ];
                     }
                 }
 
-                $items[$product->name] = null;
+                // Текущий товар
+                $items[] = [
+                    'title' => $product->name,
+                    'url' => null,
+                ];
 
-                $view->with('breadcrumbs', $items);
             }
+
+            // Если есть категория на странице (например, раздел каталога)
+            if (isset($view->category)) {
+                $category = $view->category;
+
+                // Главная
+                $items[] = [
+                    'title' => 'Главная',
+                    'url' => route('home'),
+                ];
+
+                // Все родители + текущая категория
+                foreach ($category->getAncestorsAndSelf() as $cat) {
+                    $items[] = [
+                        'title' => $cat->name,
+                        'url' => route('catalog.show', $cat->getFullPath()),
+                    ];
+                }
+            }
+
+            $view->with('breadcrumbs', $items);
         });
     }
 }

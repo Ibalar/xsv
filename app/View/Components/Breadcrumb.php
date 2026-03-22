@@ -11,16 +11,13 @@ class Breadcrumb extends Component
     public array $items;
 
     /**
-     * @param array $items Массив ['Название' => 'Ссылка', ...], последний элемент без ссылки
+     * @param array $items [['title' => 'Название', 'url' => 'Ссылка'], ...]
      */
     public function __construct(array $items = [])
     {
         $this->items = $items;
     }
 
-    /**
-     * Get the view / contents that represent the component.
-     */
     public function render(): View|Closure|string
     {
         return view('components.breadcrumb');

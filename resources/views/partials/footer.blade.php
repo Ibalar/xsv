@@ -58,14 +58,19 @@
                         </div>
                         <hr class="d-sm-none my-0">
                     </div>
-
+                </div>
+                <div class="col-12">
+                    <p class="text-body fs-sm text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">Уважаемые посетители!
+                        Данный сайт является каталогом товаров питомника растений и не является интернет-магазином.
+                        Размещенная информация (включая цены, характеристики, изображения) представлена для ознакомления и не считается офертой (ст. 407 Гражданского кодекса Республики Беларусь).
+                        Для оформления заявки и уточнения актуальных условий просим связываться с нашими менеджерами.</p>
                 </div>
             </div>
         </div>
 
         <!-- Copyright + Payment methods -->
         <div class="d-md-flex align-items-center border-top py-4">
-            <p class="text-body fs-xs text-center text-md-start mb-0 me-4 order-md-1">&copy; 2021-2026 Все права защищены. Разработка сайта <span class="animate-underline"><a class="animate-target text-dark-emphasis fw-medium text-decoration-none" href="https://webart.by/" target="_blank" rel="noreferrer">WebArt.BY</a></span></p>
+            <p class="text-body fs-xs text-center text-md-start mb-0 me-4 order-md-1">&copy; 2021-{{ date('Y') }} Все права защищены. Разработка сайта <span class="animate-underline"><a class="animate-target text-dark-emphasis fw-medium text-decoration-none" href="https://webart.by/" target="_blank" rel="noreferrer">WebArt.BY</a></span></p>
         </div>
     </div>
 </footer>

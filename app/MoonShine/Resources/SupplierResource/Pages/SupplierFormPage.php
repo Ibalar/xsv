@@ -28,8 +28,21 @@ final class SupplierFormPage extends FormPage
         return [
             Box::make('Основное', [
                 ID::make(),
-                Text::make('Название', 'name')->required(),
-                Slug::make('Slug', 'slug')->from('name')->required(),
+                Text::make('Название', 'name')
+                    ->when(
+                        fn() => $this->getResource()->isCreateFormPage(),
+                        fn(Text $field) => $field->reactive(),
+                        fn(Text $field) => $field
+                    )
+                    ->required(),
+                Slug::make('Slug', 'slug')
+                    ->unique()
+                    ->locked()
+                    ->when(
+                        fn() => $this->getResource()->isCreateFormPage(),
+                        fn(Slug $field) => $field->from('name')->live(),
+                        fn(Slug $field) => $field->readonly()
+                    ),
                 Textarea::make('Описание', 'description'),
                 Switcher::make('Активен', 'is_active')->default(true),
             ]),

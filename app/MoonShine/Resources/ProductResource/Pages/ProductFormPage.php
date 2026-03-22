@@ -176,7 +176,32 @@ final class ProductFormPage extends FormPage
 
                     Tab::make('Атрибуты', [
 
-                            $this->getAttributesField(),
+                        RelationRepeater::make(
+                            'Атрибуты',
+                            'productAttributeValues', // связь в Product
+                            resource: ProductAttributeValueResource::class
+                        )
+                            ->fields([
+                                BelongsTo::make(
+                                    'Атрибут',
+                                    'attribute',
+                                    resource: AttributeResource::class
+                                )
+                                    ->creatable()
+                                    ->searchable()
+                                    ->required(),
+
+                                BelongsTo::make(
+                                    'Значение',
+                                    'attributeValue',
+                                    resource: AttributeValueResource::class
+                                )
+                                    ->creatable()
+                                    ->searchable()
+                                    ->required()
+                            ])
+                            ->creatable()
+                            ->removable(),
 
                     ]),
 
@@ -216,56 +241,8 @@ final class ProductFormPage extends FormPage
             'seo_title' => 'nullable',
             'seo_h1' => 'nullable',
             'seo_description' => 'nullable',
-            'productAttributeValues' => 'nullable|array',
-            'productAttributeValues.*._attribute_id' => 'required_with:productAttributeValues.*|exists:attributes,id',
-            'productAttributeValues.*.attribute_value_id' => 'required_with:productAttributeValues.*|exists:attribute_values,id',
         ];
     }
 
-    protected function getAttributesField(): RelationRepeater
-    {
-        return RelationRepeater::make(
-            'Атрибуты',
-            'productAttributeValues',
-            resource: ProductAttributeValueResource::class
-        )
-            ->creatable()
-            ->removable()
-            ->fields([
-                Select::make('Атрибут', '_attribute_id')
-                    ->options(Attribute::query()->active()->ordered()->pluck('name', 'id')->toArray())
-                    ->reactive()
-                    ->required()
-                    ->afterFill(function (Select $field, DataWrapperContract $data) {
-                        // Use getOriginal() to safely access the underlying model
-                        $original = $data->getOriginal();
-                        if (!empty($original->attribute_value_id)) {
-                            // Load the attributeValue relationship on the underlying model
-                            $original->loadMissing('attributeValue.attribute');
-                            if ($original->attributeValue && $original->attributeValue->attribute) {
-                                $field->setValue($original->attributeValue->attribute->id);
-                            }
-                        }
-                    }),
 
-                BelongsTo::make(
-                    'Значение',
-                    'attributeValue',
-                    resource: AttributeValueResource::class
-                )
-                    ->reactive()
-                    ->valuesQuery(static function (Builder $query, FieldContract $field): Builder {
-                        // Filter attribute values by the selected attribute
-                        $attributeId = $field->getReactiveValue('_attribute_id');
-
-                        if ($attributeId) {
-                            return $query->where('attribute_id', $attributeId);
-                        }
-
-                        return $query;
-                    })
-                    ->searchable()
-                    ->required(),
-            ]);
-    }
 }

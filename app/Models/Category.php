@@ -123,17 +123,26 @@ class Category extends Model
     {
         $breadcrumbs = [];
 
-        foreach ($this->ancestors() as $ancestor) {
+        // Главная
+        $breadcrumbs[] = [
+            'name' => 'Главная',
+            'url' => route('home'),
+        ];
+
+        // Каталог (если есть)
+        $breadcrumbs[] = [
+            'name' => 'Каталог',
+            'url' => route('catalog.index'),
+        ];
+
+        $categories = $this->getAncestorsAndSelf();
+
+        foreach ($categories as $category) {
             $breadcrumbs[] = [
-                'name' => $ancestor->name,
-                'url' => $ancestor->slug,
+                'name' => $category->name,
+                'url' => route('catalog.show', $category->getFullPath()),
             ];
         }
-
-        $breadcrumbs[] = [
-            'name' => $this->name,
-            'url' => $this->slug,
-        ];
 
         return $breadcrumbs;
     }
@@ -200,4 +209,5 @@ class Category extends Model
 
         return $categories;
     }
+
 }

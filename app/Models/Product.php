@@ -222,4 +222,15 @@ class Product extends Model
     {
         return html_entity_decode($value);
     }
+
+    protected static function booted(): void
+    {
+        static::saving(function ($product) {
+            if ($product->image) {
+                // Обрезаем путь до имени файла
+                $product->image = basename($product->image);
+            }
+        });
+    }
+
 }
