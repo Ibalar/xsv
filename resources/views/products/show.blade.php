@@ -181,7 +181,6 @@
                                                         <button type="button" class="btn btn-icon btn-sm btn-primary" data-decrement aria-label="Decrement quantity">
                                                             <i class="ci-minus fs-sm"></i>
                                                         </button>
-                                                        <input type="number" class="form-control form-control-sm bg-primary text-white w-100" value="0" min="0" readonly>
                                                         <button type="button" class="product-card-button btn btn-icon btn-sm btn-secondary ms-auto" data-increment aria-label="Increment quantity">
                                                             <span data-count-input-value></span>
                                                             <i class="ci-plus fs-sm"></i>
