@@ -1,8 +1,20 @@
-# План реализации системы заказов
+# План реализации упрощённой системы заказов
 
 ## Обзор
 
-Детальный план создания полноценной системы заказов для интернет-магазина на базе Laravel 12 + MoonShine v4.8.
+Детальный план создания упрощённой системы заказов для интернет-магазина на базе Laravel 12 + MoonShine v4.8.
+
+**Ключевые особенности:**
+- ✅ Список товаров (хранение в localStorage)
+- ✅ Быстрая заявка с товара
+- ✅ Оформление: имя + телефон + согласие
+- ✅ Telegram уведомления
+- ✅ MoonShine админка
+- ❌ Без скидок
+- ❌ Без купонов
+- ❌ Без доставки
+- ❌ Без онлайн-оплаты
+- ❌ Без регистрации пользователей
 
 ---
 
@@ -13,45 +25,28 @@
 
 **Поля:**
 - `id` - первичный ключ
-- `user_id` - ID пользователя (nullable для гостевых заказов)
 - `order_number` - уникальный номер заказа (формат: ORD-YYYYMMDD-XXXX)
 - `status` - статус заказа
 - `total_amount` - итоговая сумма (decimal 10,2)
-- `subtotal` - сумма товаров без скидки (decimal 10,2)
-- `discount_amount` - сумма скидки (decimal 10,2, nullable)
-- `coupon_code` - код купона (string, nullable)
 - `customer_name` - имя клиента
-- `customer_email` - email клиента
 - `customer_phone` - телефон клиента
-- `shipping_address` - адрес доставки (json или отдельные поля)
-- `billing_address` - адрес для оплаты (json или отдельные поля)
-- `shipping_method` - метод доставки
-- `shipping_cost` - стоимость доставки (decimal 10,2)
-- `payment_method` - метод оплаты
-- `payment_status` - статус оплаты
-- `paid_at` - дата оплаты (datetime, nullable)
-- `notes` - заметки клиента
-- `admin_notes` - заметки администратора
-- `ip_address` - IP адрес клиента
-- `user_agent` - User Agent браузера
-- `telegram_sent` - отправлено ли уведомление в Telegram (boolean)
+- `consent` - согласие на обработку данных (boolean)
+- `product_id` - ID товара (для быстрой заявки, nullable)
+- `product_name` - название товара (на момент заказа)
+- `product_price` - цена товара (decimal 10,2, nullable)
+- `quantity` - количество (integer, default 1, nullable)
+- `notes` - заметки клиента (text, nullable)
+- `ip_address` - IP адрес клиента (string, nullable)
+- `user_agent` - User Agent браузера (text, nullable)
+- `telegram_sent` - отправлено ли уведомление в Telegram (boolean, default false)
 - `telegram_sent_at` - дата отправки уведомления (datetime, nullable)
 - `created_at` / `updated_at`
 
 **Статусы заказа:**
-- `pending` - Ожидает обработки
-- `confirmed` - Подтвержден
-- `processing` - В обработке
-- `shipped` - Отправлен
-- `delivered` - Доставлен
-- `cancelled` - Отменен
-- `refunded` - Возврат
-
-**Статусы оплаты:**
-- `pending` - Ожидает оплаты
-- `paid` - Оплачен
-- `failed` - Ошибка оплаты
-- `refunded` - Возвращен
+- `pending` - Новая заявка
+- `confirmed` - Подтверждена
+- `completed` - Выполнена
+- `cancelled` - Отменена
 
 ### 1.2. Миграция для таблицы `order_items`
 **Файл:** `database/migrations/YYYY_MM_DD_HHMMSS_create_order_items_table.php`
@@ -59,89 +54,16 @@
 **Поля:**
 - `id` - первичный ключ
 - `order_id` - ID заказа (foreign key)
-- `product_id` - ID товара (foreign key)
+- `product_id` - ID товара (foreign key, nullable)
 - `product_name` - название товара (на момент заказа)
-- `product_sku` - артикул товара (на момент заказа)
-- `quantity` - количество
+- `product_sku` - артикул товара (string, nullable)
+- `quantity` - количество (integer)
 - `price` - цена за единицу (decimal 10,2)
 - `total_price` - общая цена (decimal 10,2)
-- `product_snapshot` - JSON с данными товара на момент заказа
+- `product_snapshot` - JSON с данными товара на момент заказа (json, nullable)
 - `created_at` / `updated_at`
 
-### 1.3. Миграция для таблицы `order_status_history`
-**Файл:** `database/migrations/YYYY_MM_DD_HHMMSS_create_order_status_history_table.php`
-
-**Поля:**
-- `id` - первичный ключ
-- `order_id` - ID заказа (foreign key)
-- `from_status` - предыдущий статус
-- `to_status` - новый статус
-- `comment` - комментарий
-- `user_id` - ID пользователя/админа, изменившего статус (nullable)
-- `created_at`
-
-### 1.4. Миграция для таблицы `carts`
-**Файл:** `database/migrations/YYYY_MM_DD_HHMMSS_create_carts_table.php`
-
-**Поля:**
-- `id` - первичный ключ
-- `user_id` - ID пользователя (nullable)
-- `session_id` - ID сессии для гостевой корзины (string)
-- `created_at` / `updated_at`
-
-### 1.5. Миграция для таблицы `cart_items`
-**Файл:** `database/migrations/YYYY_MM_DD_HHMMSS_create_cart_items_table.php`
-
-**Поля:**
-- `id` - первичный ключ
-- `cart_id` - ID корзины (foreign key)
-- `product_id` - ID товара (foreign key)
-- `quantity` - количество
-- `price` - цена на момент добавления (decimal 10,2)
-- `created_at` / `updated_at`
-
-### 1.6. Миграция для таблицы `coupons`
-**Файл:** `database/migrations/YYYY_MM_DD_HHMMSS_create_coupons_table.php`
-
-**Поля:**
-- `id` - первичный ключ
-- `code` - уникальный код купона
-- `type` - тип скидки (percentage/fixed)
-- `value` - значение скидки (decimal 10,2)
-- `min_order_amount` - минимальная сумма заказа (decimal 10,2, nullable)
-- `max_discount_amount` - максимальная сумма скидки (decimal 10,2, nullable)
-- `usage_limit` - лимит использования (integer, nullable)
-- `used_count` - количество использований (integer, default 0)
-- `valid_from` - дата начала действия (datetime, nullable)
-- `valid_until` - дата окончания действия (datetime, nullable)
-- `is_active` - активен ли (boolean)
-- `description` - описание
-- `created_at` / `updated_at`
-
-### 1.7. Миграция для таблицы `shipping_methods`
-**Файл:** `database/migrations/YYYY_MM_DD_HHMMSS_create_shipping_methods_table.php`
-
-**Поля:**
-- `id` - первичный ключ
-- `name` - название метода доставки
-- `description` - описание
-- `cost` - стоимость доставки (decimal 10,2)
-- `estimated_days` - ориентировочное количество дней (integer)
-- `is_active` - активен ли (boolean)
-- `sort_order` - порядок сортировки
-- `created_at` / `updated_at`
-
-### 1.8. Миграция для таблицы `payment_methods`
-**Файл:** `database/migrations/YYYY_MM_DD_HHMMSS_create_payment_methods_table.php`
-
-**Поля:**
-- `id` - первичный ключ
-- `name` - название метода оплаты
-- `description` - описание
-- `is_active` - активен ли (boolean)
-- `sort_order` - порядок сортировки
-- `settings` - настройки (json, nullable)
-- `created_at` / `updated_at`
+**Примечание:** Таблица order_items используется для будущих расширений, когда будут поддерживаться заказы с несколькими товарами. В базовой версии заказы создаются с одним товаром.
 
 ---
 
@@ -157,47 +79,36 @@
 **Константы статусов:**
 - `STATUS_PENDING = 'pending'`
 - `STATUS_CONFIRMED = 'confirmed'`
-- `STATUS_PROCESSING = 'processing'`
-- `STATUS_SHIPPED = 'shipped'`
-- `STATUS_DELIVERED = 'delivered'`
+- `STATUS_COMPLETED = 'completed'`
 - `STATUS_CANCELLED = 'cancelled'`
-- `STATUS_REFUNDED = 'refunded'`
-
-**Константы статусов оплаты:**
-- `PAYMENT_STATUS_PENDING = 'pending'`
-- `PAYMENT_STATUS_PAID = 'paid'`
-- `PAYMENT_STATUS_FAILED = 'failed'`
-- `PAYMENT_STATUS_REFUNDED = 'refunded'`
 
 **Fillable поля:**
 - Все поля кроме id, created_at, updated_at
 
 **Casts:**
-- `total_amount`, `subtotal`, `discount_amount`, `shipping_cost` → `decimal:2`
-- `paid_at`, `telegram_sent_at` → `datetime`
-- `shipping_address`, `billing_address`, `user_agent` → `array`
-- `telegram_sent` → `boolean`
+- `total_amount`, `product_price` → `decimal:2`
+- `telegram_sent_at` → `datetime`
+- `consent`, `telegram_sent` → `boolean`
+- `quantity` → `integer`
 
 **Отношения:**
-- `user()` - BelongsTo User
 - `items()` - HasMany OrderItem
-- `statusHistory()` - HasMany OrderStatusHistory
-- `coupon()` - BelongsTo Coupon (если купон применен)
+- `product()` - BelongsTo Product (если быстрой заявки)
 
 **Методы:**
 - `generateOrderNumber()` - генерация уникального номера заказа
 - `scopeByStatus($status)` - фильтр по статусу
-- `scopeByPaymentStatus($status)` - фильтр по статусу оплаты
+- `scopePending()` - новые заявки
+- `scopeNew()` - новые заявки (alias)
+- `scopeCompleted()` - выполненные
 - `getStatusLabel()` - получение названия статуса
-- `getPaymentStatusLabel()` - получение названия статуса оплаты
-- `markAsConfirmed()`, `markAsProcessing()`, etc. - методы смены статуса
-- `markAsPaid()` - отметить как оплаченный
-- `calculateTotal()` - пересчет итоговой суммы
-- `canBeCancelled()` - можно ли отменить заказ
-- `getCustomerName()`, `getCustomerEmail()`, `getCustomerPhone()` - получение данных клиента (из заказа или пользователя)
+- `markAsConfirmed()`, `markAsCompleted()`, `markAsCancelled()` - методы смены статуса
+- `isQuickOrder()` - является ли быстрой заявкой
+- `isBulkOrder()` - является ли заказом с несколькими товарами
 
 **Observers:**
-- Создание записи в `order_status_history` при изменении статуса
+- Автоматическая генерация order_number при создании
+- Отправка уведомления в Telegram при создании
 
 ### 2.2. Модель `OrderItem`
 **Файл:** `app/Models/OrderItem.php`
@@ -217,142 +128,32 @@
 **Методы:**
 - `calculateTotal()` - пересчет суммы
 
-### 2.3. Модель `OrderStatusHistory`
-**Файл:** `app/Models/OrderStatusHistory.php`
-
-**Fillable поля:**
-- `order_id`, `from_status`, `to_status`, `comment`, `user_id`
-
-**Отношения:**
-- `order()` - BelongsTo Order
-- `user()` - BelongsTo User/MoonShineUser
-
-### 2.4. Модель `Cart`
-**Файл:** `app/Models/Cart.php`
-
-**Fillable поля:**
-- `user_id`, `session_id`
-
-**Отношения:**
-- `user()` - BelongsTo User
-- `items()` - HasMany CartItem
-
-**Методы:**
-- `getTotal()` - получение итоговой суммы
-- `getTotalQuantity()` - получение общего количества товаров
-- `mergeWithCart(Cart $otherCart)` - объединение корзин
-- `clear()` - очистка корзины
-- `addItem($productId, $quantity)` - добавление товара
-- `updateItem($productId, $quantity)` - обновление количества
-- `removeItem($productId)` - удаление товара
-
-**Scopes:**
-- `scopeForUser($user)` - корзина пользователя
-- `scopeForSession($sessionId)` - корзина сессии
-
-### 2.5. Модель `CartItem`
-**Файл:** `app/Models/CartItem.php`
-
-**Fillable поля:**
-- `cart_id`, `product_id`, `quantity`, `price`
-
-**Casts:**
-- `price` → `decimal:2`
-- `quantity` → `integer`
-
-**Отношения:**
-- `cart()` - BelongsTo Cart
-- `product()` - BelongsTo Product
-
-**Методы:**
-- `getSubtotal()` - сумма позиции
-
-### 2.6. Модель `Coupon`
-**Файл:** `app/Models/Coupon.php`
-
-**Константы типов:**
-- `TYPE_PERCENTAGE = 'percentage'`
-- `TYPE_FIXED = 'fixed'`
-
-**Fillable поля:**
-- `code`, `type`, `value`, `min_order_amount`, `max_discount_amount`, `usage_limit`, `used_count`, `valid_from`, `valid_until`, `is_active`, `description`
-
-**Casts:**
-- `value`, `min_order_amount`, `max_discount_amount` → `decimal:2`
-- `usage_limit`, `used_count` → `integer`
-- `valid_from`, `valid_until` → `datetime`
-- `is_active` → `boolean`
-
-**Методы:**
-- `isValid()` - проверка валидности купона
-- `calculateDiscount($orderTotal)` - расчет скидки
-- `incrementUsage()` - увеличение счетчика использований
-- `isExpired()` - проверка срока действия
-- `hasReachedLimit()` - проверка лимита использований
-
-### 2.7. Модель `ShippingMethod`
-**Файл:** `app/Models/ShippingMethod.php`
-
-**Fillable поля:**
-- `name`, `description`, `cost`, `estimated_days`, `is_active`, `sort_order`
-
-**Casts:**
-- `cost` → `decimal:2`
-- `estimated_days` → `integer`
-- `is_active` → `boolean`
-
-**Scopes:**
-- `scopeActive()` - только активные
-
-### 2.8. Модель `PaymentMethod`
-**Файл:** `app/Models/PaymentMethod.php`
-
-**Fillable поля:**
-- `name`, `description`, `is_active`, `sort_order`, `settings`
-
-**Casts:**
-- `is_active` → `boolean`
-- `settings` → `array`
-
-**Scopes:**
-- `scopeActive()` - только активные
-
 ---
 
 ## 3. КОНТРОЛЛЕРЫ (Controllers)
 
-### 3.1. CartController
-**Файл:** `app/Http/Controllers/CartController.php`
-
-**Методы:**
-- `index()` - отображение страницы корзины
-- `store(Request $request)` - добавление товара в корзину
-- `update(Request $request, $itemId)` - обновление количества товара
-- `destroy($itemId)` - удаление товара из корзины
-- `clear()` - очистка корзины
-- `getCachedCart()` - получение корзины из кэша/сессии
-- `updateQuantity(Request $request)` - AJAX обновление количества
-- `getCartSummary()` - AJAX получение сводки корзины (JSON)
-
-### 3.2. OrderController
+### 3.1. OrderController
 **Файл:** `app/Http/Controllers/OrderController.php`
 
 **Методы:**
-- `checkout()` - страница оформления заказа
-- `store(Request $request)` - создание заказа
+- `store(Request $request)` - создание заказа (быстрой заявки или корзины)
 - `success(Order $order)` - страница успешного заказа
-- `show(Order $order)` - страница заказа (для пользователя)
-- `myOrders()` - список заказов пользователя
+- `show(Order $order)` - страница заказа (для админа)
 
-### 3.3. CheckoutController
-**Файл:** `app/Http/Controllers/CheckoutController.php`
+**Логика метода store:**
+1. Валидация данных (имя, телефон, согласие)
+2. Определение типа заказа (быстрая заявка или из корзины)
+3. Создание заказа
+4. Создание order_items
+5. Отправка уведомления в Telegram
+6. Редирект на страницу успеха
+
+### 3.2. ProductController
+**Файл:** `app/Http/Controllers/ProductController.php`
 
 **Методы:**
-- `index()` - первый шаг оформления (данные клиента)
-- `shipping()` - второй шаг (выбор доставки)
-- `payment()` - третий шаг (выбор оплаты)
-- `review()` - четвертый шаг (просмотр и подтверждение)
-- `process()` - финальная обработка заказа
+- `index()` - список товаров с фильтрами
+- `show(Product $product)` - страница товара с формой заявки
 
 ---
 
@@ -363,168 +164,113 @@
 
 **Endpoints:**
 
-#### Корзина (Cart API)
-- `GET /api/cart` - получение корзины
-- `POST /api/cart/items` - добавление товара
-- `PUT /api/cart/items/{id}` - обновление количества
-- `DELETE /api/cart/items/{id}` - удаление товара
-- `DELETE /api/cart` - очистка корзины
-- `POST /api/cart/merge` - объединение корзин (при авторизации)
+#### Заказы (Orders API)
+- `POST /api/orders` - создание заказа (быстрой заявки или из корзины)
+- `GET /api/orders/{order}` - просмотр заказа (для админа)
 
-#### Купоны (Coupons API)
-- `POST /api/coupons/apply` - применение купона
-- `DELETE /api/coupons` - удаление купона
-
-#### Оформление заказа (Checkout API)
-- `GET /api/checkout/summary` - получение сводки заказа
-- `POST /api/checkout/validate` - валидация данных
-- `POST /api/orders` - создание заказа
+#### Корзина (Cart API - для localStorage)
+- `POST /api/cart/validate` - валидация товаров в корзине (проверка наличия, актуальности цен)
 
 ---
 
 ## 5. FRONTEND
 
-### 5.1. Компоненты корзины
+### 5.1. Компонент корзины (localStorage)
 
-#### Виджет корзины в хедере
-**Файл:** `resources/views/partials/cart-widget.blade.php`
-
-**Функционал:**
-- Отображение количества товаров
-- Отображение общей суммы
-- Клик - открытие модалки корзины
-- Обновление через AJAX при изменениях
-
-#### Модалка корзины
-**Файл:** `resources/views/modals/cart-modal.blade.php`
+**Файл:** `resources/js/cart.js`
 
 **Функционал:**
-- Список товаров в корзине
-- Изменение количества (+/- кнопки)
-- Удаление товаров
-- Итоговая сумма
-- Кнопка "Оформить заказ"
-- Кнопка "Продолжить покупки"
-- AJAX обновление без перезагрузки
+- Добавление товара в корзину (localStorage)
+- Удаление товара из корзины
+- Изменение количества
+- Очистка корзины
+- Подсчет итоговой суммы
+- Сохранение в localStorage
 
-### 5.2. Страница корзины
-**Файл:** `resources/views/cart/index.blade.php`
+**Структура данных в localStorage:**
+```javascript
+{
+  "cart": [
+    {
+      "id": 1,
+      "name": "Товар",
+      "price": 100,
+      "quantity": 2,
+      "image": "/path/to/image.jpg"
+    }
+  ],
+  "timestamp": 1234567890
+}
+```
+
+### 5.2. Страница списка товаров
+**Файл:** `resources/views/products/index.blade.php`
 
 **Блоки:**
-- Таблица товаров с:
+- Сетка товаров с:
   - Изображением
   - Названием
   - Ценой
-  - Количество (+/-)
-  - Суммой
-  - Удалением
-- Блок "Промокод"
-- Блок сводки:
-  - Подытог
-  - Скидка (если есть)
-  - Доставка
-  - Итого
-- Кнопка "Оформить заказ"
+  - Кнопкой "В корзину"
+  - Кнопкой "Купить сейчас" (быстрая заявка)
+- Фильтры по категориям (опционально)
+- Поиск товаров (опционально)
+- Сортировка (опционально)
 
-### 5.3. Страницы оформления заказа
-
-#### Шаг 1: Данные клиента
-**Файл:** `resources/views/checkout/step-customer.blade.php`
-
-**Поля:**
-- Имя (required)
-- Телефон (required)
-- Email (required)
-- Комментарий к заказу (optional)
-- Автозаполнение из профиля если авторизован
-
-#### Шаг 2: Доставка
-**Файл:** `resources/views/checkout/step-shipping.blade.php`
-
-**Функционал:**
-- Выбор метода доставки (radio buttons)
-- Отображение стоимости и сроков доставки
-- Форма адреса доставки:
-  - Город
-  - Улица
-  - Дом
-  - Квартира
-  - Индекс
-
-#### Шаг 3: Оплата
-**Файл:** `resources/views/checkout/step-payment.blade.php`
-
-**Функционал:**
-- Выбор метода оплаты (radio buttons)
-- Описание методов оплаты
-- Поля данных для оплаты (если нужно)
-
-#### Шаг 4: Просмотр и подтверждение
-**Файл:** `resources/views/checkout/step-review.blade.php`
+### 5.3. Страница товара
+**Файл:** `resources/views/products/show.blade.php`
 
 **Блоки:**
-- Информация о клиенте
-- Информация о доставке
-- Информация об оплате
-- Список товаров
-- Сводка по суммам
-- Кнопка "Подтвердить заказ"
+- Изображение товара (галерея)
+- Название и описание
+- Цена
+- Характеристики (опционально)
+- Кнопка "В корзину"
+- Кнопка "Купить сейчас" (быстрая заявка)
+- Форма быстрой заявки:
+  - Имя (required)
+  - Телефон (required)
+  - Чекбокс согласия (required)
+  - Кнопка "Оформить заявку"
 
-### 5.4. Страница успешного заказа
+### 5.4. Корзина (localStorage)
+**Может быть реализована как виджет или модалка**
+
+**Блоки:**
+- Список товаров в корзине
+- Изменение количества (+/-)
+- Удаление товаров
+- Итоговая сумма
+- Кнопка "Оформить заказ"
+- Форма оформления:
+  - Имя (required)
+  - Телефон (required)
+  - Чекбокс согласия (required)
+  - Кнопка "Отправить заказ"
+
+### 5.5. Страница успешного заказа
 **Файл:** `resources/views/orders/success.blade.php`
 
 **Блоки:**
 - Номер заказа
 - Сообщение благодарности
-- Детали заказа
-- Инструкция по оплате (если выбран метод с оплатой)
+- Детали заказа (если авторизован админ)
 - Кнопки:
-  - "Мои заказы"
-  - "На главную"
+  - "Продолжить покупки"
+  - "В каталог"
 
-### 5.5. Страница "Мои заказы"
-**Файл:** `resources/views/orders/my-orders.blade.php`
+### 5.6. JavaScript компоненты
 
-**Функционал:**
-- Список заказов с:
-  - Номером заказа
-  - Датой
-  - Статусом
-  - Суммой
-- Детали заказа по клику (модалка или отдельная страница)
-- Фильтры по статусам
-
-### 5.6. Страница деталей заказа
-**Файл:** `resources/views/orders/show.blade.php`
-
-**Блоки:**
-- Информация о заказе (номер, дата, статус)
-- Информация о клиенте
-- Информация о доставке и оплате
-- Список товаров
-- История статусов
-- Суммы заказа
-
-### 5.7. JavaScript компоненты
-
-**Файл:** `resources/js/cart.js`
+**Файл:** `resources/js/order.js`
 
 **Функции:**
-- Добавление в корзину (с анимацией)
-- Обновление количества
+- Работа с localStorage корзиной
+- Добавление товара
 - Удаление товара
-- Обновление виджета корзины
-- Открытие/закрытие модалки корзины
-- Применение промокода
-
-**Файл:** `resources/js/checkout.js`
-
-**Функции:**
-- Валидация шагов оформления
-- Расчет итоговой суммы в реальном времени
-- Обновление стоимости доставки при выборе метода
-- AJAX отправка заказа
-- Обработка ошибок
+- Изменение количества
+- Отправка заказа (AJAX)
+- Валидация формы
+- Показ уведомлений
 
 ---
 
@@ -538,15 +284,17 @@
 - `toArray($notifiable)` - форматирование для других каналов
 
 **Содержание сообщения:**
-- 🆕 Новый заказ #{номер}
+- 🆕 Новая заявка #{номер}
+- 📦 Товар: {название}
+- 💰 Сумма: {total}
+- 📞 Телефон: {phone}
+- 👤 Имя: {name}
+- 📝 Комментарий: {notes}
+- 📍 IP: {ip_address}
+
+Для заказов из корзины:
 - 📦 Количество товаров: {count}
 - 💰 Сумма: {total}
-- 👤 Клиент: {name}
-- 📞 Телефон: {phone}
-- 📧 Email: {email}
-- 🚚 Доставка: {method}
-- 💳 Оплата: {method}
-- 📝 Комментарий: {notes}
 
 ### 6.2. Настройка Telegram Bot
 **Файл:** `config/telegram.php` (создать)
@@ -564,33 +312,19 @@
 composer require laravel-notification-channels/telegram
 ```
 
-### 6.4. Модель Notifiable
-**Добавить в User модель:**
-- `routeNotificationForTelegram()` - метод для получения chat_id
+### 6.4. Сервис для отправки уведомлений
+**Файл:** `app/Services/TelegramService.php`
 
-**Или использовать отдельный класс:**
-```php
-app/Models/TelegramRecipient.php
-```
+**Методы:**
+- `sendOrderNotification(Order $order)` - отправка уведомления о заказе
+- `sendOrderUpdatedNotification(Order $order)` - отправка уведомления об изменении статуса
+- `formatOrderMessage(Order $order)` - форматирование сообщения
 
 ### 6.5. Отправка уведомления
 **В OrderObserver при создании заказа:**
 ```php
 $order->notify(new NewOrderNotification($order));
-```
-
-**Или в OrderController после создания:**
-```php
-$order->notify(new NewOrderNotification($order));
 $order->update(['telegram_sent' => true, 'telegram_sent_at' => now()]);
-```
-
-### 6.6. Команды для управления
-
-**Команда:**
-```bash
-php artisan telegram:set-webhook
-php artisan telegram:send-test
 ```
 
 ---
@@ -605,109 +339,44 @@ php artisan telegram:send-test
 - Номер заказа
 - Дата создания
 - Статус (select with colors)
-- Статус оплаты
 - Сумма
 - Клиент
-- Количество товаров
-- Метод доставки
-- Метод оплаты
+- Телефон
+- Тип заявки (быстрая/корзина)
 
 **Поля в форме:**
 - Информация о заказе (ID, номер, дата)
 - Статус (select)
-- Статус оплаты (select)
 - Данные клиента (только чтение)
-- Данные доставки (редактируемые)
-- Данные оплаты (редактируемые)
-- Товары заказа (таблица, только чтение)
+- Товары заказа (таблица)
 - Заметки клиента (только чтение)
 - Заметки администратора (textarea)
 - Флаг "Отправлено в Telegram" (switcher, только чтение)
 
 **Actions:**
 - "Отправить повторно в Telegram"
-- "Скачать PDF чек"
-- "Отправить письмо клиенту"
+- "Позвонить клиенту" (ссылка на tel:)
+- "Отправить WhatsApp" (если настроено)
 
 **Filters:**
 - По статусу
-- По статусу оплаты
 - По дате (диапазон)
-- По email клиента
+- По телефону клиента
 - По номеру заказа
 
 **Scopes:**
-- `scopePending()` - новые заказы
-- `scopeProcessing()` - в обработке
-- `scopeCompleted()` - завершенные
+- `scopePending()` - новые заявки
+- `scopeProcessing()` - в работе
+- `scopeCompleted()` - выполненные
 - `scopeCancelled()` - отмененные
 
-### 7.2. OrderItemResource (embedded в OrderResource)
-**Поля:**
-- Товар (связь с Product)
-- Название товара
-- Артикул
-- Количество
-- Цена
-- Сумма
-
-### 7.3. CouponResource
-**Файл:** `app/MoonShine/Resources/CouponResource/CouponResource.php`
-
-**Поля:**
-- Код
-- Тип скидки
-- Значение
-- Минимальная сумма заказа
-- Максимальная скидка
-- Лимит использований
-- Использовано
-- Период действия
-- Активен
-- Описание
-
-### 7.4. ShippingMethodResource
-**Файл:** `app/MoonShine/Resources/ShippingMethodResource/ShippingMethodResource.php`
-
-**Поля:**
-- Название
-- Описание
-- Стоимость
-- Срок доставки
-- Активен
-- Порядок сортировки
-
-### 7.5. PaymentMethodResource
-**Файл:** `app/MoonShine/Resources/PaymentMethodResource/PaymentMethodResource.php`
-
-**Поля:**
-- Название
-- Описание
-- Активен
-- Порядок сортировки
-- Настройки (json editor)
-
-### 7.6. OrderStatusHistoryResource (embedded в OrderResource)
-**Поля:**
-- Дата/Время
-- От статуса
-- К статусу
-- Пользователь
-- Комментарий
-
-### 7.7. Кастомные страницы MoonShine
+### 7.2. Кастомные страницы MoonShine
 
 **Dashboard widget:**
-- Количество новых заказов за сегодня
-- Общая сумма заказов за сегодня
-- Количество заказов в работе
-- График продаж за неделю
-
-**Страница статистики заказов:**
-- Графики продаж
-- ТОП товаров
-- Статистика по методам доставки
-- Статистика по методам оплаты
+- Количество новых заявок сегодня
+- Общая сумма заказов сегодня
+- Количество заявок в работе
+- График заявок за неделю
 
 ---
 
@@ -715,164 +384,91 @@ php artisan telegram:send-test
 
 ### 8.1. Services
 
-#### CartService
-**Файл:** `app/Services/CartService.php`
-
-**Методы:**
-- `getCart()` - получение текущей корзины
-- `addToCart($productId, $quantity)` - добавление товара
-- `updateCartItem($itemId, $quantity)` - обновление
-- `removeFromCart($itemId)` - удаление
-- `clearCart()` - очистка
-- `mergeCarts($sessionCart, $userCart)` - объединение
-- `getCartTotal()` - общая сумма
-- `getCartItems()` - список товаров
-
 #### OrderService
 **Файл:** `app/Services/OrderService.php`
 
 **Методы:**
-- `createOrderFromCart($data)` - создание заказа из корзины
+- `createQuickOrder($data, $product)` - создание быстрой заявки
+- `createOrderFromCart($data, $cartItems)` - создание заказа из корзины
 - `updateOrderStatus($orderId, $status, $comment)` - обновление статуса
-- `cancelOrder($orderId)` - отмена заказа
+- `cancelOrder($orderId)` - отмена заявки
 - `calculateOrderTotal($order)` - пересчет суммы
-- `applyCoupon($order, $couponCode)` - применение купона
-- `removeCoupon($order)` - удаление купона
 
-#### NotificationService
-**Файл:** `app/Services/NotificationService.php`
+#### TelegramService
+**Файл:** `app/Services/TelegramService.php`
 
 **Методы:**
-- `sendOrderNotification($order)` - отправка уведомления о заказе
-- `sendStatusChangeNotification($order)` - уведомление о смене статуса
-- `sendCustomerEmail($order, $template)` - отправка email клиенту
+- `sendOrderNotification(Order $order)` - отправка уведомления
+- `sendOrderStatusNotification(Order $order)` - уведомление о смене статуса
+- `formatOrderMessage(Order $order)` - форматирование сообщения
 
-### 8.2. Jobs
-
-#### SendTelegramNotificationJob
-**Файл:** `app/Jobs/SendTelegramNotificationJob.php`
-
-Использовать queue для отправки уведомлений в Telegram.
-
-#### SendOrderEmailJob
-**Файл:** `app/Jobs/SendOrderEmailJob.php`
-
-Использовать queue для отправки email уведомлений.
-
-### 8.3. Form Requests
+### 8.2. Form Requests
 
 #### StoreOrderRequest
 **Файл:** `app/Http/Requests/StoreOrderRequest.php`
 
 **Правила валидации:**
 - `customer_name` - required, string, max:255
-- `customer_email` - required, email
 - `customer_phone` - required, regex:/^\+?\d{10,15}$/
-- `shipping_method_id` - required, exists:shipping_methods,id
-- `payment_method_id` - required, exists:payment_methods,id
-- `shipping_address` - required, array
+- `consent` - required, accepted
 - `notes` - nullable, string, max:1000
-
-#### UpdateCartRequest
-**Файл:** `app/Http/Requests/UpdateCartRequest.php`
-
-**Правила валидации:**
-- `quantity` - required, integer, min:1
-
-#### ApplyCouponRequest
-**Файл:** `app/Http/Requests/ApplyCouponRequest.php`
-
-**Правила валидации:**
-- `code` - required, string, exists:coupons,code
-
-### 8.4. Events и Listeners
-
-#### Events:
-- `OrderCreated` - заказ создан
-- `OrderStatusChanged` - статус заказа изменен
-- `OrderPaid` - заказ оплачен
-- `OrderCancelled` - заказ отменен
-
-#### Listeners:
-- `SendTelegramNotification` - отправка в Telegram
-- `SendEmailToCustomer` - отправка email клиенту
-- `UpdateInventory` - обновление остатков на складе
-- `CreateOrderStatusHistory` - запись истории
-
-### 8.5. Mail
-
-#### OrderCreatedMail
-**Файл:** `app/Mail/OrderCreatedMail.php`
-
-**Содержание:**
-- Детали заказа
-- Список товаров
-- Сумма к оплате
-- Информация о доставке и оплате
-
-#### OrderStatusChangedMail
-**Файл:** `app/Mail/OrderStatusChangedMail.php`
-
-**Содержание:**
-- Номер заказа
-- Новый статус
-- Комментарий (если есть)
+- `product_id` - nullable, exists:products,id (для быстрой заявки)
+- `cart_items` - nullable, array (для заказа из корзины)
 
 ---
 
 ## 9. ПОРЯДОК РЕАЛИЗАЦИИ
 
 ### Этап 1: База данных и модели (Приоритет: Высокий)
-1. Создать все миграции
-2. Создать модели
-3. Настроить отношения
-4. Создать seeders для тестовых данных
+1. Создать миграцию для orders
+2. Создать миграцию для order_items
+3. Создать модели Order и OrderItem
+4. Настроить отношения
+5. Настроить observers
 
-### Этап 2: Базовый функционал корзины (Приоритет: Высокий)
-1. Создать CartService
-2. Создать CartController
-3. Реализовать API для корзины
-4. Создать frontend компоненты корзины (виджет, модалка)
-5. Тестирование корзины
-
-### Этап 3: Оформление заказа (Приоритет: Высокий)
+### Этап 2: Базовый функционал (Приоритет: Высокий)
 1. Создать OrderService
 2. Создать OrderController
 3. Создать Form Requests
-4. Реализовать страницы оформления заказа
-5. Создать JavaScript для checkout
-6. Тестирование оформления заказа
+4. Реализовать API для заказов
+5. Создать JavaScript для работы с корзиной (localStorage)
+6. Тестирование
+
+### Этап 3: Frontend (Приоритет: Высокий)
+1. Создать страницу товаров
+2. Создать страницу товара с формой заявки
+3. Реализовать JavaScript компонент корзины
+4. Создать страницу успешного заказа
+5. Тестирование
 
 ### Этап 4: Админка MoonShine (Приоритет: Средний)
 1. Создать OrderResource
-2. Создать CouponResource
-3. Создать ShippingMethodResource
-4. Создать PaymentMethodResource
-5. Добавить виджеты на Dashboard
-6. Тестирование админки
+2. Добавить поля в список и форму
+3. Добавить фильтры и scopes
+4. Добавить виджеты на Dashboard
+5. Тестирование админки
 
 ### Этап 5: Уведомления Telegram (Приоритет: Средний)
 1. Установить пакет telegram notifications
 2. Создать конфигурацию
-3. Создать Notification класс
-4. Настроить отправку уведомлений
-5. Тестирование уведомлений
+3. Создать TelegramService
+4. Создать Notification класс
+5. Настроить отправку уведомлений
+6. Тестирование уведомлений
 
 ### Этап 6: Дополнительный функционал (Приоритет: Низкий)
-1. Система купонов
-2. Email уведомления клиентам
-3. История заказов для клиентов
-4. PDF чеки
-5. Экспорт заказов
-6. Статистика и отчеты
+1. Фильтры и поиск товаров
+2. История заказов в localStorage
+3. Email уведомления (опционально)
+4. SMS уведомления (опционально)
+5. Статистика и отчеты
 
 ### Этап 7: Тестирование и оптимизация (Приоритет: Высокий)
 1. Unit тесты для моделей
 2. Feature тесты для API
-3. Browser тесты для checkout
+3. Browser тесты для оформления
 4. Оптимизация запросов к БД
-5. Кэширование
-6. Настройка очередей
+5. Кэширование товаров
 
 ---
 
@@ -881,62 +477,58 @@ php artisan telegram:send-test
 ### Безопасность:
 - Все формы с CSRF токеном
 - Валидация всех входных данных
-- Проверка прав доступа к заказам пользователей
+- Проверка согласия на обработку данных
 - Защита от SQL injection (Eloquent ORM)
 - Rate limiting для API
+- Маскирование телефона в админке
 
 ### Производительность:
-- Кэширование корзины (Redis/Session)
 - Ленивая загрузка отношений (eager loading)
 - Оптимизация запросов к БД
-- Использование очередей для уведомлений
+- Кэширование товаров (Redis/File)
 - Индексы в БД для частых запросов
 
 ### UX/UI:
 - AJAX обновления без перезагрузки
-- Анимации для действий с корзиной
 - Понятные сообщения об ошибках
-- Сохранение данных при ошибках checkout
+- Сохранение данных в localStorage
 - Адаптивный дизайн (mobile-first)
+- Быстрая заявка в один клик
 
 ### Логирование:
 - Логирование всех заказов
-- Логирование ошибок оплаты
 - Логирование уведомлений
 - Audit trail для изменений статусов
 
 ---
 
-## 11. СИДЕРЫ ДЛЯ ТЕСТОВЫХ ДАННЫХ
-
-### Database Seeders:
-- `ShippingMethodSeeder` - методы доставки
-- `PaymentMethodSeeder` - методы оплаты
-- `CouponSeeder` - тестовые купоны
-- `OrderSeeder` - тестовые заказы (опционально)
-
----
-
-## 12. КОНФИГУРАЦИЯ
+## 11. КОНФИГУРАЦИЯ
 
 ### Файлы конфигурации:
-- `config/cart.php` - настройки корзины
 - `config/orders.php` - настройки заказов
 - `config/telegram.php` - настройки Telegram
-- `config/payment.php` - настройки платежных систем (будущее)
+
+### Переменные окружения (.env):
+```env
+# Telegram
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=your_chat_id
+TELEGRAM_ENABLED=true
+
+# Orders
+ORDER_NUMBER_PREFIX=ORD
+```
 
 ---
 
 ## ПРИМЕЧАНИЯ
 
-1. **Гостевые заказы:** Поддержка заказов без регистрации (хранение в сессии)
-2. **Объединение корзин:** При авторизации объединять гостевую корзину с пользовательской
-3. **Цены:** Фиксировать цены в момент заказа (product_snapshot)
-4. **Остатки:** Проверять наличие товаров при добавлении в корзину
-5. **Кэширование:** Кэшировать цены товаров для быстрого расчета
-6. **Валюты:** Подумать о мульти-валютности (если нужно в будущем)
-7. **Налоги:** Учесть возможность добавления налогов (НДС)
-8. **Интеграция:** Подготовить архитектуру для интеграции с платежными шлюзами
+1. **Без авторизации:** Все заказы создаются без регистрации пользователя
+2. **localStorage корзина:** Корзина хранится в браузере клиента
+3. **Быстрая заявка:** Заказ создается напрямую со страницы товара
+4. **Цены:** Фиксировать цены в момент заказа (product_snapshot)
+5. **Кэширование:** Кэшировать цены и наличие товаров
+6. **Маскирование данных:** В админке показывать телефон в маскированном виде
 
 ---
 
@@ -946,12 +538,6 @@ php artisan telegram:send-test
 ```bash
 # Telegram notifications
 composer require laravel-notification-channels/telegram
-
-# PDF generation (для чеков)
-composer require barryvdh/laravel-dompdf
-
-# Excel export (для экспорта заказов)
-composer require maatwebsite/excel
 ```
 
 ### Установленные пакеты (уже есть):
@@ -965,14 +551,14 @@ composer require maatwebsite/excel
 
 ### Тестовые заказы:
 - Создать 5-10 тестовых заказов с разными статусами
-- Несколько заказов с несколькими товарами
-- Тестовые купоны
+- Несколько быстрых заявок
+- Несколько заказов из корзины с несколькими товарами
 
-### Тестовые пользователи:
-- Админ с правами управления заказами
-- Обычный пользователь с заказами
-- Гостевой заказ (без пользователя)
+### Тестовые товары:
+- 10-20 товаров с разными категориями
+- Товары с изображениями
+- Товары с характеристиками
 
 ---
 
-Этот план предоставляет полную структуру для реализации системы заказов. Реализацию можно делать поэтапно, начиная с базового функционала и постепенно добавляя дополнительные возможности.
+Этот план предоставляет полную структуру для реализации упрощённой системы заказов. Реализацию можно делать поэтапно, начиная с базового функционала и постепенно добавляя дополнительные возможности.

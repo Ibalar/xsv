@@ -1,6 +1,6 @@
-# Примеры кода для системы заказов
+# Примеры кода для упрощённой системы заказов
 
-Этот файл содержит примеры реализации ключевых компонентов системы заказов.
+Этот файл содержит примеры реализации ключевых компонентов упрощённой системы заказов.
 
 ---
 
@@ -21,33 +21,22 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('order_number')->unique();
             $table->enum('status', [
                 'pending',
                 'confirmed',
-                'processing',
-                'shipped',
-                'delivered',
+                'completed',
                 'cancelled',
-                'refunded',
             ])->default('pending');
             $table->decimal('total_amount', 10, 2);
-            $table->decimal('subtotal', 10, 2);
-            $table->decimal('discount_amount', 10, 2)->nullable();
-            $table->string('coupon_code')->nullable();
             $table->string('customer_name');
-            $table->string('customer_email');
             $table->string('customer_phone');
-            $table->json('shipping_address');
-            $table->json('billing_address')->nullable();
-            $table->foreignId('shipping_method_id')->nullable()->constrained();
-            $table->decimal('shipping_cost', 10, 2)->default(0);
-            $table->foreignId('payment_method_id')->nullable()->constrained();
-            $table->enum('payment_status', ['pending', 'paid', 'failed', 'refunded'])->default('pending');
-            $table->timestamp('paid_at')->nullable();
+            $table->boolean('consent')->default(false);
+            $table->foreignId('product_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('product_name')->nullable();
+            $table->decimal('product_price', 10, 2)->nullable();
+            $table->integer('quantity')->default(1)->nullable();
             $table->text('notes')->nullable();
-            $table->text('admin_notes')->nullable();
             $table->string('ip_address')->nullable();
             $table->text('user_agent')->nullable();
             $table->boolean('telegram_sent')->default(false);
@@ -56,8 +45,8 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['status', 'created_at']);
-            $table->index('payment_status');
-            $table->index('customer_email');
+            $table->index('customer_phone');
+            $table->index('product_id');
         });
     }
 
@@ -102,37 +91,6 @@ return new class extends Migration
 };
 ```
 
-### create_carts_table.php
-
-```php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('carts', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('session_id')->nullable();
-            $table->timestamps();
-
-            $table->index('user_id');
-            $table->index('session_id');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('carts');
-    }
-};
-```
-
 ---
 
 ## 2. МОДЕЛИ
@@ -156,54 +114,28 @@ class Order extends Model
 
     public const STATUS_PENDING = 'pending';
     public const STATUS_CONFIRMED = 'confirmed';
-    public const STATUS_PROCESSING = 'processing';
-    public const STATUS_SHIPPED = 'shipped';
-    public const STATUS_DELIVERED = 'delivered';
+    public const STATUS_COMPLETED = 'completed';
     public const STATUS_CANCELLED = 'cancelled';
-    public const STATUS_REFUNDED = 'refunded';
 
     public const STATUSES = [
-        self::STATUS_PENDING => 'Ожидает обработки',
-        self::STATUS_CONFIRMED => 'Подтвержден',
-        self::STATUS_PROCESSING => 'В обработке',
-        self::STATUS_SHIPPED => 'Отправлен',
-        self::STATUS_DELIVERED => 'Доставлен',
-        self::STATUS_CANCELLED => 'Отменен',
-        self::STATUS_REFUNDED => 'Возврат',
-    ];
-
-    public const PAYMENT_STATUS_PENDING = 'pending';
-    public const PAYMENT_STATUS_PAID = 'paid';
-    public const PAYMENT_STATUS_FAILED = 'failed';
-    public const PAYMENT_STATUS_REFUNDED = 'refunded';
-
-    public const PAYMENT_STATUSES = [
-        self::PAYMENT_STATUS_PENDING => 'Ожидает оплаты',
-        self::PAYMENT_STATUS_PAID => 'Оплачен',
-        self::PAYMENT_STATUS_FAILED => 'Ошибка оплаты',
-        self::PAYMENT_STATUS_REFUNDED => 'Возврат',
+        self::STATUS_PENDING => 'Новая заявка',
+        self::STATUS_CONFIRMED => 'Подтверждена',
+        self::STATUS_COMPLETED => 'Выполнена',
+        self::STATUS_CANCELLED => 'Отменена',
     ];
 
     protected $fillable = [
-        'user_id',
         'order_number',
         'status',
         'total_amount',
-        'subtotal',
-        'discount_amount',
-        'coupon_code',
         'customer_name',
-        'customer_email',
         'customer_phone',
-        'shipping_address',
-        'billing_address',
-        'shipping_method_id',
-        'shipping_cost',
-        'payment_method_id',
-        'payment_status',
-        'paid_at',
+        'consent',
+        'product_id',
+        'product_name',
+        'product_price',
+        'quantity',
         'notes',
-        'admin_notes',
         'ip_address',
         'user_agent',
         'telegram_sent',
@@ -214,13 +146,10 @@ class Order extends Model
     {
         return [
             'total_amount' => 'decimal:2',
-            'subtotal' => 'decimal:2',
-            'discount_amount' => 'decimal:2',
-            'shipping_cost' => 'decimal:2',
-            'paid_at' => 'datetime',
+            'product_price' => 'decimal:2',
+            'quantity' => 'integer',
             'telegram_sent_at' => 'datetime',
-            'shipping_address' => 'array',
-            'billing_address' => 'array',
+            'consent' => 'boolean',
             'telegram_sent' => 'boolean',
         ];
     }
@@ -233,16 +162,20 @@ class Order extends Model
             if (empty($order->order_number)) {
                 $order->order_number = static::generateOrderNumber();
             }
+            $order->ip_address = request()->ip();
+            $order->user_agent = request()->userAgent();
         });
 
-        static::updating(function (self $order) {
-            if ($order->isDirty('status')) {
-                OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'from_status' => $order->getOriginal('status'),
-                    'to_status' => $order->status,
-                    'user_id' => auth()->id(),
+        static::created(function (self $order) {
+            // Отправка уведомления в Telegram
+            try {
+                $order->notify(new \App\Notifications\NewOrderNotification($order));
+                $order->update([
+                    'telegram_sent' => true,
+                    'telegram_sent_at' => now(),
                 ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to send Telegram notification: ' . $e->getMessage());
             }
         });
     }
@@ -264,39 +197,19 @@ class Order extends Model
         return "ORD-{$date}-" . str_pad((string) $number, 4, '0', STR_PAD_LEFT);
     }
 
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    public function statusHistory(): HasMany
+    public function product(): BelongsTo
     {
-        return $this->hasMany(OrderStatusHistory::class);
-    }
-
-    public function shippingMethod(): BelongsTo
-    {
-        return $this->belongsTo(ShippingMethod::class);
-    }
-
-    public function paymentMethod(): BelongsTo
-    {
-        return $this->belongsTo(PaymentMethod::class);
+        return $this->belongsTo(Product::class);
     }
 
     public function scopeByStatus($query, $status)
     {
         return $query->where('status', $status);
-    }
-
-    public function scopeByPaymentStatus($query, $status)
-    {
-        return $query->where('payment_status', $status);
     }
 
     public function scopePending($query)
@@ -311,7 +224,7 @@ class Order extends Model
 
     public function scopeCompleted($query)
     {
-        return $query->whereIn('status', [self::STATUS_SHIPPED, self::STATUS_DELIVERED]);
+        return $query->whereIn('status', [self::STATUS_COMPLETED]);
     }
 
     public function getStatusLabel(): string
@@ -319,56 +232,14 @@ class Order extends Model
         return self::STATUSES[$this->status] ?? $this->status;
     }
 
-    public function getPaymentStatusLabel(): string
-    {
-        return self::PAYMENT_STATUSES[$this->payment_status] ?? $this->payment_status;
-    }
-
-    public function getCustomerName(): string
-    {
-        if ($this->user && empty($this->customer_name)) {
-            return $this->user->name;
-        }
-
-        return $this->customer_name;
-    }
-
-    public function getCustomerEmail(): string
-    {
-        if ($this->user && empty($this->customer_email)) {
-            return $this->user->email;
-        }
-
-        return $this->customer_email;
-    }
-
-    public function getCustomerPhone(): string
-    {
-        if ($this->user && empty($this->customer_phone)) {
-            return $this->user->phone ?? '';
-        }
-
-        return $this->customer_phone;
-    }
-
     public function markAsConfirmed(): void
     {
         $this->update(['status' => self::STATUS_CONFIRMED]);
     }
 
-    public function markAsProcessing(): void
+    public function markAsCompleted(): void
     {
-        $this->update(['status' => self::STATUS_PROCESSING]);
-    }
-
-    public function markAsShipped(): void
-    {
-        $this->update(['status' => self::STATUS_SHIPPED]);
-    }
-
-    public function markAsDelivered(): void
-    {
-        $this->update(['status' => self::STATUS_DELIVERED]);
+        $this->update(['status' => self::STATUS_COMPLETED]);
     }
 
     public function markAsCancelled(): void
@@ -376,47 +247,29 @@ class Order extends Model
         $this->update(['status' => self::STATUS_CANCELLED]);
     }
 
-    public function markAsPaid(): void
+    public function isQuickOrder(): bool
     {
-        $this->update([
-            'payment_status' => self::PAYMENT_STATUS_PAID,
-            'paid_at' => now(),
-        ]);
+        return !empty($this->product_id);
     }
 
-    public function canBeCancelled(): bool
+    public function isBulkOrder(): bool
     {
-        return in_array($this->status, [
-            self::STATUS_PENDING,
-            self::STATUS_CONFIRMED,
-            self::STATUS_PROCESSING,
-        ]);
+        return $this->items()->count() > 1;
     }
 
-    public function isPending(): bool
+    public function getMaskedPhone(): string
     {
-        return $this->status === self::STATUS_PENDING;
-    }
-
-    public function isPaid(): bool
-    {
-        return $this->payment_status === self::PAYMENT_STATUS_PAID;
-    }
-
-    public function calculateTotal(): void
-    {
-        $subtotal = $this->items->sum('total_price');
-        $discount = $this->discount_amount ?? 0;
-        $shipping = $this->shipping_cost ?? 0;
-
-        $this->subtotal = $subtotal;
-        $this->total_amount = $subtotal - $discount + $shipping;
-        $this->save();
+        $phone = $this->customer_phone;
+        $length = strlen($phone);
+        if ($length > 6) {
+            return substr($phone, 0, 3) . '***' . substr($phone, -3);
+        }
+        return $phone;
     }
 }
 ```
 
-### Cart.php
+### OrderItem.php
 
 ```php
 <?php
@@ -426,112 +279,46 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Cart extends Model
+class OrderItem extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'session_id',
+        'order_id',
+        'product_id',
+        'product_name',
+        'product_sku',
+        'quantity',
+        'price',
+        'total_price',
+        'product_snapshot',
     ];
 
-    public function user(): BelongsTo
+    protected function casts(): array
     {
-        return $this->belongsTo(User::class);
+        return [
+            'price' => 'decimal:2',
+            'total_price' => 'decimal:2',
+            'quantity' => 'integer',
+            'product_snapshot' => 'array',
+        ];
     }
 
-    public function items(): HasMany
+    public function order(): BelongsTo
     {
-        return $this->hasMany(CartItem::class);
+        return $this->belongsTo(Order::class);
     }
 
-    public function scopeForUser($query, $user)
+    public function product(): BelongsTo
     {
-        return $query->where('user_id', $user->id);
+        return $this->belongsTo(Product::class);
     }
 
-    public function scopeForSession($query, $sessionId)
+    public function calculateTotal(): void
     {
-        return $query->where('session_id', $sessionId);
-    }
-
-    public function getTotal(): float
-    {
-        return $this->items->sum(function ($item) {
-            return $item->quantity * $item->price;
-        });
-    }
-
-    public function getTotalQuantity(): int
-    {
-        return $this->items->sum('quantity');
-    }
-
-    public function addItem(int $productId, int $quantity = 1): CartItem
-    {
-        $item = $this->items()->where('product_id', $productId)->first();
-
-        if ($item) {
-            $item->increment('quantity', $quantity);
-            $item->refresh();
-        } else {
-            $product = Product::find($productId);
-            if (!$product) {
-                throw new \Exception('Product not found');
-            }
-
-            $item = $this->items()->create([
-                'product_id' => $productId,
-                'quantity' => $quantity,
-                'price' => $product->price,
-            ]);
-        }
-
-        return $item;
-    }
-
-    public function updateItem(int $productId, int $quantity): void
-    {
-        $item = $this->items()->where('product_id', $productId)->first();
-
-        if ($item) {
-            if ($quantity > 0) {
-                $item->update(['quantity' => $quantity]);
-            } else {
-                $item->delete();
-            }
-        }
-    }
-
-    public function removeItem(int $productId): void
-    {
-        $this->items()->where('product_id', $productId)->delete();
-    }
-
-    public function clear(): void
-    {
-        $this->items()->delete();
-    }
-
-    public function mergeWithCart(Cart $otherCart): void
-    {
-        foreach ($otherCart->items as $item) {
-            $existingItem = $this->items()->where('product_id', $item->product_id)->first();
-
-            if ($existingItem) {
-                $existingItem->increment('quantity', $item->quantity);
-            } else {
-                $this->items()->create([
-                    'product_id' => $item->product_id,
-                    'quantity' => $item->quantity,
-                    'price' => $item->price,
-                ]);
-            }
-        }
-
-        $otherCart->delete();
+        $this->total_price = $this->price * $this->quantity;
+        $this->save();
     }
 }
 ```
@@ -540,108 +327,6 @@ class Cart extends Model
 
 ## 3. SERVICES
 
-### CartService.php
-
-```php
-<?php
-
-namespace App\Services;
-
-use App\Models\Cart;
-use App\Models\CartItem;
-use App\Models\Product;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
-
-class CartService
-{
-    protected ?Cart $cart = null;
-
-    public function getCart(): Cart
-    {
-        if ($this->cart) {
-            return $this->cart;
-        }
-
-        if (Auth::check()) {
-            $this->cart = Cart::firstOrCreate([
-                'user_id' => Auth::id(),
-            ]);
-        } else {
-            $sessionId = Session::getId();
-            $this->cart = Cart::firstOrCreate([
-                'session_id' => $sessionId,
-            ]);
-        }
-
-        return $this->cart;
-    }
-
-    public function addToCart(int $productId, int $quantity = 1): CartItem
-    {
-        $cart = $this->getCart();
-        $product = Product::findOrFail($productId);
-
-        if (!$product->in_stock || $product->stock < $quantity) {
-            throw new \Exception('Product is out of stock');
-        }
-
-        return $cart->addItem($productId, $quantity);
-    }
-
-    public function updateCartItem(int $itemId, int $quantity): void
-    {
-        $cart = $this->getCart();
-        $item = $cart->items()->findOrFail($itemId);
-
-        $product = $item->product;
-        if (!$product->in_stock || $product->stock < $quantity) {
-            throw new \Exception('Insufficient stock');
-        }
-
-        $cart->updateItem($item->product_id, $quantity);
-    }
-
-    public function removeFromCart(int $itemId): void
-    {
-        $cart = $this->getCart();
-        $item = $cart->items()->findOrFail($itemId);
-        $cart->removeItem($item->product_id);
-    }
-
-    public function clearCart(): void
-    {
-        $cart = $this->getCart();
-        $cart->clear();
-    }
-
-    public function mergeCarts(string $sessionId): void
-    {
-        $sessionCart = Cart::where('session_id', $sessionId)->first();
-
-        if ($sessionCart && Auth::check()) {
-            $userCart = Cart::firstOrCreate(['user_id' => Auth::id()]);
-            $userCart->mergeWithCart($sessionCart);
-        }
-    }
-
-    public function getCartTotal(): float
-    {
-        return $this->getCart()->getTotal();
-    }
-
-    public function getCartItemsCount(): int
-    {
-        return $this->getCart()->getTotalQuantity();
-    }
-
-    public function getCartItems(): \Illuminate\Database\Eloquent\Collection
-    {
-        return $this->getCart()->items()->with('product')->get();
-    }
-}
-```
-
 ### OrderService.php
 
 ```php
@@ -649,142 +334,101 @@ class CartService
 
 namespace App\Services;
 
-use App\Models\Cart;
-use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\ShippingMethod;
-use App\Models\PaymentMethod;
+use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 
 class OrderService
 {
-    public function createOrderFromCart(array $data): Order
+    public function createQuickOrder(array $data, Product $product): Order
     {
-        $cart = app(CartService::class)->getCart();
+        return DB::transaction(function () use ($data, $product) {
+            $quantity = $data['quantity'] ?? 1;
+            $totalAmount = $product->price * $quantity;
 
-        if ($cart->items->isEmpty()) {
-            throw new \Exception('Cart is empty');
-        }
-
-        return DB::transaction(function () use ($cart, $data) {
             $order = Order::create([
-                'user_id' => auth()->id(),
                 'customer_name' => $data['customer_name'],
-                'customer_email' => $data['customer_email'],
                 'customer_phone' => $data['customer_phone'],
-                'shipping_address' => $data['shipping_address'],
-                'billing_address' => $data['billing_address'] ?? null,
-                'shipping_method_id' => $data['shipping_method_id'],
-                'payment_method_id' => $data['payment_method_id'],
-                'notes' => $data['notes'] ?? null,
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
-
-            // Calculate totals
-            $subtotal = 0;
-            foreach ($cart->items as $item) {
-                $subtotal += $item->price * $item->quantity;
-            }
-
-            $shippingMethod = ShippingMethod::find($data['shipping_method_id']);
-            $shippingCost = $shippingMethod ? $shippingMethod->cost : 0;
-
-            $discountAmount = 0;
-            if (!empty($data['coupon_code'])) {
-                $discountAmount = $this->applyCouponToOrder($order, $data['coupon_code'], $subtotal);
-            }
-
-            $totalAmount = $subtotal + $shippingCost - $discountAmount;
-
-            $order->update([
-                'subtotal' => $subtotal,
-                'shipping_cost' => $shippingCost,
-                'discount_amount' => $discountAmount,
+                'consent' => $data['consent'] ?? false,
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'product_price' => $product->price,
+                'quantity' => $quantity,
                 'total_amount' => $totalAmount,
+                'notes' => $data['notes'] ?? null,
             ]);
 
-            // Create order items
-            foreach ($cart->items as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item->product_id,
-                    'product_name' => $item->product->name,
-                    'product_sku' => $item->product->sku,
-                    'quantity' => $item->quantity,
-                    'price' => $item->price,
-                    'total_price' => $item->price * $item->quantity,
-                    'product_snapshot' => [
-                        'name' => $item->product->name,
-                        'sku' => $item->product->sku,
-                        'price' => $item->product->price,
-                        'image' => $item->product->image,
-                    ],
-                ]);
-
-                // Update product stock
-                $item->product->decrement('stock', $item->quantity);
-            }
-
-            // Clear cart
-            $cart->clear();
+            // Создаем order_item для совместимости
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'product_sku' => $product->sku ?? null,
+                'quantity' => $quantity,
+                'price' => $product->price,
+                'total_price' => $totalAmount,
+                'product_snapshot' => [
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'price' => $product->price,
+                    'image' => $product->image,
+                ],
+            ]);
 
             return $order->load('items.product');
         });
     }
 
-    public function applyCouponToOrder(Order $order, string $couponCode, float $subtotal): float
+    public function createOrderFromCart(array $data, array $cartItems): Order
     {
-        $coupon = Coupon::where('code', $couponCode)
-            ->where('is_active', true)
-            ->first();
+        return DB::transaction(function () use ($data, $cartItems) {
+            $totalAmount = collect($cartItems)->sum(function ($item) {
+                return $item['price'] * $item['quantity'];
+            });
 
-        if (!$coupon) {
-            throw new \Exception('Invalid coupon code');
-        }
+            $order = Order::create([
+                'customer_name' => $data['customer_name'],
+                'customer_phone' => $data['customer_phone'],
+                'consent' => $data['consent'] ?? false,
+                'total_amount' => $totalAmount,
+                'notes' => $data['notes'] ?? null,
+            ]);
 
-        if (!$coupon->isValid()) {
-            throw new \Exception('Coupon is not valid');
-        }
+            // Создаем order_items
+            foreach ($cartItems as $item) {
+                $product = Product::find($item['id']);
+                if (!$product) {
+                    continue;
+                }
 
-        if ($coupon->min_order_amount && $subtotal < $coupon->min_order_amount) {
-            throw new \Exception('Minimum order amount not met');
-        }
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'product_sku' => $product->sku ?? null,
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total_price' => $item['price'] * $item['quantity'],
+                    'product_snapshot' => [
+                        'name' => $product->name,
+                        'sku' => $product->sku,
+                        'price' => $product->price,
+                        'image' => $product->image,
+                    ],
+                ]);
+            }
 
-        $discount = $coupon->calculateDiscount($subtotal);
-
-        if ($coupon->max_discount_amount && $discount > $coupon->max_discount_amount) {
-            $discount = $coupon->max_discount_amount;
-        }
-
-        $order->update([
-            'coupon_code' => $coupon->code,
-            'discount_amount' => $discount,
-        ]);
-
-        $coupon->incrementUsage();
-
-        return $discount;
+            return $order->load('items.product');
+        });
     }
 
     public function updateOrderStatus(int $orderId, string $status, ?string $comment = null): Order
     {
         $order = Order::findOrFail($orderId);
+        $order->update(['status' => $status]);
 
-        $order->update([
-            'status' => $status,
-        ]);
-
-        if ($comment) {
-            OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'from_status' => $order->getOriginal('status'),
-                'to_status' => $status,
-                'comment' => $comment,
-                'user_id' => auth()->id(),
-            ]);
-        }
+        // Можно добавить логирование истории статусов здесь
 
         return $order;
     }
@@ -792,28 +436,76 @@ class OrderService
     public function cancelOrder(int $orderId, ?string $reason = null): Order
     {
         $order = Order::findOrFail($orderId);
+        $order->update(['status' => Order::STATUS_CANCELLED]);
 
-        if (!$order->canBeCancelled()) {
-            throw new \Exception('Order cannot be cancelled');
+        if ($reason) {
+            $order->update(['notes' => ($order->notes ?? '') . "\nОтмена: $reason"]);
         }
 
-        // Return stock
-        foreach ($order->items as $item) {
-            if ($item->product) {
-                $item->product->increment('stock', $item->quantity);
-            }
-        }
-
-        return $this->updateOrderStatus($orderId, Order::STATUS_CANCELLED, $reason);
+        return $order;
     }
 
     public function calculateOrderTotal(Order $order): float
     {
-        $subtotal = $order->items->sum('total_price');
-        $shippingCost = $order->shipping_cost ?? 0;
-        $discountAmount = $order->discount_amount ?? 0;
+        return $order->items->sum('total_price');
+    }
+}
+```
 
-        return $subtotal + $shippingCost - $discountAmount;
+### TelegramService.php
+
+```php
+<?php
+
+namespace App\Services;
+
+use App\Models\Order;
+use Illuminate\Support\Facades\Log;
+
+class TelegramService
+{
+    public function sendOrderNotification(Order $order): void
+    {
+        try {
+            $order->notify(new \App\Notifications\NewOrderNotification($order));
+
+            $order->update([
+                'telegram_sent' => true,
+                'telegram_sent_at' => now(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send Telegram notification: ' . $e->getMessage());
+        }
+    }
+
+    public function formatOrderMessage(Order $order): string
+    {
+        $message = "*🆕 Новая заявка #{$order->order_number}*\n\n";
+
+        if ($order->isQuickOrder()) {
+            $message .= "*📦 Товар:* {$order->product_name}\n";
+            $message .= "*💰 Цена:* {$order->product_price} руб.\n";
+            $message .= "*📊 Количество:* {$order->quantity}\n";
+        } else {
+            $itemsText = $order->items->map(function ($item) {
+                return "• {$item->product_name} x{$item->quantity} = {$item->total_price} руб.";
+            })->implode("\n");
+
+            $message .= "*📦 Товары:*\n{$itemsText}\n";
+        }
+
+        $message .= "\n*💰 Итого:* {$order->total_amount} руб.";
+        $message .= "\n*👤 Имя:* {$order->customer_name}";
+        $message .= "\n*📞 Телефон:* `{$order->customer_phone}`";
+
+        if ($order->notes) {
+            $message .= "\n\n*📝 Комментарий:* {$order->notes}";
+        }
+
+        $message .= "\n*📍 IP:* {$order->ip_address}";
+        $message .= "\n_" . now()->format('d.m.Y H:i') . "_";
+
+        return $message;
     }
 }
 ```
@@ -822,159 +514,164 @@ class OrderService
 
 ## 4. CONTROLLERS
 
-### CartController.php
+### OrderController.php
 
 ```php
 <?php
 
 namespace App\Http\Controllers;
 
-use App\Services\CartService;
+use App\Http\Requests\StoreOrderRequest;
+use App\Models\Order;
+use App\Services\OrderService;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 
-class CartController extends Controller
+class OrderController extends Controller
 {
-    protected CartService $cartService;
+    protected OrderService $orderService;
 
-    public function __construct(CartService $cartService)
+    public function __construct(OrderService $orderService)
     {
-        $this->cartService = $cartService;
+        $this->orderService = $orderService;
     }
 
+    public function store(StoreOrderRequest $request)
+    {
+        try {
+            $data = $request->validated();
+
+            // Определяем тип заказа: быстрая заявка или из корзины
+            if (!empty($data['product_id'])) {
+                // Быстрая заявка
+                $product = \App\Models\Product::findOrFail($data['product_id']);
+                $order = $this->orderService->createQuickOrder($data, $product);
+            } elseif (!empty($data['cart_items'])) {
+                // Заказ из корзины
+                $order = $this->orderService->createOrderFromCart($data, $data['cart_items']);
+            } else {
+                return back()->with('error', 'Ошибка: не указаны товары для заказа');
+            }
+
+            return redirect()->route('orders.success', $order)
+                ->with('success', 'Заявка успешно отправлена!');
+        } catch (\Exception $e) {
+            \Log::error('Order creation failed: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Ошибка при создании заказа: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    public function success(Order $order)
+    {
+        return view('orders.success', compact('order'));
+    }
+
+    public function show(Order $order)
+    {
+        $order->load('items.product');
+        return view('orders.show', compact('order'));
+    }
+}
+```
+
+### ProductController.php
+
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Product;
+
+class ProductController extends Controller
+{
     public function index()
     {
-        $cart = $this->cartService->getCart();
-        $items = $this->cartService->getCartItems();
-        $total = $this->cartService->getCartTotal();
-
-        return view('cart.index', compact('cart', 'items', 'total'));
+        $products = Product::active()->orderBy('name')->paginate(20);
+        return view('products.index', compact('products'));
     }
 
-    public function store(Request $request): JsonResponse
+    public function show(Product $product)
     {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'nullable|integer|min:1|max:100',
-        ]);
-
-        try {
-            $quantity = $request->input('quantity', 1);
-            $item = $this->cartService->addToCart($request->product_id, $quantity);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Товар добавлен в корзину',
-                'count' => $this->cartService->getCartItemsCount(),
-                'total' => $this->cartService->getCartTotal(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
-        }
-    }
-
-    public function update(Request $request, int $itemId): JsonResponse
-    {
-        $request->validate([
-            'quantity' => 'required|integer|min:1|max:100',
-        ]);
-
-        try {
-            $this->cartService->updateCartItem($itemId, $request->quantity);
-
-            return response()->json([
-                'success' => true,
-                'count' => $this->cartService->getCartItemsCount(),
-                'total' => $this->cartService->getCartTotal(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
-        }
-    }
-
-    public function destroy(int $itemId): JsonResponse
-    {
-        try {
-            $this->cartService->removeFromCart($itemId);
-
-            return response()->json([
-                'success' => true,
-                'count' => $this->cartService->getCartItemsCount(),
-                'total' => $this->cartService->getCartTotal(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
-        }
-    }
-
-    public function clear(): JsonResponse
-    {
-        try {
-            $this->cartService->clearCart();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Корзина очищена',
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
-        }
-    }
-
-    public function getSummary(): JsonResponse
-    {
-        return response()->json([
-            'count' => $this->cartService->getCartItemsCount(),
-            'total' => $this->cartService->getCartTotal(),
-            'items' => $this->cartService->getCartItems(),
-        ]);
+        return view('products.show', compact('product'));
     }
 }
 ```
 
 ---
 
-## 5. API ROUTES
+## 5. FORM REQUESTS
+
+### StoreOrderRequest.php
 
 ```php
-// routes/api.php
+<?php
 
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\OrderController;
-use Illuminate\Support\Facades\Route;
+namespace App\Http\Requests;
 
-// Cart API
-Route::prefix('cart')->group(function () {
-    Route::get('/', [CartController::class, 'getSummary']);
-    Route::post('/items', [CartController::class, 'store']);
-    Route::put('/items/{id}', [CartController::class, 'update']);
-    Route::delete('/items/{id}', [CartController::class, 'destroy']);
-    Route::delete('/', [CartController::class, 'clear']);
-});
+use Illuminate\Foundation\Http\FormRequest;
 
-// Orders API
-Route::prefix('orders')->group(function () {
-    Route::get('/', [OrderController::class, 'index'])->middleware('auth');
-    Route::get('/{order}', [OrderController::class, 'show'])->middleware('auth');
-    Route::post('/', [OrderController::class, 'store']);
-});
+class StoreOrderRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'customer_name' => 'required|string|max:255',
+            'customer_phone' => 'required|string|regex:/^\+?\d{10,15}$/',
+            'consent' => 'required|accepted',
+            'notes' => 'nullable|string|max:1000',
+
+            // Для быстрой заявки
+            'product_id' => 'nullable|exists:products,id',
+            'quantity' => 'nullable|integer|min:1|max:100',
+
+            // Для заказа из корзины
+            'cart_items' => 'nullable|array|min:1',
+            'cart_items.*.id' => 'required|exists:products,id',
+            'cart_items.*.quantity' => 'required|integer|min:1|max:100',
+            'cart_items.*.price' => 'required|numeric|min:0',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'customer_name.required' => 'Пожалуйста, укажите ваше имя',
+            'customer_phone.required' => 'Пожалуйста, укажите ваш телефон',
+            'customer_phone.regex' => 'Некорректный формат телефона',
+            'consent.required' => 'Необходимо согласие на обработку персональных данных',
+            'consent.accepted' => 'Необходимо согласие на обработку персональных данных',
+        ];
+    }
+}
 ```
 
 ---
 
-## 6. TELEGRAM NOTIFICATION
+## 6. API ROUTES
+
+```php
+<?php
+
+// routes/api.php
+
+use App\Http\Controllers\OrderController;
+use Illuminate\Support\Facades\Route;
+
+// Orders API
+Route::post('/orders', [OrderController::class, 'store']);
+Route::get('/orders/{order}', [OrderController::class, 'show']);
+```
+
+---
+
+## 7. TELEGRAM NOTIFICATION
 
 ```php
 <?php
@@ -1006,40 +703,49 @@ class NewOrderNotification extends Notification
     {
         $message = TelegramMessage::create()
             ->to(config('telegram.chat_id'))
-            ->content("*🆕 Новый заказ #{$this->order->order_number}*\n\n");
+            ->content("*🆕 Новая заявка #{$this->order->order_number}*\n\n");
 
-        $itemsText = $this->order->items->map(function ($item) {
-            return "• {$item->product_name} x{$item->quantity} = {$item->total_price} руб.";
-        })->implode("\n");
+        if ($this->order->isQuickOrder()) {
+            $message->line("*📦 Товар:* {$this->order->product_name}")
+                ->line("*💰 Цена:* {$this->order->product_price} руб.")
+                ->line("*📊 Количество:* {$this->order->quantity}");
+        } else {
+            $itemsText = $this->order->items->map(function ($item) {
+                return "• {$item->product_name} x{$item->quantity} = {$item->total_price} руб.";
+            })->implode("\n");
 
-        $message->line("*📦 Товары:*\n{$itemsText}")
-            ->line("\n*💰 Итого:* {$this->order->total_amount} руб.")
-            ->line("*👤 Клиент:* {$this->order->customer_name}")
-            ->line("*📞 Телефон:* {$this->order->customer_phone}")
-            ->line("*📧 Email:* {$this->order->customer_email}");
-
-        if ($this->order->shippingMethod) {
-            $message->line("*🚚 Доставка:* {$this->order->shippingMethod->name} ({$this->order->shipping_cost} руб.)");
+            $message->line("*📦 Товары:*\n{$itemsText}");
         }
 
-        if ($this->order->paymentMethod) {
-            $message->line("*💳 Оплата:* {$this->order->paymentMethod->name}");
-        }
+        $message->line("\n*💰 Итого:* {$this->order->total_amount} руб.")
+            ->line("*👤 Имя:* {$this->order->customer_name}")
+            ->line("*📞 Телефон:* `{$this->order->customer_phone}`");
 
         if ($this->order->notes) {
             $message->line("\n*📝 Комментарий:* {$this->order->notes}");
         }
 
-        $message->line("\n_" . now()->format('d.m.Y H:i') . "_");
+        $message->line("\n*📍 IP:* {$this->order->ip_address}")
+            ->line("_" . now()->format('d.m.Y H:i') . "_");
 
-        return $message->button('Просмотр в админке', config('app.url') . '/admin/resource/order-resource/' . $this->order->id);
+        $message->button(
+            '📦 Заказ #'.$this->order->order_number,
+            config('app.url') . '/admin/resource/order-resource/' . $this->order->id
+        );
+
+        $message->button(
+            '📞 Позвонить',
+            'tel:' . $this->order->customer_phone
+        );
+
+        return $message;
     }
 }
 ```
 
 ---
 
-## 7. MOONSHINE RESOURCE
+## 8. MOONSHINE RESOURCE
 
 ```php
 <?php
@@ -1049,7 +755,6 @@ declare(strict_types=1);
 namespace App\MoonShine\Resources;
 
 use App\Models\Order;
-use App\Models\OrderStatusHistory;
 use MoonShine\Contracts\Core\DependencyInjection\FieldsContract;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
@@ -1057,7 +762,6 @@ use MoonShine\Laravel\Fields\Relationships\HasMany;
 use MoonShine\Laravel\Resources\ModelResource;
 use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\ID;
-use MoonShine\UI\Fields\Json;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Text;
@@ -1073,7 +777,7 @@ class OrderResource extends ModelResource
 
     protected string $column = 'order_number';
 
-    protected array $with = ['user', 'items', 'shippingMethod', 'paymentMethod'];
+    protected array $with = ['product', 'items', 'items.product'];
 
     public function getTitle(): string
     {
@@ -1084,30 +788,20 @@ class OrderResource extends ModelResource
     {
         return [
             ID::make()->sortable(),
-            Text::make('Номер заказа', 'order_number')->badge('primary'),
+            Text::make('Номер', 'order_number')->badge('primary'),
             Date::make('Дата', 'created_at')->format('d.m.Y H:i')->sortable(),
             Select::make('Статус', 'status')
                 ->options(Order::STATUSES)
                 ->badge(fn($value) => match($value) {
                     'pending' => 'warning',
                     'confirmed' => 'info',
-                    'processing' => 'primary',
-                    'shipped' => 'success',
-                    'delivered' => 'success',
+                    'completed' => 'success',
                     'cancelled' => 'danger',
                     default => 'gray',
                 }),
-            Select::make('Оплата', 'payment_status')
-                ->options(Order::PAYMENT_STATUSES)
-                ->badge(fn($value) => match($value) {
-                    'paid' => 'success',
-                    'pending' => 'warning',
-                    'failed' => 'danger',
-                    default => 'gray',
-                }),
             Number::make('Сумма', 'total_amount'),
-            Text::make('Клиент', 'customer_name'),
-            Text::make('Телефон', 'customer_phone'),
+            Text::make('Имя', 'customer_name'),
+            Text::make('Телефон', 'customer_phone')->badge(fn($value) => 'secondary'),
         ];
     }
 
@@ -1116,30 +810,23 @@ class OrderResource extends ModelResource
         return [
             Grid::make([
                 Column::make([
-                    Box::make('Информация о заказе', [
+                    Box::make('Информация о заявке', [
                         ID::make(),
-                        Text::make('Номер заказа', 'order_number')->readonly(),
+                        Text::make('Номер', 'order_number')->readonly(),
                         Date::make('Дата создания', 'created_at')->readonly(),
                         Select::make('Статус', 'status')
                             ->options(Order::STATUSES)
                             ->required(),
-                        Select::make('Статус оплаты', 'payment_status')
-                            ->options(Order::PAYMENT_STATUSES)
-                            ->required(),
+                        Switcher::make('Отправлено в Telegram', 'telegram_sent')->readonly(),
                     ]),
                 ])->columnSpan(6),
 
                 Column::make([
                     Box::make('Данные клиента', [
                         Text::make('Имя', 'customer_name')->readonly(),
-                        Text::make('Email', 'customer_email')->readonly(),
                         Text::make('Телефон', 'customer_phone')->readonly(),
                     ]),
                 ])->columnSpan(6),
-            ]),
-
-            Box::make('Адрес доставки', [
-                Json::make('Адрес', 'shipping_address')->readonly(),
             ]),
 
             Box::make('Товары', [
@@ -1153,9 +840,13 @@ class OrderResource extends ModelResource
             ]),
 
             Box::make('Примечания', [
-                Textarea::make('Заметки клиента', 'notes')->readonly(),
+                Textarea::make('Комментарий клиента', 'notes')->readonly(),
                 Textarea::make('Заметки администратора', 'admin_notes'),
-                Switcher::make('Отправлено в Telegram', 'telegram_sent')->readonly(),
+            ]),
+
+            Box::make('Дополнительная информация', [
+                Text::make('IP адрес', 'ip_address')->readonly(),
+                Switcher::make('Согласие на обработку', 'consent')->readonly(),
             ]),
         ];
     }
@@ -1169,8 +860,7 @@ class OrderResource extends ModelResource
     {
         return [
             Select::make('Статус', 'status')->options(Order::STATUSES),
-            Select::make('Статус оплаты', 'payment_status')->options(Order::PAYMENT_STATUSES),
-            Text::make('Email клиента', 'customer_email'),
+            Text::make('Телефон клиента', 'customer_phone'),
             Text::make('Номер заказа', 'order_number'),
         ];
     }
@@ -1179,196 +869,377 @@ class OrderResource extends ModelResource
 
 ---
 
-## 8. FRONTEND EXAMPLES
+## 9. FRONTEND EXAMPLES
 
-### Cart Modal (resources/views/modals/cart-modal.blade.php)
+### Products List (resources/views/products/index.blade.php)
 
 ```blade
-<div class="offcanvas offcanvas-end" id="cartModal" tabindex="-1">
-    <div class="offcanvas-header border-bottom">
-        <h5 class="offcanvas-title">Корзина</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-    </div>
-    <div class="offcanvas-body">
-        <div id="cart-items">
-            <!-- Items will be loaded here via AJAX -->
+@extends('layouts.app')
+
+@section('content')
+<div class="container py-5">
+    <h1 class="mb-4">Каталог товаров</h1>
+
+    <div class="row">
+        @foreach($products as $product)
+        <div class="col-md-4 col-sm-6 mb-4">
+            <div class="card h-100">
+                @if($product->image)
+                <img src="{{ $product->image }}" class="card-img-top" alt="{{ $product->name }}">
+                @endif
+                <div class="card-body">
+                    <h5 class="card-title">{{ $product->name }}</h5>
+                    <p class="card-text">{{ Str::limit($product->description, 100) }}</p>
+                    <h4 class="card-text text-primary">{{ number_format($product->price, 0, ',', ' ') }} руб.</h4>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <div class="d-grid gap-2">
+                        <button
+                            type="button"
+                            class="btn btn-primary"
+                            data-add-to-cart
+                            data-product-id="{{ $product->id }}"
+                            data-product-name="{{ $product->name }}"
+                            data-product-price="{{ $product->price }}"
+                            data-product-image="{{ $product->image }}"
+                        >
+                            <i class="bi bi-cart-plus"></i> В корзину
+                        </button>
+                        <a
+                            href="{{ route('products.show', $product) }}"
+                            class="btn btn-outline-primary"
+                        >
+                            <i class="bi bi-lightning"></i> Купить сейчас
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div id="cart-empty" class="text-center py-5 d-none">
-            <i class="ci-shopping-bag display-4 text-muted"></i>
-            <p class="mt-3">Корзина пуста</p>
-        </div>
+        @endforeach
     </div>
-    <div class="offcanvas-footer border-top p-3" id="cart-footer">
-        <div class="d-flex justify-content-between mb-2">
-            <span>Товары:</span>
-            <span id="cart-subtotal">0 руб.</span>
-        </div>
-        <a href="{{ route('cart.index') }}" class="btn btn-primary w-100">
-            Оформить заказ
-        </a>
-    </div>
+
+    {{ $products->links() }}
 </div>
+
+@endsection
 ```
 
-### Cart JavaScript (resources/js/cart.js)
+### Product Page with Quick Order (resources/views/products/show.blade.php)
+
+```blade
+@extends('layouts.app')
+
+@section('content')
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-6">
+            @if($product->image)
+            <img src="{{ $product->image }}" class="img-fluid rounded" alt="{{ $product->name }}">
+            @endif
+        </div>
+        <div class="col-md-6">
+            <h1>{{ $product->name }}</h1>
+            <h2 class="text-primary mb-4">{{ number_format($product->price, 0, ',', ' ') }} руб.</h2>
+            <p>{{ $product->description }}</p>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Быстрая заявка</h5>
+                    <p class="text-muted small">Оставьте заявку и мы перезвоним вам</p>
+
+                    <form action="{{ route('orders.store') }}" method="POST" id="quick-order-form">
+                        @csrf
+                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                        <input type="hidden" name="product_name" value="{{ $product->name }}">
+                        <input type="hidden" name="product_price" value="{{ $product->price }}">
+                        <input type="hidden" name="quantity" value="1">
+
+                        <div class="mb-3">
+                            <label for="customer_name" class="form-label">Ваше имя *</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="customer_name"
+                                name="customer_name"
+                                required
+                                placeholder="Иван Иванов"
+                            >
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="customer_phone" class="form-label">Телефон *</label>
+                            <input
+                                type="tel"
+                                class="form-control"
+                                id="customer_phone"
+                                name="customer_phone"
+                                required
+                                placeholder="+375 (29) 123-45-67"
+                            >
+                            <small class="text-muted">Мы позвоним вам в течение 15 минут</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    id="consent"
+                                    name="consent"
+                                    value="1"
+                                    required
+                                >
+                                <label class="form-check-label" for="consent">
+                                    Я согласен на обработку персональных данных
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Комментарий</label>
+                            <textarea
+                                class="form-control"
+                                id="notes"
+                                name="notes"
+                                rows="3"
+                                placeholder="Удобное время для звонка, вопросы..."
+                            ></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-lightning"></i> Оставить заявку
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+```
+
+### Success Page (resources/views/orders/success.blade.php)
+
+```blade
+@extends('layouts.app')
+
+@section('content')
+<div class="container py-5">
+    <div class="text-center">
+        <div class="mb-4">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+        </div>
+        <h1 class="mb-4">Спасибо за вашу заявку!</h1>
+        <p class="lead mb-4">
+            Номер заявки: <strong>#{{ $order->order_number }}</strong>
+        </p>
+        <p class="mb-4">
+            Мы перезвоним вам в течение 15 минут для подтверждения заказа.
+        </p>
+
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ route('products.index') }}" class="btn btn-primary">
+                <i class="bi bi-shop"></i> Продолжить покупки
+            </a>
+        </div>
+    </div>
+</div>
+@endsection
+```
+
+---
+
+## 10. JAVASCRIPT
+
+### Cart with LocalStorage (resources/js/cart.js)
 
 ```javascript
 class Cart {
     constructor() {
-        this.cartCount = document.getElementById('cart-count');
-        this.cartTotal = document.getElementById('cart-total');
+        this.storageKey = 'shop_cart';
+        this.cart = this.loadCart();
         this.init();
     }
 
     init() {
-        this.updateCartWidget();
         this.setupAddToCartButtons();
+        this.updateCartWidget();
     }
 
-    async addToCart(productId, quantity = 1) {
+    loadCart() {
         try {
-            const response = await fetch('/api/cart/items', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    product_id: productId,
-                    quantity: quantity
-                })
+            const data = localStorage.getItem(this.storageKey);
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            console.error('Error loading cart:', e);
+            return [];
+        }
+    }
+
+    saveCart() {
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify(this.cart));
+            this.updateCartWidget();
+        } catch (e) {
+            console.error('Error saving cart:', e);
+            alert('Ошибка сохранения корзины');
+        }
+    }
+
+    addToCart(product) {
+        const existingItem = this.cart.find(item => item.id === product.id);
+
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            this.cart.push({
+                id: product.id,
+                name: product.name,
+                price: parseFloat(product.price),
+                quantity: 1,
+                image: product.image || ''
             });
+        }
 
-            const data = await response.json();
+        this.saveCart();
+        this.showNotification('Товар добавлен в корзину');
+    }
 
-            if (data.success) {
-                this.updateCartWidget();
-                this.showNotification(data.message);
-                this.openCartModal();
+    removeFromCart(productId) {
+        this.cart = this.cart.filter(item => item.id !== productId);
+        this.saveCart();
+        this.updateCartWidget();
+    }
+
+    updateQuantity(productId, quantity) {
+        const item = this.cart.find(item => item.id === productId);
+
+        if (item) {
+            if (quantity <= 0) {
+                this.removeFromCart(productId);
             } else {
-                this.showError(data.message);
+                item.quantity = quantity;
+                this.saveCart();
             }
-        } catch (error) {
-            console.error('Error:', error);
-            this.showError('Ошибка при добавлении в корзину');
         }
     }
 
-    async updateQuantity(itemId, quantity) {
-        try {
-            const response = await fetch(`/api/cart/items/${itemId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({ quantity })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                this.updateCartWidget();
-                this.updateCartModal();
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
+    clearCart() {
+        this.cart = [];
+        this.saveCart();
     }
 
-    async removeItem(itemId) {
-        if (!confirm('Удалить товар из корзины?')) {
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/cart/items/${itemId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                this.updateCartWidget();
-                this.updateCartModal();
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
+    getTotal() {
+        return this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     }
 
-    async updateCartWidget() {
-        try {
-            const response = await fetch('/api/cart');
-            const data = await response.json();
-
-            if (this.cartCount) {
-                this.cartCount.textContent = data.count;
-            }
-            if (this.cartTotal) {
-                this.cartTotal.textContent = data.total + ' руб.';
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    }
-
-    async updateCartModal() {
-        const response = await fetch('/cart');
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const cartItems = doc.getElementById('cart-items');
-
-        if (cartItems) {
-            document.getElementById('cart-items').innerHTML = cartItems.innerHTML;
-        }
-    }
-
-    openCartModal() {
-        const cartModal = new bootstrap.Offcanvas(document.getElementById('cartModal'));
-        cartModal.show();
+    getTotalQuantity() {
+        return this.cart.reduce((sum, item) => sum + item.quantity, 0);
     }
 
     setupAddToCartButtons() {
         document.querySelectorAll('[data-add-to-cart]').forEach(button => {
             button.addEventListener('click', (e) => {
                 e.preventDefault();
-                const productId = button.dataset.productId;
-                const quantity = button.dataset.quantity || 1;
-                this.addToCart(parseInt(productId), parseInt(quantity));
+                const product = {
+                    id: parseInt(button.dataset.productId),
+                    name: button.dataset.productName,
+                    price: parseFloat(button.dataset.productPrice),
+                    image: button.dataset.productImage
+                };
+                this.addToCart(product);
             });
         });
     }
 
+    updateCartWidget() {
+        const countElement = document.getElementById('cart-count');
+        const totalElement = document.getElementById('cart-total');
+
+        if (countElement) {
+            countElement.textContent = this.getTotalQuantity();
+        }
+
+        if (totalElement) {
+            totalElement.textContent = this.getTotal().toLocaleString('ru-RU') + ' руб.';
+        }
+    }
+
     showNotification(message) {
-        // Show toast notification
         const toast = document.createElement('div');
-        toast.className = 'toast show position-fixed bottom-0 end-0 m-3';
-        toast.innerHTML = `
-            <div class="toast-body">
-                ${message}
-            </div>
-        `;
+        toast.className = 'alert alert-success position-fixed bottom-0 end-0 m-3';
+        toast.style.zIndex = '9999';
+        toast.innerHTML = message;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
-
-    showError(message) {
-        alert(message);
-    }
 }
 
-// Initialize cart
 document.addEventListener('DOMContentLoaded', () => {
     window.cart = new Cart();
 });
 ```
 
+### Order Form Handler (resources/js/order.js)
+
+```javascript
+class OrderForm {
+    constructor() {
+        this.init();
+    }
+
+    init() {
+        this.setupPhoneInput();
+        this.setupForms();
+    }
+
+    setupPhoneInput() {
+        const phoneInput = document.getElementById('customer_phone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 0) {
+                    if (value[0] === '7' || value[0] === '8') {
+                        value = '+375' + value.slice(1);
+                    } else if (!value.startsWith('+375')) {
+                        value = '+375' + value;
+                    }
+                }
+                e.target.value = value;
+            });
+        }
+    }
+
+    setupForms() {
+        const forms = document.querySelectorAll('[data-order-form]');
+        forms.forEach(form => {
+            form.addEventListener('submit', (e) => this.handleSubmit(e));
+        });
+    }
+
+    async handleSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+
+        // Проверяем, есть ли товары в корзине
+        if (window.cart && window.cart.getTotalQuantity() > 0) {
+            // Формируем данные заказа из корзины
+            const formData = new FormData(form);
+            const cartItems = window.cart.cart;
+
+            formData.append('cart_items', JSON.stringify(cartItems));
+        }
+
+        // Отправляем форму
+        form.submit();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    new OrderForm();
+});
+```
+
 ---
 
-Эти примеры кода помогут в реализации системы заказов. Каждый компонент можно адаптировать под конкретные требования проекта.
+Эти примеры кода помогут в реализации упрощённой системы заказов. Каждый компонент можно адаптировать под конкретные требования проекта.
