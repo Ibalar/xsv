@@ -29,3 +29,8 @@ Route::post('/quick-order', [OrderController::class, 'store'])->name('quick-orde
 
 // Страница успешного оформления заказа
 Route::get('/orders/success/{order}', [OrderController::class, 'success'])->name('orders.success');
+
+// Политика конфиденциальности
+Route::get('/privacy-policy', function () {
+    return view('privacy-policy');
+})->name('privacy-policy');

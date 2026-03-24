@@ -91,11 +91,41 @@
     <script src="{{ asset('assets/vendor/glightbox/glightbox.min.js') }}"></script>
     <script src="{{ asset('assets/js/search.js') }}"></script>
     <script src="{{ asset('assets/js/cart.js') }}"></script>
+    <script src="{{ asset('assets/js/cookie-consent.js') }}"></script>
 
 
     <!-- Bootstrap + Theme scripts -->
     <script src="{{ asset('assets/js/theme.min.js') }}"></script>
 
     @stack('scripts')
+
+    <!-- Cookie consent -->
+    <div class="alert alert-dark alert-dismissible fade position-fixed bottom-0 start-0 end-0 m-3"
+         role="alert"
+         id="cookieConsent"
+         style="z-index: 9999; display: none;">
+        <div class="container">
+            <div class="d-flex align-items-start">
+                <i class="ci-info fs-3 mt-1 me-3 text-primary"></i>
+                <div class="w-100">
+                    <h6 class="alert-heading mb-2">Мы используем cookies</h6>
+                    <p class="mb-3 fs-sm">
+                        Этот сайт использует cookies для улучшения работы сайта и персонализации.
+                        Продолжая использовать сайт, вы соглашаетесь с нашей
+                        <a href="{{ route('privacy-policy') }}" class="alert-link text-decoration-underline">политикой конфиденциальности</a>.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-primary btn-sm" id="acceptCookies">
+                            <i class="ci-check me-2"></i>Согласен
+                        </button>
+                        <a href="{{ route('privacy-policy') }}" class="btn btn-outline-light btn-sm">
+                            Подробнее
+                        </a>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
