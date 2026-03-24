@@ -16,7 +16,8 @@ class CatalogController extends Controller
             ->whereNull('parent_id')
             ->active()
             ->ordered()
-            ->withCount('children') // чтобы знать есть ли вложенные
+            ->with(['children' => fn($q) => $q->active()->ordered()])
+            ->withCount(['children' => fn($q) => $q->active()]) // чтобы знать есть ли вложенные
             ->get();
 
         // Хлебные крошки
