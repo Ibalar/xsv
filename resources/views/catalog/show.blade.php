@@ -273,7 +273,14 @@
                                                     <i class="ci-minus fs-sm"></i>
                                                 </button>
                                                 <input type="number" class="form-control form-control-sm bg-primary text-white w-100" value="0" min="0" readonly>
-                                                <button type="button" class="product-card-button btn btn-icon btn-sm btn-secondary ms-auto" data-increment aria-label="Increment quantity">
+                                                <button type="button"
+                                                        class="product-card-button btn btn-icon btn-sm btn-secondary ms-auto"
+                                                        data-id="{{ $product->id }}"
+                                                        data-name="{{ $product->name }}"
+                                                        data-price="{{ $product->price }}"
+                                                        data-image="{{ $product->image }}"
+                                                        data-increment
+                                                        aria-label="Increment quantity">
                                                     <span data-count-input-value></span>
                                                     <i class="ci-chat fs-sm"></i>
                                                 </button>

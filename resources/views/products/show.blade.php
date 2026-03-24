@@ -87,7 +87,13 @@
                     @endif
                     <div class="d-flex gap-3 mb-4">
                         <button type="button" class="btn btn-lg btn-primary rounded-pill w-100">в Лист заказа</button>
-                        <button type="button" class="btn btn-lg btn-dark rounded-pill w-100">Быстрая заявка</button>
+                        <button type="button"
+                                class="btn btn-lg btn-dark rounded-pill w-100"
+                                data-id="{{ $product->id }}"
+                                data-name="{{ $product->name }}"
+                                data-price="{{ $product->price }}"
+                                data-image="{{ $product->image }}"
+                        >Быстрая заявка</button>
                     </div>
                     <ul class="list-unstyled gap-3 pb-3 pb-lg-4 mb-3">
                         @if($product->supplier?->name)

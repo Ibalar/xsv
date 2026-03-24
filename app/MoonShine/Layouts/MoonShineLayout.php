@@ -17,6 +17,7 @@ use MoonShine\Contracts\ColorManager\ColorManagerContract;
 use MoonShine\Contracts\ColorManager\PaletteContract;
 use MoonShine\MenuManager\MenuItem;
 use App\MoonShine\Resources\ProductAttributeValue\ProductAttributeValueResource;
+use App\MoonShine\Resources\Order\OrderResource;
 
 final class MoonShineLayout extends AppLayout
 {
@@ -43,6 +44,7 @@ final class MoonShineLayout extends AppLayout
             MenuItem::make(AttributeValueResource::class),
             ...parent::menu(),
             MenuItem::make(ProductAttributeValueResource::class, 'ProductAttributeValues'),
+            MenuItem::make(OrderResource::class, 'Orders'),
         ];
     }
 

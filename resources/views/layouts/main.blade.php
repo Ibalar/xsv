@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/choices/choices.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/nouislider/nouislider.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/glightbox/glightbox.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/search.css') }}">
 
     <!-- Bootstrap + Theme styles -->
     <link rel="preload" href="{{ asset('assets/css/theme.css') }}" as="style">
@@ -86,10 +87,10 @@
     <script src="{{ asset('assets/vendor/swiper/swiper-bundle.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/choices/choices.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/nouislider/nouislider.min.js') }}"></script>
-
-
     <script src="{{ asset('assets/vendor/simplebar/simplebar.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/glightbox/glightbox.min.js') }}"></script>
+    <script src="{{ asset('assets/js/search.js') }}"></script>
+    <script src="{{ asset('assets/js/cart.js') }}"></script>
 
 
     <!-- Bootstrap + Theme scripts -->

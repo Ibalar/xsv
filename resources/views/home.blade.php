@@ -192,7 +192,13 @@
                                                 <del class="text-body-tertiary fs-sm fw-normal">{{ number_format($product->old_price, 2) }} BYN</del>
                                             @endif
                                         </div>
-                                        <button type="button" class="product-card-button btn btn-icon btn-secondary animate-slide-end ms-2" title="Добавить в заявку">
+                                        <button type="button"
+                                                class="product-card-button btn btn-icon btn-secondary animate-slide-end ms-2"
+                                                data-id="{{ $product->id }}"
+                                                data-name="{{ $product->name }}"
+                                                data-price="{{ $product->price }}"
+                                                data-image="{{ $product->image }}"
+                                                title="Добавить в заявку">
                                             <i class="ci-chat fs-base animate-target"></i>
                                         </button>
                                     </div>
@@ -315,7 +321,13 @@
                                                 <del class="text-body-tertiary fs-sm fw-normal">{{ number_format($product->old_price, 2) }} BYN</del>
                                             @endif
                                         </div>
-                                        <button type="button" class="product-card-button btn btn-icon btn-secondary animate-slide-end ms-2" title="Добавить в заявку">
+                                        <button type="button"
+                                                class="product-card-button btn btn-icon btn-secondary animate-slide-end ms-2"
+                                                data-id="{{ $product->id }}"
+                                                data-name="{{ $product->name }}"
+                                                data-price="{{ $product->price }}"
+                                                data-image="{{ $product->image }}"
+                                                title="Добавить в заявку">
                                             <i class="ci-chat fs-base animate-target"></i>
                                         </button>
                                     </div>
@@ -437,7 +449,12 @@
                                 </div>
 
                                 <button type="button"
-                                        class="product-card-button btn btn-icon btn-secondary">
+                                        class="product-card-button btn btn-icon btn-secondary"
+                                        data-id="{{ $product->id }}"
+                                        data-name="{{ $product->name }}"
+                                        data-price="{{ $product->price }}"
+                                        data-image="{{ $product->image }}"
+                                >
                                     <i class="ci-chat fs-base"></i>
                                 </button>
 

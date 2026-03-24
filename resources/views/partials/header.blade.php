@@ -71,11 +71,28 @@
         </div>
 
         <!-- Search bar visible on screens > 768px wide (md breakpoint) -->
-        <div class="position-relative w-100 d-none d-md-block me-3 me-xl-4">
-            <input type="search" class="form-control form-control-lg rounded-pill" placeholder="Поиск по сайту" aria-label="Search">
-            <button type="button" class="btn btn-icon btn-ghost fs-lg btn-secondary text-bo border-0 position-absolute top-0 end-0 rounded-circle mt-1 me-1" aria-label="Search button">
+        <div class="position-relative w-100 d-none d-md-block me-3 me-xl-4 search-box">
+
+            <input
+                type="search"
+                name="q"
+                id="search"
+                class="form-control form-control-lg rounded-pill"
+                placeholder="Поиск по сайту"
+                autocomplete="off"
+            >
+
+            <button
+                type="button"
+                aria-label="Search button"
+                class="btn btn-icon btn-ghost fs-lg btn-secondary border-0 position-absolute top-0 end-0 rounded-circle mt-1 me-1"
+            >
                 <i class="ci-search"></i>
             </button>
+
+            <!-- Результаты -->
+            <div id="search-results" class="search-results shadow"></div>
+
         </div>
 
 
@@ -126,10 +143,6 @@
                 <i class="ci-search animate-target"></i>
             </button>
 
-            <!-- Delivery options button visible on screens < 1200px wide (xl breakpoint) -->
-            <button type="button" class="btn btn-icon fs-lg btn-outline-secondary border-0 rounded-circle animate-scale d-xl-none" data-bs-toggle="offcanvas" data-bs-target="#deliveryOptions" aria-controls="deliveryOptions" aria-label="Toggle delivery options offcanvas">
-                <i class="ci-map-pin animate-target"></i>
-            </button>
 
             <!-- Account button visible on screens > 768px wide (md breakpoint) -->
             <a class="btn btn-icon fs-lg btn-outline-secondary border-0 rounded-circle animate-shake d-none d-md-inline-flex" href="account-signin.html">
@@ -150,7 +163,18 @@
         <div class="container pt-2 pb-3">
             <div class="position-relative">
                 <i class="ci-search position-absolute top-50 translate-middle-y d-flex fs-lg ms-3"></i>
-                <input type="search" class="form-control form-icon-start rounded-pill" placeholder="Search for products" data-autofocus="collapse">
+                <input
+                    type="search"
+                    name="q"
+                    id="search-mobile"
+                    class="form-control form-icon-start rounded-pill"
+                    placeholder="Поиск по сайту"
+                    data-autofocus="collapse"
+                    autocomplete="off"
+                >
+
+                <!-- Результаты поиска для мобильных -->
+                <div id="search-results-mobile" class="search-results shadow"></div>
             </div>
         </div>
     </div>

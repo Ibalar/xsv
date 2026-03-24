@@ -15299,4 +15299,16 @@ span.flatpickr-weekday {
 .br-none {
     border-radius: 0!important;
 }
+
+.cart-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #000;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    z-index: 9999;
+}
+
 /*# sourceMappingURL=theme.min.css.map */
