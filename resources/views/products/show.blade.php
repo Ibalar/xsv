@@ -232,6 +232,79 @@
         </div>
     </section>
 
+    <!-- Quick Order Modal -->
+    <div class="modal fade" id="quickOrderModal" tabindex="-1" aria-labelledby="quickOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quickOrderModalLabel">Быстрая заявка</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Product Info -->
+                    <div class="d-flex align-items-center mb-4 p-3 bg-light rounded">
+                        <img src="" alt="" id="quick-order-image" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                        <div class="ms-3">
+                            <h6 class="mb-1" id="quick-order-name"></h6>
+                            <div class="text-primary fw-medium" id="quick-order-price"></div>
+                        </div>
+                    </div>
 
+                    <!-- Form -->
+                    <form id="quick-order-form">
+                        @csrf
+                        <input type="hidden" id="quick-order-product-id" name="product_id">
+
+                        <div class="mb-3">
+                            <label for="quick-order-name-input" class="form-label">Ваше имя <span class="text-danger">*</span></label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="quick-order-name-input"
+                                   name="name"
+                                   required
+                                   placeholder="Введите ваше имя">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="quick-order-phone" class="form-label">Телефон <span class="text-danger">*</span></label>
+                            <input type="tel"
+                                   class="form-control"
+                                   id="quick-order-phone"
+                                   name="phone"
+                                   required
+                                   placeholder="+375 (XX) XXX-XX-XX">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="quick-order-comment" class="form-label">Комментарий</label>
+                            <textarea class="form-control"
+                                      id="quick-order-comment"
+                                      name="comment"
+                                      rows="2"
+                                      placeholder="Удобное время для звонка..."></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="quick-order-agree"
+                                       name="agree"
+                                       value="1"
+                                       required>
+                                <label class="form-check-label" for="quick-order-agree">
+                                    Я согласен на обработку персональных данных <span class="text-danger">*</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100" id="quick-order-submit">
+                            Отправить заявку
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
 @endsection
