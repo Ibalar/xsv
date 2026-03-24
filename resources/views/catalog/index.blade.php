@@ -20,7 +20,7 @@
                     <div class="card h-100 bg-transparent border-0">
                         <div class="position-relative hover-effect-opacity mb-3">
                             <div class="ratio rounded-5 overflow-hidden" style="--cz-aspect-ratio: calc(240 / 212 * 100%)">
-                                <img src="{{ $category->image ? asset('storage/categories/' . $category->image) : asset('assets/img/placeholder.png') }}" alt="{{ $category->name }}">
+                                <img src="{{ $category->image ? asset('storage/' . $category->image) : asset('assets/img/placeholder.png') }}" alt="{{ $category->name }}">
                             </div>
                             <div class="hover-effect-target position-absolute top-0 start-0 w-100 h-100 bg-black bg-opacity-25 d-flex align-items-center justify-content-center opacity-0 transition-all">
                                 <i class="ci-arrow-right fs-2 text-white"></i>
