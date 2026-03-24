@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const removedItem = cart.find(item => item.id == productId);
         cart = cart.filter(item => item.id != productId);
         saveCart(cart);
-        
+
         if (removedItem) {
             showRemovedMessage(removedItem.name);
         }
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!toastContainer) {
             toastContainer = document.createElement('div');
             toastContainer.id = 'toast-container';
-            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
             toastContainer.style.zIndex = '9999';
             document.body.appendChild(toastContainer);
         }
