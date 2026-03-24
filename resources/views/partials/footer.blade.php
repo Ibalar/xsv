@@ -71,6 +71,9 @@
         <!-- Copyright + Payment methods -->
         <div class="d-md-flex align-items-center border-top py-4">
             <p class="text-body fs-xs text-center text-md-start mb-0 me-4 order-md-1">&copy; 2021-{{ date('Y') }} Все права защищены. Разработка сайта <span class="animate-underline"><a class="animate-target text-dark-emphasis fw-medium text-decoration-none" href="https://webart.by/" target="_blank" rel="noreferrer">WebArt.BY</a></span></p>
+            <div class="ms-md-auto order-md-2 mt-3 mt-md-0">
+                <a class="nav-link fs-xs fw-normal p-0" href="{{ route('privacy-policy') }}">Политика конфиденциальности</a>
+            </div>
         </div>
     </div>
 </footer>
