@@ -32,8 +32,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function removeFromCart(productId) {
         let cart = getCart();
+        const removedItem = cart.find(item => item.id == productId);
         cart = cart.filter(item => item.id != productId);
         saveCart(cart);
+        
+        if (removedItem) {
+            showRemovedMessage(removedItem.name);
+        }
     }
 
     function updateQuantity(productId, quantity) {
@@ -71,28 +76,68 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function showAddedMessage(name) {
-        let el = document.createElement('div');
-        el.className = 'cart-toast';
-        el.innerText = `Добавлено: ${name}`;
-        el.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #28a745;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            z-index: 9999;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            animation: slideIn 0.3s ease;
-        `;
-        document.body.appendChild(el);
+    // Toast уведомления на основе Bootstrap
+    function getToastContainer() {
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+        return toastContainer;
+    }
 
-        setTimeout(() => {
-            el.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => el.remove(), 300);
-        }, 2000);
+    function showCartMessage(message, type = 'success') {
+        const toastContainer = getToastContainer();
+
+        const typeClasses = {
+            success: 'bg-success',
+            danger: 'bg-danger',
+            info: 'bg-info',
+            warning: 'bg-warning'
+        };
+
+        const typeIcons = {
+            success: 'ci-check-circle',
+            danger: 'ci-trash',
+            info: 'ci-info-circle',
+            warning: 'ci-exclamation-triangle'
+        };
+
+        const toastHtml = `
+            <div class="toast align-items-center text-white ${typeClasses[type] || typeClasses.success} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="${typeIcons[type] || typeIcons.success} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        const toastElement = toastContainer.lastElementChild;
+
+        const toast = new bootstrap.Toast(toastElement, {
+            delay: 3000,
+            autohide: true
+        });
+        toast.show();
+
+        toastElement.addEventListener('hidden.bs.toast', function() {
+            this.remove();
+        });
+    }
+
+    function showAddedMessage(name) {
+        showCartMessage(`Добавлено в заявку: ${name}`, 'success');
+    }
+
+    function showRemovedMessage(name) {
+        showCartMessage(`Удалено из заявки: ${name}`, 'danger');
     }
 
     // Обработка всех кнопок добавления в корзину
