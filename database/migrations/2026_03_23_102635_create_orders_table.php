@@ -13,10 +13,15 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->json('products'); // массив товаров: id, name, quantity, price
+            $table->json('products'); // массив товаров: id, name, quantity, price, image
             $table->string('name');
             $table->string('phone');
+            $table->text('comment')->nullable();
             $table->boolean('agree')->default(false); // согласие с обработкой
+            $table->string('ip_address')->nullable();
+            $table->text('user_agent')->nullable();
+            $table->boolean('telegram_sent')->default(false);
+            $table->timestamp('telegram_sent_at')->nullable();
             $table->timestamps();
         });
     }

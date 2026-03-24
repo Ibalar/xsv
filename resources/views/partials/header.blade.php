@@ -151,10 +151,10 @@
             </a>
 
             <!-- Cart button -->
-            <button type="button" class="btn btn-icon fs-xl btn-outline-secondary position-relative border-0 rounded-circle animate-scale" data-bs-toggle="offcanvas" data-bs-target="#shoppingCart" aria-controls="shoppingCart" aria-label="Shopping cart" title="Заявка на заказ">
-                <span class="position-absolute top-0 start-100 badge fs-xs text-bg-primary rounded-pill ms-n3 z-2" style="--cz-badge-padding-y: .25em; --cz-badge-padding-x: .42em">0</span>
+            <a href="{{ route('checkout.show') }}" class="btn btn-icon fs-xl btn-outline-secondary position-relative border-0 rounded-circle animate-scale" aria-label="Shopping cart" title="Заявка на заказ">
+                <span id="cart-badge" class="position-absolute top-0 start-100 badge fs-xs text-bg-primary rounded-pill ms-n3 z-2" style="--cz-badge-padding-y: .25em; --cz-badge-padding-x: .42em; display: none;">0</span>
                 <i class="ci-file-text animate-target"></i>
-            </button>
+            </a>
         </div>
     </div>
 

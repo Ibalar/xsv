@@ -26,3 +26,6 @@ Route::get('/checkout', [OrderController::class, 'show'])->name('checkout.show')
 // Отправка заказа и быстрой заявки
 Route::post('/checkout', [OrderController::class, 'store'])->name('checkout.store');
 Route::post('/quick-order', [OrderController::class, 'store'])->name('quick-order.store');
+
+// Страница успешного оформления заказа
+Route::get('/orders/success/{order}', [OrderController::class, 'success'])->name('orders.success');
