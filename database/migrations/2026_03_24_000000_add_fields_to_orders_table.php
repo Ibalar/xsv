@@ -9,15 +9,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->string('status')->default('new')->after('phone');
-            $table->text('admin_notes')->nullable()->after('comment');
+            if (!Schema::hasColumn('orders', 'status')) {
+                $table->string('status')->default('new')->after('phone');
+            }
+            if (!Schema::hasColumn('orders', 'admin_notes')) {
+                $table->text('admin_notes')->nullable()->after('agree');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn(['status', 'admin_notes']);
+            if (Schema::hasColumn('orders', 'status')) {
+                $table->dropColumn('status');
+            }
+            if (Schema::hasColumn('orders', 'admin_notes')) {
+                $table->dropColumn('admin_notes');
+            }
         });
     }
 };
