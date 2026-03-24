@@ -11,7 +11,7 @@ class OrderController extends Controller
     // Показ страницы оформления заказа
     public function show()
     {
-        return view('checkout'); // подключи свой Blade-шаблон checkout.blade.php
+        return view('checkout');
     }
 
     // Сохранение заказа или быстрой заявки
@@ -19,46 +19,104 @@ class OrderController extends Controller
     {
         // Валидация данных
         $data = $request->validate([
-            'products' => 'required|array|min:1',
-            'products.*.id' => 'required|integer',
-            'products.*.name' => 'required|string',
-            'products.*.price' => 'required|numeric',
-            'products.*.quantity' => 'required|integer|min:1',
-            'name' => 'required|string',
-            'phone' => 'required|string',
-            'agree' => 'accepted',
+            'products' => 'required|json',
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:50',
+            'agree' => 'required|accepted',
+            'comment' => 'nullable|string|max:1000',
+        ], [
+            'products.required' => 'Корзина пуста',
+            'products.json' => 'Неверный формат данных корзины',
+            'name.required' => 'Пожалуйста, укажите ваше имя',
+            'name.max' => 'Имя не должно превышать 255 символов',
+            'phone.required' => 'Пожалуйста, укажите ваш телефон',
+            'phone.max' => 'Телефон не должен превышать 50 символов',
+            'agree.required' => 'Необходимо согласие на обработку персональных данных',
+            'agree.accepted' => 'Необходимо согласие на обработку персональных данных',
+            'comment.max' => 'Комментарий не должен превышать 1000 символов',
         ]);
+
+        // Декодируем товары из JSON
+        $products = json_decode($data['products'], true);
+
+        if (empty($products) || !is_array($products)) {
+            return back()
+                ->with('error', 'Корзина пуста')
+                ->withInput();
+        }
+
+        // Валидируем структуру товаров
+        foreach ($products as $product) {
+            if (!isset($product['id'], $product['name'], $product['price'], $product['quantity'])) {
+                return back()
+                    ->with('error', 'Неверный формат данных товаров')
+                    ->withInput();
+            }
+        }
 
         // Создание заказа в базе
         $order = Order::create([
-            'products' => $data['products'], // JSON
+            'products' => $products,
             'name' => $data['name'],
             'phone' => $data['phone'],
+            'comment' => $data['comment'] ?? null,
             'agree' => true,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
         ]);
 
         // Отправка в Telegram
-        $this->sendTelegram($order);
+        try {
+            $this->sendTelegram($order);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send Telegram notification: ' . $e->getMessage());
+        }
 
-        return response()->json(['success' => true, 'order_id' => $order->id]);
+        // Редирект на страницу успеха
+        return redirect()
+            ->route('orders.success', $order)
+            ->with('success', 'Заявка успешно отправлена!');
+    }
+
+    // Страница успешного оформления заказа
+    public function success(Order $order)
+    {
+        return view('orders.success', compact('order'));
     }
 
     // Метод для отправки данных в Telegram
     protected function sendTelegram(Order $order)
     {
-        $token = config('services.telegram.bot_token'); // твой токен
-        $chat_id = config('services.telegram.chat_id'); // ID чата
+        $token = config('services.telegram.bot_token');
+        $chat_id = config('services.telegram.chat_id');
 
-        $productsText = '';
-        foreach ($order->products as $p) {
-            $productsText .= "{$p['name']} — {$p['quantity']} × {$p['price']} BYN\n";
+        // Если не настроены настройки Telegram - пропускаем
+        if (empty($token) || empty($chat_id)) {
+            return;
         }
 
-        $message = "Новый заказ:\n\n"
-            . "Имя: {$order->name}\n"
-            . "Телефон: {$order->phone}\n"
-            . "Согласие на обработку данных: Да\n\n"
-            . "Товары:\n{$productsText}";
+        $productsText = '';
+        $totalAmount = 0;
+
+        foreach ($order->products as $p) {
+            $itemTotal = $p['quantity'] * $p['price'];
+            $totalAmount += $itemTotal;
+            $productsText .= "• {$p['name']}\n";
+            $productsText .= "  {$p['quantity']} × {$p['price']} BYN = {$itemTotal} BYN\n\n";
+        }
+
+        $message = "<b>🆕 Новая заявка #{$order->id}</b>\n\n";
+        $message .= "<b>👤 Имя:</b> {$order->name}\n";
+        $message .= "<b>📞 Телефон:</b> {$order->phone}\n";
+
+        if ($order->comment) {
+            $message .= "<b>📝 Комментарий:</b> {$order->comment}\n";
+        }
+
+        $message .= "\n<b>📦 Товары:</b>\n\n";
+        $message .= $productsText;
+        $message .= "<b>💰 Итого:</b> {$totalAmount} BYN\n";
+        $message .= "\n<i>" . now()->format('d.m.Y H:i') . "</i>";
 
         // Отправка через Telegram Bot API
         Http::get("https://api.telegram.org/bot{$token}/sendMessage", [
