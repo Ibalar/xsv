@@ -235,8 +235,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const productsInput = document.getElementById('products-input');
 
         if (cart.length === 0) {
-            container.innerHTML = '';
-            container.appendChild(emptyMessage);
+            // Не удаляем emptyMessage из DOM, просто скрываем/показываем
+            const cartTable = container.querySelector('.table-responsive');
+            if (cartTable) {
+                cartTable.remove();
+            }
             emptyMessage.style.display = 'block';
             cartFooter.style.display = 'none';
             submitBtn.disabled = true;
@@ -300,7 +303,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         html += '</tbody></table></div>';
-        container.innerHTML = html;
+
+        // Удаляем старую таблицу если есть
+        const existingTable = container.querySelector('.table-responsive');
+        if (existingTable) {
+            existingTable.remove();
+        }
+
+        // Добавляем HTML после emptyMessage
+        emptyMessage.insertAdjacentHTML('afterend', html);
 
         // Update total
         document.getElementById('cart-total').textContent = total.toFixed(2) + ' BYN';
