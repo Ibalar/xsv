@@ -8,10 +8,10 @@
 
                 @if (!$loop->last && !empty($item['url']))
                     <a href="{{ $item['url'] }}" itemprop="item">
-                        <span itemprop="name">{{ $item['title'] }}</span>
+                        <span itemprop="name">{{ $item['name'] ?? $item['title'] }}</span>
                     </a>
                 @else
-                    <span itemprop="name">{{ $item['title'] }}</span>
+                    <span itemprop="name">{{ $item['name'] ?? $item['title'] }}</span>
                 @endif
 
                 <meta itemprop="position" content="{{ $index + 1 }}">
