@@ -128,16 +128,16 @@
                             </div>
 
                             <div class="mb-4">
-                                <div class="form-check bg-body-tertiary p-3 rounded">
+                                <div class="form-check d-inline bg-body-tertiary p-3 rounded">
                                     <input type="checkbox"
-                                           class="form-check-input @error('agree') is-invalid @enderror"
+                                           class="form-check-input ms-1 me-2 @error('agree') is-invalid @enderror"
                                            id="agree"
                                            name="agree"
                                            value="1"
                                            required
                                            {{ old('agree') ? 'checked' : '' }}>
                                     <label class="form-check-label" for="agree">
-                                        <span class="fw-medium">Я согласен</span> на обработку персональных данных <span class="text-danger">*</span>
+                                        Я согласен на обработку персональных данных <span class="text-danger">*</span>
                                     </label>
                                     @error('agree')
                                         <div class="invalid-feedback">{{ $message }}</div>
