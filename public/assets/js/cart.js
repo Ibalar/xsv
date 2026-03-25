@@ -114,26 +114,28 @@ document.addEventListener('DOMContentLoaded', function () {
         const imageUrl = `/storage/products/${item.image || 'placeholder.png'}`;
 
         return `
-            <div class="d-flex align-items-center">
-                <a class="flex-shrink-0" href="${productUrl}">
-                    <img src="${imageUrl}" width="110" alt="${item.name}">
+            <div class="d-flex align-items-center gap-3 p-3 rounded bg-body-tertiary">
+                <a class="flex-shrink-0 rounded overflow-hidden" href="${productUrl}">
+                    <img src="${imageUrl}" width="80" height="80" style="object-fit: cover;" alt="${item.name}">
                 </a>
-                <div class="w-100 ps-3">
-                    <h5 class="fs-sm fw-medium lh-base mb-2">
-                        <a class="hover-effect-underline" href="${productUrl}">${item.name}</a>
+                <div class="w-100 min-w-0">
+                    <h5 class="fs-sm fw-semibold lh-base mb-1">
+                        <a class="hover-effect-underline text-decoration-none" href="${productUrl}">${item.name}</a>
                     </h5>
-                    <div class="h6 pb-1 mb-2">${item.price.toFixed(2)} BYN</div>
+                    <div class="h6 pb-1 mb-2 text-primary fw-medium">${item.price.toFixed(2)} BYN</div>
                     <div class="d-flex align-items-center justify-content-between">
-                        <div class="count-input rounded-pill">
-                            <button type="button" class="btn btn-icon btn-sm" data-cart-decrement="${item.id}" aria-label="Decrement quantity">
-                                <i class="ci-minus"></i>
+                        <div class="d-inline-flex align-items-center border rounded overflow-hidden" style="padding: 2px;">
+                            <button type="button" class="btn btn-sm btn-icon bg-transparent border-0" data-cart-decrement="${item.id}" aria-label="Уменьшить количество">
+                                <i class="ci-minus fs-sm"></i>
                             </button>
-                            <input type="number" class="form-control form-control-sm" value="${item.quantity}" readonly>
-                            <button type="button" class="btn btn-icon btn-sm" data-cart-increment="${item.id}" aria-label="Increment quantity">
-                                <i class="ci-plus"></i>
+                            <input type="number" class="form-control form-control-sm text-center bg-transparent border-0" style="width: 40px;" value="${item.quantity}" readonly>
+                            <button type="button" class="btn btn-sm btn-icon bg-transparent border-0" data-cart-increment="${item.id}" aria-label="Увеличить количество">
+                                <i class="ci-plus fs-sm"></i>
                             </button>
                         </div>
-                        <button type="button" class="btn-close fs-sm" data-cart-remove="${item.id}" data-bs-toggle="tooltip" data-bs-custom-class="tooltip-sm" data-bs-title="Удалить" aria-label="Remove from cart"></button>
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 32px; height: 32px; padding: 0;" data-cart-remove="${item.id}" data-bs-toggle="tooltip" data-bs-custom-class="tooltip-sm" data-bs-title="Удалить" aria-label="Удалить из заявки">
+                            <i class="ci-trash fs-sm"></i>
+                        </button>
                     </div>
                 </div>
             </div>
