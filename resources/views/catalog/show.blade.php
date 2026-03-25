@@ -279,6 +279,7 @@
                                                         data-name="{{ $product->name }}"
                                                         data-price="{{ $product->price }}"
                                                         data-image="{{ $product->image }}"
+                                                        data-slug="{{ $product->slug }}"
                                                         data-increment
                                                         aria-label="Increment quantity">
                                                     <span data-count-input-value></span>

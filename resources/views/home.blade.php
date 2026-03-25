@@ -198,6 +198,7 @@
                                                 data-name="{{ $product->name }}"
                                                 data-price="{{ $product->price }}"
                                                 data-image="{{ $product->image }}"
+                                                data-slug="{{ $product->slug }}"
                                                 title="Добавить в заявку">
                                             <i class="ci-chat fs-base animate-target"></i>
                                         </button>
@@ -327,6 +328,7 @@
                                                 data-name="{{ $product->name }}"
                                                 data-price="{{ $product->price }}"
                                                 data-image="{{ $product->image }}"
+                                                data-slug="{{ $product->slug }}"
                                                 title="Добавить в заявку">
                                             <i class="ci-chat fs-base animate-target"></i>
                                         </button>
@@ -454,6 +456,7 @@
                                         data-name="{{ $product->name }}"
                                         data-price="{{ $product->price }}"
                                         data-image="{{ $product->image }}"
+                                        data-slug="{{ $product->slug }}"
                                 >
                                     <i class="ci-chat fs-base"></i>
                                 </button>
