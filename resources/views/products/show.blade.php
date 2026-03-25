@@ -92,6 +92,7 @@
                                 data-name="{{ $product->name }}"
                                 data-price="{{ $product->price }}"
                                 data-image="{{ $product->image }}"
+                                data-slug="{{ $product->slug }}"
                         >в Лист заказа</button>
                         <button type="button"
                                 class="quick-order-button btn btn-lg btn-dark rounded-pill w-100"
@@ -99,6 +100,7 @@
                                 data-name="{{ $product->name }}"
                                 data-price="{{ $product->price }}"
                                 data-image="{{ $product->image }}"
+                                data-slug="{{ $product->slug }}"
                         >Быстрая заявка</button>
                     </div>
                     <ul class="list-unstyled gap-3 pb-3 pb-lg-4 mb-3">
@@ -200,6 +202,7 @@
                                                                 data-name="{{ $related->name }}"
                                                                 data-price="{{ $related->price }}"
                                                                 data-image="{{ $related->image }}"
+                                                                data-slug="{{ $related->slug }}"
                                                                 data-increment
                                                                 aria-label="Increment quantity">
                                                             <span data-count-input-value></span>

@@ -10,118 +10,28 @@
     </div>
 
     <!-- Items -->
-    <div class="offcanvas-body d-flex flex-column gap-4 pt-2">
+    <div id="cart-offcanvas-items" class="offcanvas-body d-flex flex-column gap-4 pt-2">
+        <!-- Dynamic content will be loaded here -->
+    </div>
 
-        <!-- Item -->
-        <div class="d-flex align-items-center">
-            <a class="position-relative flex-shrink-0" href="shop-product-grocery.html">
-                <span class="badge text-bg-danger position-absolute top-0 start-0 z-2 mt-0 ms-0">-$2.79</span>
-                <img src="assets/img/shop/grocery/thumbs/01.png" width="110" alt="Thumbnail">
-            </a>
-            <div class="w-100 ps-3">
-                <h5 class="fs-sm fw-medium lh-base mb-2">
-                    <a class="hover-effect-underline" href="shop-product-grocery.html">Fresh orange Klementina, Spain</a>
-                </h5>
-                <div class="h6 pb-1 mb-2">$3.12</div>
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="count-input rounded-pill">
-                        <button type="button" class="btn btn-icon btn-sm" data-decrement aria-label="Decrement quantity">
-                            <i class="ci-minus"></i>
-                        </button>
-                        <input type="number" class="form-control form-control-sm" value="3" readonly>
-                        <button type="button" class="btn btn-icon btn-sm" data-increment aria-label="Increment quantity">
-                            <i class="ci-plus"></i>
-                        </button>
-                    </div>
-                    <button type="button" class="btn-close fs-sm" data-bs-toggle="tooltip" data-bs-custom-class="tooltip-sm" data-bs-title="Remove" aria-label="Remove from cart"></button>
-                </div>
-            </div>
+    <!-- Empty state -->
+    <div id="cart-offcanvas-empty" class="offcanvas-body d-flex flex-column align-items-center justify-content-center text-center py-5 d-none">
+        <div class="mb-4">
+            <i class="ci-shopping-cart fs-1 text-body-tertiary"></i>
         </div>
-
-        <!-- Item -->
-        <div class="d-flex align-items-center">
-            <a class="flex-shrink-0" href="shop-product-grocery.html">
-                <img src="assets/img/shop/grocery/thumbs/02.png" width="110" alt="Thumbnail">
-            </a>
-            <div class="w-100 ps-3">
-                <h5 class="fs-sm fw-medium lh-base mb-2">
-                    <a class="hover-effect-underline" href="shop-product-grocery.html">Pesto sauce Barilla with basil, Italy</a>
-                </h5>
-                <div class="h6 pb-1 mb-2">$3.95</div>
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="count-input rounded-pill">
-                        <button type="button" class="btn btn-icon btn-sm" data-decrement aria-label="Decrement quantity">
-                            <i class="ci-minus"></i>
-                        </button>
-                        <input type="number" class="form-control form-control-sm" value="1" readonly>
-                        <button type="button" class="btn btn-icon btn-sm" data-increment aria-label="Increment quantity">
-                            <i class="ci-plus"></i>
-                        </button>
-                    </div>
-                    <button type="button" class="btn-close fs-sm" data-bs-toggle="tooltip" data-bs-custom-class="tooltip-sm" data-bs-title="Remove" aria-label="Remove from cart"></button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Item -->
-        <div class="d-flex align-items-center">
-            <a class="flex-shrink-0" href="shop-product-grocery.html">
-                <img src="assets/img/shop/grocery/thumbs/03.png" width="110" alt="Thumbnail">
-            </a>
-            <div class="w-100 ps-3">
-                <h5 class="fs-sm fw-medium lh-base mb-2">
-                    <a class="hover-effect-underline" href="shop-product-grocery.html">Steak salmon fillet with rosmary</a>
-                </h5>
-                <div class="h6 pb-1 mb-2">$27.00</div>
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="count-input rounded-pill">
-                        <button type="button" class="btn btn-icon btn-sm" data-decrement aria-label="Decrement quantity">
-                            <i class="ci-minus"></i>
-                        </button>
-                        <input type="number" class="form-control form-control-sm" value="2" readonly>
-                        <button type="button" class="btn btn-icon btn-sm" data-increment aria-label="Increment quantity">
-                            <i class="ci-plus"></i>
-                        </button>
-                    </div>
-                    <button type="button" class="btn-close fs-sm" data-bs-toggle="tooltip" data-bs-custom-class="tooltip-sm" data-bs-title="Remove" aria-label="Remove from cart"></button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Item -->
-        <div class="d-flex align-items-center">
-            <a class="flex-shrink-0" href="shop-product-grocery.html">
-                <img src="assets/img/shop/grocery/thumbs/04.png" width="110" alt="Thumbnail">
-            </a>
-            <div class="w-100 ps-3">
-                <h5 class="fs-sm fw-medium lh-base mb-2">
-                    <a class="hover-effect-underline" href="shop-product-grocery.html">Sprite soda lemon lime, can</a>
-                </h5>
-                <div class="h6 pb-1 mb-2">$0.80</div>
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="count-input rounded-pill">
-                        <button type="button" class="btn btn-icon btn-sm" data-decrement aria-label="Decrement quantity">
-                            <i class="ci-minus"></i>
-                        </button>
-                        <input type="number" class="form-control form-control-sm" value="2" readonly>
-                        <button type="button" class="btn btn-icon btn-sm" data-increment aria-label="Increment quantity">
-                            <i class="ci-plus"></i>
-                        </button>
-                    </div>
-                    <button type="button" class="btn-close fs-sm" data-bs-toggle="tooltip" data-bs-custom-class="tooltip-sm" data-bs-title="Remove" aria-label="Remove from cart"></button>
-                </div>
-            </div>
-        </div>
+        <h5 class="h6 mb-3">Ваша заявка пуста</h5>
+        <p class="fs-sm text-body-secondary mb-4">Вы еще не добавили ни одного товара в свою заявку.</p>
+        <a class="btn btn-sm btn-primary rounded-pill" href="{{ route('catalog.index') }}">Перейти в каталог</a>
     </div>
 
     <!-- Footer -->
-    <div class="offcanvas-header flex-column align-items-start">
+    <div id="cart-offcanvas-footer" class="offcanvas-header flex-column align-items-start">
         <div class="d-flex align-items-center justify-content-between w-100 mb-3 mb-md-4">
-            <span class="text-light-emphasis">Subtotal:</span>
-            <span class="h6 mb-0">$68.91</span>
+            <span class="text-light-emphasis">Итого:</span>
+            <span id="cart-offcanvas-total" class="h6 mb-0">0.00 BYN</span>
         </div>
         <div class="d-flex w-100 gap-3">
-            <a class="btn btn-lg btn-primary w-100 rounded-pill" href="{{ route('checkout.show') }}">Оформить</a>
+            <a class="btn btn-lg btn-primary w-100 rounded-pill" href="{{ route('checkout.show') }}">Оформить заказ</a>
         </div>
     </div>
 </div>

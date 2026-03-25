@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function saveCart(cart) {
         localStorage.setItem('cart', JSON.stringify(cart));
         updateCartBadge();
+        renderCartOffcanvas();
     }
 
     function addToCart(product) {
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 name: product.name,
                 price: product.price,
                 image: product.image,
+                slug: product.slug,
                 quantity: 1
             });
         }
@@ -57,6 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function clearCart() {
         localStorage.removeItem('cart');
         updateCartBadge();
+        renderCartOffcanvas();
     }
 
     function getTotalQuantity() {
@@ -75,6 +78,93 @@ document.addEventListener('DOMContentLoaded', function () {
             badge.style.display = total > 0 ? 'block' : 'none';
         }
     }
+
+    // Dynamic rendering for offcanvas
+    function renderCartOffcanvas() {
+        const cartItemsContainer = document.getElementById('cart-offcanvas-items');
+        const emptyState = document.getElementById('cart-offcanvas-empty');
+        const footer = document.getElementById('cart-offcanvas-footer');
+        const totalElement = document.getElementById('cart-offcanvas-total');
+
+        if (!cartItemsContainer) return;
+
+        const cart = getCart();
+
+        if (cart.length === 0) {
+            cartItemsContainer.classList.add('d-none');
+            emptyState.classList.remove('d-none');
+            footer.classList.add('d-none');
+            return;
+        }
+
+        cartItemsContainer.classList.remove('d-none');
+        emptyState.classList.add('d-none');
+        footer.classList.remove('d-none');
+
+        cartItemsContainer.innerHTML = cart.map(item => getCartItemHtml(item)).join('');
+        totalElement.textContent = getTotalAmount().toFixed(2) + ' BYN';
+
+        // Re-initialize tooltips
+        const tooltips = cartItemsContainer.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltips.forEach(el => new bootstrap.Tooltip(el));
+    }
+
+    function getCartItemHtml(item) {
+        const productUrl = `/product/${item.slug || item.id}`;
+        const imageUrl = `/storage/products/${item.image || 'placeholder.png'}`;
+
+        return `
+            <div class="d-flex align-items-center">
+                <a class="flex-shrink-0" href="${productUrl}">
+                    <img src="${imageUrl}" width="110" alt="${item.name}">
+                </a>
+                <div class="w-100 ps-3">
+                    <h5 class="fs-sm fw-medium lh-base mb-2">
+                        <a class="hover-effect-underline" href="${productUrl}">${item.name}</a>
+                    </h5>
+                    <div class="h6 pb-1 mb-2">${item.price.toFixed(2)} BYN</div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="count-input rounded-pill">
+                            <button type="button" class="btn btn-icon btn-sm" data-cart-decrement="${item.id}" aria-label="Decrement quantity">
+                                <i class="ci-minus"></i>
+                            </button>
+                            <input type="number" class="form-control form-control-sm" value="${item.quantity}" readonly>
+                            <button type="button" class="btn btn-icon btn-sm" data-cart-increment="${item.id}" aria-label="Increment quantity">
+                                <i class="ci-plus"></i>
+                            </button>
+                        </div>
+                        <button type="button" class="btn-close fs-sm" data-cart-remove="${item.id}" data-bs-toggle="tooltip" data-bs-custom-class="tooltip-sm" data-bs-title="Удалить" aria-label="Remove from cart"></button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Event delegation for cart offcanvas buttons
+    document.addEventListener('click', function(e) {
+        const decrementBtn = e.target.closest('[data-cart-decrement]');
+        const incrementBtn = e.target.closest('[data-cart-increment]');
+        const removeBtn = e.target.closest('[data-cart-remove]');
+
+        if (decrementBtn) {
+            const id = decrementBtn.dataset.cartDecrement;
+            const cart = getCart();
+            const item = cart.find(i => i.id == id);
+            if (item) updateQuantity(id, item.quantity - 1);
+        }
+
+        if (incrementBtn) {
+            const id = incrementBtn.dataset.cartIncrement;
+            const cart = getCart();
+            const item = cart.find(i => i.id == id);
+            if (item) updateQuantity(id, item.quantity + 1);
+        }
+
+        if (removeBtn) {
+            const id = removeBtn.dataset.cartRemove;
+            removeFromCart(id);
+        }
+    });
 
     // Toast уведомления на основе Bootstrap
     function getToastContainer() {
@@ -150,7 +240,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 id: this.dataset.id,
                 name: this.dataset.name,
                 price: parseFloat(this.dataset.price),
-                image: this.dataset.image
+                image: this.dataset.image,
+                slug: this.dataset.slug
             };
 
             addToCart(product);
@@ -167,7 +258,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 id: this.dataset.id,
                 name: this.dataset.name,
                 price: parseFloat(this.dataset.price),
-                image: this.dataset.image
+                image: this.dataset.image,
+                slug: this.dataset.slug
             };
 
             // Открываем модальное окно быстрой заявки
@@ -349,13 +441,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Обновляем бейдж при загрузке страницы
+    // Обновляем бейдж и рендерим корзину при загрузке страницы
     updateCartBadge();
+    renderCartOffcanvas();
 
     // Слушаем изменения localStorage из других вкладок
     window.addEventListener('storage', function(e) {
         if (e.key === 'cart') {
             updateCartBadge();
+            renderCartOffcanvas();
         }
     });
 
@@ -369,7 +463,8 @@ document.addEventListener('DOMContentLoaded', function () {
         clearCart,
         getTotalQuantity,
         getTotalAmount,
-        updateCartBadge
+        updateCartBadge,
+        renderCartOffcanvas
     };
 
 });
