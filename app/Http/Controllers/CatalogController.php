@@ -59,13 +59,31 @@ class CatalogController extends Controller
             ->whereIn('category_id', $categoryIds)
             ->active();
 
-        // ✅ Загружаем фильтруемые атрибуты (НУЖНО ДЛЯ SLUG)
+        // ✅ Загружаем фильтруемые атрибуты (только те, что есть у товаров в категории)
+        // 1. Получаем ID товаров в текущей категории и её потомках
+        $productIds = Product::query()
+            ->whereIn('category_id', $categoryIds)
+            ->active()
+            ->pluck('id');
+
+        // 2. Получаем ID атрибутов, которые используются у этих товаров
+        $attributeIds = \App\Models\ProductAttributeValue::query()
+            ->whereIn('product_id', $productIds)
+            ->distinct()
+            ->pluck('attribute_id');
+
+        // 3. Загружаем только те атрибуты, которые есть у товаров в категории
         $filterAttributes = Attribute::query()
+            ->whereIn('id', $attributeIds)
             ->active()
             ->filterable()
             ->ordered()
-            ->with(['attributeValues' => function ($q) {
-                $q->orderBy('value');
+            ->with(['attributeValues' => function ($q) use ($productIds) {
+                // Для SELECT типа: загружаем только значения, которые используются товарами в категории
+                $q->whereHas('productAttributeValues', function ($q2) use ($productIds) {
+                    $q2->whereIn('product_id', $productIds);
+                })
+                ->orderBy('value');
             }])
             ->get();
 
