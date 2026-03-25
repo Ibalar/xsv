@@ -113,7 +113,7 @@
                   <span class="theme-icon d-flex fs-base me-2">
                     <i class="ci-sun"></i>
                   </span>
-                            <span class="theme-label">Light</span>
+                            <span class="theme-label">Светлая</span>
                             <i class="item-active-indicator ci-check ms-auto"></i>
                         </button>
                     </li>
@@ -122,7 +122,7 @@
                   <span class="theme-icon d-flex fs-base me-2">
                     <i class="ci-moon"></i>
                   </span>
-                            <span class="theme-label">Dark</span>
+                            <span class="theme-label">Темная</span>
                             <i class="item-active-indicator ci-check ms-auto"></i>
                         </button>
                     </li>
@@ -131,7 +131,7 @@
                   <span class="theme-icon d-flex fs-base me-2">
                     <i class="ci-auto"></i>
                   </span>
-                            <span class="theme-label">Auto</span>
+                            <span class="theme-label">Авто</span>
                             <i class="item-active-indicator ci-check ms-auto"></i>
                         </button>
                     </li>

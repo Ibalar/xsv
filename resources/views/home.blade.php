@@ -15,7 +15,7 @@
                     <div class="pt-5 pt-md-0 px-4 px-sm-5 pe-md-0 ps-md-5 ps-lg-0">
                         <p class="fs-xl mb-lg-4">Большой ассортимент. Доставка по всей Беларуси. Посадка.</p>
                         <h1 class="display-6 text-uppercase mb-4 mb-lg-5">Питомник растений <span class="text-nowrap">"Сказочный сад"</span></h1>
-                        <a class="btn btn-lg btn-dark" href="/">
+                        <a class="btn btn-lg btn-dark" href="{{ route('catalog.index') }}">
                             В Каталог
                             <i class="ci-arrow-up-right fs-lg ms-2 me-n1"></i>
                         </a>
@@ -149,22 +149,10 @@
                                             <button type="button" class="btn btn-icon btn-secondary animate-pulse d-none d-lg-inline-flex">
                                                 <i class="ci-heart fs-base animate-target"></i>
                                             </button>
-                                            <button type="button" class="btn btn-icon btn-secondary animate-rotate d-none d-lg-inline-flex">
-                                                <i class="ci-refresh-cw fs-base animate-target"></i>
-                                            </button>
                                         </div>
                                     </div>
 
-                                    <!-- Mobile dropdown -->
-                                    <div class="dropdown d-lg-none position-absolute top-0 end-0 z-2 mt-2 me-2">
-                                        <button type="button" class="btn btn-icon btn-sm btn-secondary bg-body" data-bs-toggle="dropdown">
-                                            <i class="ci-more-vertical fs-lg"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end fs-xs p-2">
-                                            <li><a class="dropdown-item" href="#"><i class="ci-heart fs-sm ms-n1 me-2"></i> Wishlist</a></li>
-                                            <li><a class="dropdown-item" href="#"><i class="ci-refresh-cw fs-sm ms-n1 me-2"></i> Compare</a></li>
-                                        </ul>
-                                    </div>
+
 
                                     <!-- Изображение товара -->
                                     <a class="d-block rounded-top overflow-hidden p-3 p-sm-4"
@@ -279,22 +267,11 @@
                                             <button type="button" class="btn btn-icon btn-secondary animate-pulse d-none d-lg-inline-flex">
                                                 <i class="ci-heart fs-base animate-target"></i>
                                             </button>
-                                            <button type="button" class="btn btn-icon btn-secondary animate-rotate d-none d-lg-inline-flex">
-                                                <i class="ci-refresh-cw fs-base animate-target"></i>
-                                            </button>
+
                                         </div>
                                     </div>
 
-                                    <!-- Mobile dropdown -->
-                                    <div class="dropdown d-lg-none position-absolute top-0 end-0 z-2 mt-2 me-2">
-                                        <button type="button" class="btn btn-icon btn-sm btn-secondary bg-body" data-bs-toggle="dropdown">
-                                            <i class="ci-more-vertical fs-lg"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end fs-xs p-2">
-                                            <li><a class="dropdown-item" href="#"><i class="ci-heart fs-sm ms-n1 me-2"></i> Wishlist</a></li>
-                                            <li><a class="dropdown-item" href="#"><i class="ci-refresh-cw fs-sm ms-n1 me-2"></i> Compare</a></li>
-                                        </ul>
-                                    </div>
+
 
                                     <!-- Изображение товара -->
                                     <a class="d-block rounded-top overflow-hidden p-3 p-sm-4"
@@ -390,22 +367,10 @@
                                     <button type="button" class="btn btn-icon btn-secondary animate-pulse d-none d-lg-inline-flex">
                                         <i class="ci-heart fs-base animate-target"></i>
                                     </button>
-                                    <button type="button" class="btn btn-icon btn-secondary animate-rotate d-none d-lg-inline-flex">
-                                        <i class="ci-refresh-cw fs-base animate-target"></i>
-                                    </button>
                                 </div>
                             </div>
 
-                            <!-- Mobile dropdown -->
-                            <div class="dropdown d-lg-none position-absolute top-0 end-0 z-2 mt-2 me-2">
-                                <button type="button" class="btn btn-icon btn-sm btn-secondary bg-body" data-bs-toggle="dropdown">
-                                    <i class="ci-more-vertical fs-lg"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end fs-xs p-2">
-                                    <li><a class="dropdown-item" href="#"><i class="ci-heart fs-sm ms-n1 me-2"></i> Wishlist</a></li>
-                                    <li><a class="dropdown-item" href="#"><i class="ci-refresh-cw fs-sm ms-n1 me-2"></i> Compare</a></li>
-                                </ul>
-                            </div>
+
 
                             <a class="d-block rounded-top overflow-hidden p-3 p-sm-4"
                                href="{{ route('products.show', $product->slug ?? '#') }}">
