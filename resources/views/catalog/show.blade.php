@@ -267,7 +267,7 @@
                                     </a>
 
                                     <div class="position-absolute w-100 start-0 bottom-0">
-                                        <div class="d-flex justify-content-end px-2 px-lg-3 pb-2 pb-lg-3">
+                                        <div class="d-flex justify-content-end mt-1 mt-sm-2 me-1 me-sm-2">
                                             <div class="count-input count-input-collapsible collapsed justify-content-between w-100 bg-transparent border-0 rounded-2">
                                                 <button type="button" class="btn btn-icon btn-sm btn-primary" data-decrement aria-label="Decrement quantity">
                                                     <i class="ci-minus fs-sm"></i>

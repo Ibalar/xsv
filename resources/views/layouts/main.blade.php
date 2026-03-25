@@ -47,6 +47,8 @@
     @include('partials.menu-offcanvas')
 
     @include('partials.top-bar')
+
+    @include('partials.shopping-cart')
     <!-- Header -->
     @include('partials.header')
 
