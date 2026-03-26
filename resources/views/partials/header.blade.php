@@ -145,16 +145,16 @@
 
 
             <!-- Account button visible on screens > 768px wide (md breakpoint) -->
-            <a class="btn btn-icon fs-lg btn-outline-secondary border-0 rounded-circle animate-shake d-none d-md-inline-flex" href="account-signin.html">
+            <a class="btn btn-icon fs-lg btn-outline-secondary border-0 rounded-circle animate-shake d-none d-md-inline-flex" href="#">
                 <i class="ci-user animate-target"></i>
-                <span class="visually-hidden">Account</span>
+                <span class="visually-hidden">Аккаунт</span>
             </a>
 
             <!-- Cart button -->
 
             <button type="button" class="btn btn-icon fs-xl btn-outline-secondary position-relative border-0 rounded-circle animate-scale" data-bs-toggle="offcanvas" data-bs-target="#shoppingCart" aria-controls="shoppingCart" aria-label="Shopping cart" title="Заявка на заказ">
                 <span id="cart-badge" class="position-absolute top-0 start-100 badge fs-xs text-bg-primary rounded-pill ms-n3 z-2" style="--cz-badge-padding-y: .25em; --cz-badge-padding-x: .42em; display: none;">0</span>
-                <i class="ci-shopping-cart animate-target"></i>
+                <i class="ci-file-text animate-target"></i>
             </button>
         </div>
     </div>
