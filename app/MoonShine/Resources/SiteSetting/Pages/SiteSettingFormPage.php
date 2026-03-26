@@ -77,7 +77,6 @@ class SiteSettingFormPage extends FormPage
                 Tab::make('Email и Адрес', [
                     Box::make([
                         Text::make('Email', 'value.email')
-                            ->type('email')
                             ->placeholder('xsv.by@yandex.by'),
                         Text::make('Адрес', 'value.address')
                             ->placeholder('Минская обл., Логойский р-н, д. Зелёный сад, ул. Подлесная, 20'),
@@ -151,8 +150,7 @@ class SiteSettingFormPage extends FormPage
                     ], colSpan: 6),
                 ]),
                 Textarea::make('Дополнительная информация', 'value.additional_info')
-                    ->placeholder('Свидетельство о регистрации выдано Логойским райисполком от 24.12.2025 г.')
-                    ->rows(3),
+                    ->placeholder('Свидетельство о регистрации выдано Логойским райисполком от 24.12.2025 г.'),
                 Textarea::make('Описание', 'description')
                     ->readonly()
                     ->default('Реквизиты компании для отображения в футере'),

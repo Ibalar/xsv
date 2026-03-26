@@ -19,6 +19,7 @@ use App\MoonShine\Resources\SupplierResource\SupplierResource;
 use App\MoonShine\Resources\ProductAttributeValue\ProductAttributeValueResource;
 use App\MoonShine\Resources\Order\OrderResource;
 use App\MoonShine\Resources\SiteSetting\SiteSettingResource;
+use App\MoonShine\Resources\Page\PageResource;
 
 class MoonShineServiceProvider extends ServiceProvider
 {
@@ -40,6 +41,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 ProductAttributeValueResource::class,
                 OrderResource::class,
                 SiteSettingResource::class,
+                PageResource::class,
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),

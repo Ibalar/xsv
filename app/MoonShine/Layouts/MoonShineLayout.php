@@ -19,6 +19,7 @@ use MoonShine\MenuManager\MenuItem;
 use App\MoonShine\Resources\ProductAttributeValue\ProductAttributeValueResource;
 use App\MoonShine\Resources\Order\OrderResource;
 use App\MoonShine\Resources\SiteSetting\SiteSettingResource;
+use App\MoonShine\Resources\Page\PageResource;
 
 final class MoonShineLayout extends AppLayout
 {
@@ -44,9 +45,10 @@ final class MoonShineLayout extends AppLayout
             MenuItem::make(AttributeResource::class),
             MenuItem::make(AttributeValueResource::class),
             MenuItem::make(OrderResource::class, 'Заказы'),
+            MenuItem::make(PageResource::class, 'Статические страницы'),
+            MenuItem::make(SiteSettingResource::class, 'Настройки сайта'),
             ...parent::menu(),
 
-            MenuItem::make(SiteSettingResource::class, 'SiteSettings'),
         ];
     }
 
