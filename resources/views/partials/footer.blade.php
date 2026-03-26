@@ -10,33 +10,61 @@
                     <h4 class="mb-sm-0 mb-md-4 me-4">
                         <span class="text-dark-emphasis text-decoration-none">Наши контакты</span>
                     </h4>
+                    @if(!empty($siteSettings['phones']['value']))
+                        @foreach($siteSettings['phones']['value'] as $phone)
+                            <p class="text-body fs-md text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">
+                                <a class="nav-link animate-target text-white fw-semibold p-0 px-1" href="tel:{{ preg_replace('/[^\d+]/', '', $phone['number'] ?? '') }}"><i class="ci-phone fs-md m-xxl-1"></i> {{ $phone['number'] ?? '' }}</a>
+                            </p>
+                        @endforeach
+                    @else
+                        {{-- Fallback на хардкод если настройки не заполнены --}}
+                        <p class="text-body fs-md text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">
+                            <a class="nav-link animate-target text-white fw-semibold p-0 px-1" href="tel:+375296403709"><i class="ci-phone fs-md m-xxl-1"></i> +375 (29) 640-37-09</a>
+                        </p>
+                        <p class="text-body fs-md text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">
+                            <a class="nav-link animate-target text-white fw-semibold p-0 px-1" href="tel:+375445913335"><i class="ci-phone fs-md m-xxl-1"></i> +375 (44) 591-33-35</a>
+                        </p>
+                        <p class="text-body fs-md text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">
+                            <a class="nav-link animate-target text-white fw-semibold p-0 px-1" href="tel:+375295913372"><i class="ci-phone fs-md m-xxl-1"></i> +375 (29) 591-33-72</a>
+                        </p>
+                    @endif
                     <p class="text-body fs-md text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">
-                        <a class="nav-link animate-target text-white fw-semibold p-0 px-1" href="tel:+375296403709"><i class="ci-phone fs-md m-xxl-1"></i> +375 (29) 640-37-09</a>
+                        <a class="nav-link animate-target text-white fw-semibold p-0 px-1" href="mailto:{{ $siteSettings['email'] ?? 'xsv.by@yandex.by' }}"><i class="ci-mail fs-md m-xxl-1"></i> {{ $siteSettings['email'] ?? 'xsv.by@yandex.by' }}</a>
                     </p>
                     <p class="text-body fs-md text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">
-                        <a class="nav-link animate-target text-white fw-semibold p-0 px-1" href="tel:+375445913335"><i class="ci-phone fs-md m-xxl-1"></i> +375 (44) 591-33-35</a>
-                    </p>
-                    <p class="text-body fs-md text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">
-                        <a class="nav-link animate-target text-white fw-semibold p-0 px-1" href="tel:+375295913372"><i class="ci-phone fs-md m-xxl-1"></i> +375 (29) 591-33-72</a>
-                    </p>
-                    <p class="text-body fs-md text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">
-                        <a class="nav-link animate-target text-white fw-semibold p-0 px-1" href="mailto:xsv.by@yandex.by"><i class="ci-mail fs-md m-xxl-1"></i> xsv.by@yandex.by</a>
-                    </p>
-                    <p class="text-body fs-md text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">
-                        <i class="ci-map-pin fs-md m-xxl-1"></i> Минская обл., Логойский р-н<br> д. Зелёный сад, ул. Подлесная, 20
+                        <i class="ci-map-pin fs-md m-xxl-1"></i> {!! nl2br(e($siteSettings['address'] ?? "Минская обл., Логойский р-н\n д. Зелёный сад, ул. Подлесная, 20")) !!}
                     </p>
                 </div>
                 <div class="col-md-5 d-sm-flex flex-md-column align-items-center align-items-md-start pb-3 mb-sm-4">
                     <h4 class="mb-sm-0 mb-md-4 me-4">
                         <span class="text-dark-emphasis text-decoration-none">Наши реквизиты</span>
                     </h4>
-                    <p class="text-body fs-md text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">ООО "Сказочный сад"</p>
-                    <p class="text-body fs-sm text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">УНП: 690876969<br>
-                        Свидетельство о регистрации<br>
-                        выдано Логойским райисполком от 24.12.2025 г.</p>
-                    <p class="text-body fs-sm text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">Р/сч: BY85 UNBS 3012 2578 3000 0000 0933<br>
-                        в ЗАО БСБ Банк 220004, г. Минск, пр. Победителей, 23, корп. 3<br>
-                        код UNBSBY2X</p>
+                    @if(!empty($siteSettings['business_info']['value']))
+                        @php
+                            $business = $siteSettings['business_info']['value'];
+                        @endphp
+                        <p class="text-body fs-md text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">{{ $business['company_name'] ?? 'ООО "Сказочный сад"' }}</p>
+                        <p class="text-body fs-sm text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">
+                            УНП: {{ $business['unp'] ?? '690876969' }}<br>
+                            {{ $business['additional_info'] ?? 'Свидетельство о регистрации выдано Логойским райисполком от 24.12.2025 г.' }}
+                        </p>
+                        @if(!empty($business['bank_account']))
+                            <p class="text-body fs-sm text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">
+                                Р/сч: {{ $business['bank_account'] }}<br>
+                                в {{ $business['bank_name'] ?? 'ЗАО БСБ Банк' }} {{ $business['bank_address'] ?? '220004, г. Минск, пр. Победителей, 23, корп. 3' }}<br>
+                                код {{ $business['bank_code'] ?? 'UNBSBY2X' }}
+                            </p>
+                        @endif
+                    @else
+                        {{-- Fallback на хардкод если настройки не заполнены --}}
+                        <p class="text-body fs-md text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">ООО "Сказочный сад"</p>
+                        <p class="text-body fs-sm text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">УНП: 690876969<br>
+                            Свидетельство о регистрации<br>
+                            выдано Логойским райисполком от 24.12.2025 г.</p>
+                        <p class="text-body fs-sm text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">Р/сч: BY85 UNBS 3012 2578 3000 0000 0933<br>
+                            в ЗАО БСБ Банк 220004, г. Минск, пр. Победителей, 23, корп. 3<br>
+                            код UNBSBY2X</p>
+                    @endif
                 </div>
                 <div class="col-md-2">
                     <div class="accordion-item col border-0">

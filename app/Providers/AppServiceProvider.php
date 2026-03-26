@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\SiteSetting;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 
@@ -22,6 +23,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // View Composer для настроек сайта (контакты, соц. сети, реквизиты)
+        View::composer(['partials.top-bar', 'partials.footer'], function ($view) {
+            $siteSettings = cache()->remember('site_settings_all', 3600, function () {
+                $contacts = SiteSetting::getCached('contacts', []);
+
+                return [
+                    'phones' => $contacts,
+                    'email' => $contacts['email'] ?? null,
+                    'address' => $contacts['address'] ?? null,
+                    'social_links' => SiteSetting::getCached('social_links', []),
+                    'business_info' => SiteSetting::getCached('business_info', []),
+                ];
+            });
+
+            $view->with('siteSettings', $siteSettings);
+        });
         View::composer('*', function ($view) {
 
             $categories = cache()->remember('menu_categories', 3600, function () {
