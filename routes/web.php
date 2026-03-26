@@ -6,6 +6,7 @@ use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\PageController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -34,3 +35,12 @@ Route::get('/orders/success/{order}', [OrderController::class, 'success'])->name
 Route::get('/privacy-policy', function () {
     return view('privacy-policy');
 })->name('privacy-policy');
+
+// Страница контактов
+Route::get('/contacts', [PageController::class, 'contacts'])->name('contacts');
+Route::post('/contacts', [PageController::class, 'sendContactForm'])->name('contacts.send');
+
+// Динамические страницы
+Route::get('/{slug}', [PageController::class, 'show'])
+    ->where('slug', '[a-z0-9-]+')
+    ->name('pages.show');
