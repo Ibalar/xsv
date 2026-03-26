@@ -18,6 +18,7 @@ use MoonShine\Contracts\ColorManager\PaletteContract;
 use MoonShine\MenuManager\MenuItem;
 use App\MoonShine\Resources\ProductAttributeValue\ProductAttributeValueResource;
 use App\MoonShine\Resources\Order\OrderResource;
+use App\MoonShine\Resources\SiteSetting\SiteSettingResource;
 
 final class MoonShineLayout extends AppLayout
 {
@@ -42,9 +43,10 @@ final class MoonShineLayout extends AppLayout
             MenuItem::make(ProductResource::class),
             MenuItem::make(AttributeResource::class),
             MenuItem::make(AttributeValueResource::class),
+            MenuItem::make(OrderResource::class, 'Заказы'),
             ...parent::menu(),
-            MenuItem::make(ProductAttributeValueResource::class, 'ProductAttributeValues'),
-            MenuItem::make(OrderResource::class, 'Orders'),
+
+            MenuItem::make(SiteSettingResource::class, 'SiteSettings'),
         ];
     }
 
