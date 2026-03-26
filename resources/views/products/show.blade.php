@@ -160,7 +160,7 @@
                                     <span class="animate-target me-2">Полное описание</span>
                                 </button>
                             </h3>
-                            <div class="accordion-collapse collapse" id="productInfo" aria-labelledby="headingProductInfo" data-bs-parent="#productAccordion">
+                            <div class="accordion-collapse collapse show" id="productInfo" aria-labelledby="headingProductInfo" data-bs-parent="#productAccordion">
                                 <div class="accordion-body">{!! $product->description !!}</div>
                             </div>
                         </div>

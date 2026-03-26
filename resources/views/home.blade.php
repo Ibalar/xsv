@@ -105,7 +105,7 @@
 
             </div>
             <div class="nav ms-3">
-                <a class="nav-link animate-underline px-0 py-2" href="/">
+                <a class="nav-link animate-underline px-0 py-2" href="{{ route('catalog.index') }}">
                     <span class="animate-target text-nowrap">Смотреть все</span>
                     <i class="ci-chevron-right fs-base ms-1"></i>
                 </a>
@@ -223,7 +223,7 @@
 
             </div>
             <div class="nav ms-3">
-                <a class="nav-link animate-underline px-0 py-2" href="/">
+                <a class="nav-link animate-underline px-0 py-2" href="{{ route('catalog.index') }}">
                     <span class="animate-target text-nowrap">Смотреть все</span>
                     <i class="ci-chevron-right fs-base ms-1"></i>
                 </a>
@@ -320,10 +320,10 @@
 
             <!-- Мобильная навигация -->
             <div class="d-flex justify-content-center gap-2 mt-n2 mb-3 pb-1 d-sm-none">
-                <button type="button" class="offers-prev btn btn-icon btn-outline-secondary bg-body rounded-circle animate-slide-start me-1" aria-label="Назад">
+                <button type="button" class="offers-prev-two btn btn-icon btn-outline-secondary bg-body rounded-circle animate-slide-start me-1" aria-label="Назад">
                     <i class="ci-chevron-left fs-lg animate-target"></i>
                 </button>
-                <button type="button" class="offers-next btn btn-icon btn-outline-secondary bg-body rounded-circle animate-slide-end" aria-label="Вперед">
+                <button type="button" class="offers-next-two btn btn-icon btn-outline-secondary bg-body rounded-circle animate-slide-end" aria-label="Вперед">
                     <i class="ci-chevron-right fs-lg animate-target"></i>
                 </button>
             </div>
