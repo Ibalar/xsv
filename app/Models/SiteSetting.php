@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -21,7 +22,7 @@ class SiteSetting extends Model
     protected function casts(): array
     {
         return [
-            'value' => 'array',
+            'value' => AsArrayObject::class,
         ];
     }
 
@@ -88,5 +89,18 @@ class SiteSetting extends Model
         static::deleted(function (self $setting) {
             static::flushCacheByKey($setting->key);
         });
+    }
+
+    public static function contacts(): array
+    {
+        $data = static::getCached('contacts', []);
+
+        return [
+            'phones' => $data['phones'] ?? [],
+            'email' => $data['email'] ?? null,
+            'address' => $data['address'] ?? null,
+            'working_hours' => $data['working_hours'] ?? null,
+            'social_networks' => $data['social_networks'] ?? [],
+        ];
     }
 }

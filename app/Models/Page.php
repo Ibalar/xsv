@@ -11,16 +11,32 @@ class Page extends Model
         'title',
         'slug',
         'content',
+        'is_active',
+        'in_menu',
+        'sort',
     ];
 
     protected static function boot(): void
     {
         parent::boot();
 
+        // Генерация slug
         static::saving(function ($page) {
             if (empty($page->slug)) {
-                $page->slug = Str::slug($page->title);
+                $page->slug = \Illuminate\Support\Str::slug($page->title);
             }
         });
+
+        // 👉 Сброс кеша меню при сохранении
+        static::saved(function () {
+            cache()->forget('menu_pages');
+        });
+
+        // 👉 Сброс кеша при удалении
+        static::deleted(function () {
+            cache()->forget('menu_pages');
+        });
     }
+
+
 }

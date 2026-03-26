@@ -13,13 +13,11 @@ class PageController extends Controller
      */
     public function show(string $slug)
     {
-        $page = Page::where('slug', $slug)->firstOrFail();
+        $page = Page::where('slug', $slug)
+            ->where('is_active', true)
+            ->firstOrFail();
 
-        $breadcrumbs = [
-            ['name' => $page->title],
-        ];
-
-        return view('pages.show', compact('page', 'breadcrumbs'));
+        return view('pages.show', compact('page'));
     }
 
     /**
@@ -27,13 +25,23 @@ class PageController extends Controller
      */
     public function contacts()
     {
-        $contacts = SiteSetting::getCached('contacts', []);
+        $data = (array) SiteSetting::get('contacts', []);
 
-        $breadcrumbs = [
-            ['name' => 'Контакты'],
+        // Отбираем только числовые ключи как телефоны
+        $phones = [];
+        foreach ($data as $key => $value) {
+            if (is_numeric($key) && is_array($value) && isset($value['number'])) {
+                $phones[] = $value;
+            }
+        }
+
+        $contacts = [
+            'phones' => $phones,
+            'email' => $data['email'] ?? null,
+            'address' => $data['address'] ?? null,
         ];
 
-        return view('pages.contacts', compact('contacts', 'breadcrumbs'));
+        return view('pages.contacts', compact('contacts'));
     }
 
     /**

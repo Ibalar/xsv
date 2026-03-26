@@ -7,8 +7,8 @@
     <x-breadcrumb :items="$breadcrumbs" />
 
     <!-- Page content -->
-    <section class="container py-5 mt-4 mb-lg-4 mb-xl-5">
-        <div class="row justify-content-center">
+    <section class="container py-2 mt-4 mb-lg-4 mb-xl-5">
+        <div class="row justify-content-center bg-body-tertiary py-3 rounded-5">
             <div class="col-lg-9">
                 <h1 class="h2 pb-2 pb-sm-3">{{ $page->title }}</h1>
                 <div class="page-content">

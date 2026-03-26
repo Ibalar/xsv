@@ -16,6 +16,8 @@ use App\MoonShine\Resources\Page\PageResource;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Components\Layout\Box;
+use MoonShine\UI\Fields\Number;
+use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
@@ -49,6 +51,16 @@ class PageFormPage extends FormPage
                         fn(Slug $field) => $field->from('title')->live(),
                         fn(Slug $field) => $field->readonly()
                     ),
+
+                Switcher::make('Активна', 'is_active')
+                    ->default(true),
+
+                Switcher::make('Показывать в меню', 'in_menu')
+                    ->default(false),
+
+                Number::make('Сортировка', 'sort')
+                    ->default(0)
+                    ->hint('Чем меньше число — тем выше в меню'),
 
                 TinyMce::make('Контент', 'content')
                     ->nullable(),

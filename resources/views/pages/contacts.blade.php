@@ -7,12 +7,12 @@
     <x-breadcrumb :items="$breadcrumbs" />
 
     <!-- Contacts page -->
-    <section class="container py-5 mt-4 mb-lg-4 mb-xl-5">
+    <section class="container py-2 mt-4 mb-lg-4 mb-xl-5">
         <h1 class="h2 pb-2 pb-sm-3 text-center mb-4">Контакты</h1>
 
         <div class="row justify-content-center">
-            <div class="col-lg-11">
-                <div class="row g-4 g-lg-5">
+            <div class="col-lg-12">
+                <div class="row g-4 g-lg-3 pb-4 pb-lg-3 bg-body-tertiary">
                     <!-- Contact information -->
                     <div class="col-lg-6">
                         <div class="card border-0 shadow-sm h-100">
@@ -21,11 +21,15 @@
 
                                 @if(!empty($contacts['phones']))
                                     <div class="mb-4">
-                                        <h6 class="text-uppercase fs-xs text-muted mb-3">Телефон</h6>
+                                        <h6 class="text-uppercase fs-xs text-muted mb-3">Телефоны</h6>
                                         @foreach($contacts['phones'] as $phone)
-                                            <a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="d-flex align-items-center text-decoration-none mb-2">
+                                            <a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone['number'] ?? '') }}"
+                                               class="d-flex align-items-center text-decoration-none mb-2">
                                                 <i class="ci-phone me-2 text-primary"></i>
-                                                <span>{{ $phone }}</span>
+                                                <span>
+                                                    {{ $phone['number'] ?? '' }}
+                                                    @if(!empty($phone['label'])) ({{ $phone['label'] }}) @endif
+                                                </span>
                                             </a>
                                         @endforeach
                                     </div>

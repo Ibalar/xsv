@@ -63,6 +63,18 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('footerCategories', $footerCategories);
 
+            // 👉 ДОБАВИЛИ СТРАНИЦЫ
+            $menuPages = cache()->remember('menu_pages', 3600, function () {
+                return \App\Models\Page::query()
+                    ->where('is_active', true)
+                    ->where('in_menu', true)
+                    ->orderBy('sort')
+                    ->orderBy('title')
+                    ->get();
+            });
+
+            $view->with('menuPages', $menuPages);
+
             // 👉 логика колонок
             $columns = [];
 
@@ -88,55 +100,78 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('*', function ($view) {
 
+            if ($view->offsetExists('breadcrumbs')) {
+                return;
+            }
+
             $items = [];
 
-            // Если есть товар на странице
+            // PRODUCT
             if (isset($view->product)) {
                 $product = $view->product;
 
-                // Главная
                 $items[] = [
                     'title' => 'Главная',
                     'url' => route('home'),
                 ];
 
-                // Категории
                 if ($product->category) {
-                    $categories = $product->category->getAncestorsAndSelf();
-
-                    foreach ($categories as $cat) {
+                    foreach ($product->category->getAncestorsAndSelf() as $cat) {
                         $items[] = [
                             'title' => $cat->name,
-                            'url' => route('catalog.show', $cat->getFullPath()), // полный путь для SEO
+                            'url' => route('catalog.show', $cat->getFullPath()),
                         ];
                     }
                 }
 
-                // Текущий товар
                 $items[] = [
                     'title' => $product->name,
                     'url' => null,
                 ];
-
             }
 
-            // Если есть категория на странице (например, раздел каталога)
+            // CATEGORY
             if (isset($view->category)) {
                 $category = $view->category;
 
-                // Главная
                 $items[] = [
                     'title' => 'Главная',
                     'url' => route('home'),
                 ];
 
-                // Все родители + текущая категория
                 foreach ($category->getAncestorsAndSelf() as $cat) {
                     $items[] = [
                         'title' => $cat->name,
                         'url' => route('catalog.show', $cat->getFullPath()),
                     ];
                 }
+            }
+
+            // PAGE ✅
+            if (isset($view->page)) {
+                $page = $view->page;
+
+                $items[] = [
+                    'title' => 'Главная',
+                    'url' => route('home'),
+                ];
+
+                $items[] = [
+                    'title' => $page->title,
+                    'url' => null,
+                ];
+            }
+
+            if ($view->name() === 'pages.contacts') {
+                $items[] = [
+                    'title' => 'Главная',
+                    'url' => route('home'),
+                ];
+
+                $items[] = [
+                    'title' => 'Контакты',
+                    'url' => null,
+                ];
             }
 
             $view->with('breadcrumbs', $items);

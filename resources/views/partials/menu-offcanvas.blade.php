@@ -69,21 +69,18 @@
                 <span class="d-inline-block animate-target py-1">Главная</span>
             </a>
         </div>
-        <div class="h6 fw-medium py-1 mb-0">
-            <a class="d-block animate-underline py-1" href="#">
-                <span class="d-inline-block animate-target py-1">Оптовый прайс</span>
-            </a>
-        </div>
-        <div class="h6 fw-medium py-1 mb-0">
-            <a class="d-block animate-underline py-1" href="#">
-                <span class="d-inline-block animate-target py-1">Услуги по посадке</span>
-            </a>
-        </div>
-        <div class="h6 fw-medium py-1 mb-0">
-            <a class="d-block animate-underline py-1" href="#">
-                <span class="d-inline-block animate-target py-1">Контакты</span>
-            </a>
-        </div>
+
+
+
+        @foreach($menuPages as $page)
+            <div class="h6 fw-medium py-1 mb-0">
+                <a href="{{ route('pages.show', $page->slug) }}" class="d-block animate-underline py-1">
+                    <span class="d-inline-block animate-target py-1">{{ $page->title }}</span>
+                </a>
+            </div>
+        @endforeach
+
+
     </div>
 
     <!-- Account button visible on screens < 768px wide (md breakpoint) -->
