@@ -78,6 +78,7 @@ final class ProductIndexPage extends IndexPage
                 'category',
                 resource: CategoryResource::class,
             )
+                ->nullable()
                 ->valuesQuery(
                     static fn (BuilderContract $q) => $q->active()->select(['id', 'name'])
                 )
@@ -100,7 +101,9 @@ final class ProductIndexPage extends IndexPage
                 'Поставщик',
                 'supplier',
                 resource: SupplierResource::class,
-            )->valuesQuery(
+            )
+                ->nullable()
+                ->valuesQuery(
                 static fn (BuilderContract $q) => $q->active()->select(['id', 'name'])
             ),
 
@@ -108,7 +111,9 @@ final class ProductIndexPage extends IndexPage
                 'Страна',
                 'country',
                 resource: CountryResource::class,
-            )->valuesQuery(
+            )
+                ->nullable()
+                ->valuesQuery(
                 static fn (BuilderContract $q) => $q->active()->select(['id', 'name'])
             ),
 
