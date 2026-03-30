@@ -4,28 +4,26 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\ProductAttributeValue\Pages;
 
-use App\MoonShine\Resources\AttributeResource\AttributeResource;
-use App\MoonShine\Resources\AttributeValueResource\AttributeValueResource;
-use Illuminate\Database\Eloquent\Builder;
-use MoonShine\Laravel\Fields\Relationships\BelongsTo;
-use MoonShine\Laravel\Pages\Crud\FormPage;
-use MoonShine\Contracts\UI\ComponentContract;
-use MoonShine\Contracts\UI\FormBuilderContract;
-use MoonShine\UI\Components\FormBuilder;
-use MoonShine\Contracts\UI\FieldContract;
-use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use App\MoonShine\Resources\ProductAttributeValue\ProductAttributeValueResource;
+use App\MoonShine\Resources\ProductAttributeValue\Support\HasProductAttributeFields;
+use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
+use MoonShine\Contracts\UI\ComponentContract;
+use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Contracts\UI\FormBuilderContract;
+use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\Support\ListOf;
-use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Components\FormBuilder;
 use MoonShine\UI\Components\Layout\Box;
+use MoonShine\UI\Fields\ID;
 use Throwable;
-
 
 /**
  * @extends FormPage<ProductAttributeValueResource>
  */
 class ProductAttributeValueFormPage extends FormPage
 {
+    use HasProductAttributeFields;
+
     /**
      * @return list<ComponentContract|FieldContract>
      */
@@ -34,14 +32,8 @@ class ProductAttributeValueFormPage extends FormPage
         return [
             Box::make([
                 ID::make(),
-                BelongsTo::make(
-                    'Значение',
-                    'attributeValue',
-                    resource: AttributeValueResource::class
-                )
-                    ->reactive()
-                    ->searchable()
-                    ->required(),
+                $this->makeProductAttributeField(),
+                $this->makeProductAttributeValueField(),
             ]),
         ];
     }

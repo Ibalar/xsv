@@ -129,7 +129,7 @@ class CatalogController extends Controller
         }
 
         // Сортировка
-        $sort = $request->get('sort', 'Relevance');
+        $sort = $request->get('sort', 'Price: Low to High');
 
         switch ($sort) {
             case 'Popularity':

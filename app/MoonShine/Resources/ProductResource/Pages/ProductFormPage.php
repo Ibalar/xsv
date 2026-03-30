@@ -4,24 +4,21 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\ProductResource\Pages;
 
-use App\Models\Attribute;
-use App\Models\AttributeValue;
 use App\Models\Product;
+use App\MoonShine\Resources\CategoryResource\CategoryResource;
+use App\MoonShine\Resources\CountryResource\CountryResource;
 use App\MoonShine\Resources\ProductAttributeValue\ProductAttributeValueResource;
+use App\MoonShine\Resources\ProductAttributeValue\Support\HasProductAttributeFields;
+use App\MoonShine\Resources\ProductResource\ProductResource;
+use App\MoonShine\Resources\SupplierResource\SupplierResource;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
-use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Fields\Relationships\RelationRepeater;
+use MoonShine\Laravel\Fields\Slug;
 use MoonShine\Laravel\Pages\Crud\FormPage;
-use App\MoonShine\Resources\AttributeResource\AttributeResource;
-use App\MoonShine\Resources\AttributeValueResource\AttributeValueResource;
-use App\MoonShine\Resources\CategoryResource\CategoryResource;
-use App\MoonShine\Resources\CountryResource\CountryResource;
-use App\MoonShine\Resources\ProductResource\ProductResource;
-use App\MoonShine\Resources\SupplierResource\SupplierResource;
 use MoonShine\TinyMce\Fields\TinyMce;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Components\Layout\Flex;
@@ -30,18 +27,18 @@ use MoonShine\UI\Components\Tabs\Tab;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Image;
 use MoonShine\UI\Fields\Number;
-use MoonShine\Laravel\Fields\Slug;
-use MoonShine\UI\Fields\Select;
+use MoonShine\UI\Fields\Preview;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use MoonShine\UI\Fields\Textarea;
-use MoonShine\Support\AlpineJs;
 
 /**
  * @extends FormPage<ProductResource, Product>
  */
 final class ProductFormPage extends FormPage
 {
+    use HasProductAttributeFields;
+
     /**
      * @return list<ComponentContract|FieldContract>
      */
@@ -55,9 +52,9 @@ final class ProductFormPage extends FormPage
 
                         Text::make('Название', 'name')
                             ->when(
-                                fn() => $this->getResource()->isCreateFormPage(),
-                                fn(Text $field) => $field->reactive(),
-                                fn(Text $field) => $field
+                                fn () => $this->getResource()->isCreateFormPage(),
+                                fn (Text $field) => $field->reactive(),
+                                fn (Text $field) => $field
                             )
                             ->required(),
 
@@ -65,9 +62,9 @@ final class ProductFormPage extends FormPage
                             ->unique()
                             ->locked()
                             ->when(
-                                fn() => $this->getResource()->isCreateFormPage(),
-                                fn(Slug $field) => $field->from('name')->live(),
-                                fn(Slug $field) => $field->readonly()
+                                fn () => $this->getResource()->isCreateFormPage(),
+                                fn (Slug $field) => $field->from('name')->live(),
+                                fn (Slug $field) => $field->readonly()
                             ),
 
                         Flex::make([
@@ -175,34 +172,18 @@ final class ProductFormPage extends FormPage
                     ]),
 
                     Tab::make('Атрибуты', [
-
                         RelationRepeater::make(
                             'Атрибуты',
-                            'productAttributeValues', // связь в Product
+                            'productAttributeValues',
                             resource: ProductAttributeValueResource::class
                         )
                             ->fields([
-                                BelongsTo::make(
-                                    'Атрибут',
-                                    'attribute',
-                                    resource: AttributeResource::class
-                                )
-                                    ->creatable()
-                                    ->searchable()
-                                    ->required(),
-
-                                BelongsTo::make(
-                                    'Значение',
-                                    'attributeValue',
-                                    resource: AttributeValueResource::class
-                                )
-                                    ->creatable()
-                                    ->searchable()
-                                    ->required()
+                                $this->makeProductAttributeField(true),
+                                $this->makeProductAttributeValueField(true),
                             ])
                             ->creatable()
                             ->removable(),
-
+                        $this->makeProductAttributeDependencyScript(),
                     ]),
 
                     Tab::make('SEO', [
@@ -244,5 +225,114 @@ final class ProductFormPage extends FormPage
         ];
     }
 
+    protected function makeProductAttributeDependencyScript(): Preview
+    {
+        return Preview::make('', '_product_attribute_dependency_script')
+            ->changeFill(static fn (): string => <<<'HTML'
+<script>
+(() => {
+    if (window.__productAttributeDependencyInitialized) {
+        return;
+    }
 
+    window.__productAttributeDependencyInitialized = true;
+
+    const attributeSelector = 'select[data-product-attribute-field]';
+    const valueSelector = 'select[data-product-attribute-value-field]';
+    const currentAttributeInput = 'product_attribute_selected_attribute';
+
+    const ensureHiddenInput = (form, name) => {
+        let input = form.querySelector(`input[name="${name}"]`);
+
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            form.append(input);
+        }
+
+        return input;
+    };
+
+    const getRow = (element) => element.closest('tr');
+
+    const getValueSelectByRow = (row) => row ? row.querySelector(valueSelector) : null;
+
+    const getAttributeSelectByRow = (row) => row ? row.querySelector(attributeSelector) : null;
+
+    const syncCurrentAttribute = (valueSelect) => {
+        if (!(valueSelect instanceof HTMLSelectElement) || !valueSelect.form) {
+            return;
+        }
+
+        const attributeSelect = getAttributeSelectByRow(getRow(valueSelect));
+
+        ensureHiddenInput(valueSelect.form, currentAttributeInput).value = attributeSelect?.value || '';
+    };
+
+    const resolveValueSelect = (target) => {
+        if (!(target instanceof Element)) {
+            return null;
+        }
+
+        const row = getRow(target);
+
+        if (!row) {
+            return null;
+        }
+
+        return Array.from(row.querySelectorAll(valueSelector)).find((select) => {
+            if (!(select instanceof HTMLSelectElement)) {
+                return false;
+            }
+
+            const wrapper = select.tomselect?.wrapper;
+
+            return wrapper ? wrapper.contains(target) : select === target || select.contains(target);
+        }) || null;
+    };
+
+    document.addEventListener('change', (event) => {
+        const target = event.target;
+
+        if (!(target instanceof HTMLSelectElement) || !target.matches(attributeSelector)) {
+            return;
+        }
+
+        const valueSelect = getValueSelectByRow(getRow(target));
+
+        if (!(valueSelect instanceof HTMLSelectElement)) {
+            return;
+        }
+
+        if (valueSelect.tomselect) {
+            valueSelect.tomselect.clear(true);
+            valueSelect.tomselect.clearOptions();
+            syncCurrentAttribute(valueSelect);
+            valueSelect.tomselect.load('*');
+        } else {
+            valueSelect.value = '';
+            syncCurrentAttribute(valueSelect);
+        }
+    });
+
+    ['focusin', 'mousedown'].forEach((eventName) => {
+        document.addEventListener(eventName, (event) => {
+            const valueSelect = resolveValueSelect(event.target);
+
+            if (valueSelect) {
+                syncCurrentAttribute(valueSelect);
+
+                if (valueSelect.tomselect) {
+                    valueSelect.tomselect.clearOptions();
+                    valueSelect.tomselect.load('*');
+                }
+            }
+        });
+    });
+})();
+</script>
+HTML)
+            ->withoutWrapper();
+    }
 }
