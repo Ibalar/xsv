@@ -72,7 +72,7 @@
                             <span class="text-dark-emphasis d-none d-sm-block">Разделы каталога</span>
                             <button type="button" class="accordion-button collapsed py-3 d-sm-none" data-bs-toggle="collapse" data-bs-target="#companyLinks" aria-expanded="false" aria-controls="companyLinks">Разделы каталога</button>
                         </h6>
-                        <div class="accordion-collapse collapse d-sm-block" id="companyLinks" aria-labelledby="companyHeading" data-bs-parent="#footerLinks">
+                        <div class="accordion-collapse collapse show d-sm-block" id="companyLinks" aria-labelledby="companyHeading" data-bs-parent="#footerLinks">
                             <ul class="nav flex-column gap-2 pt-sm-3 pb-3 mt-n1 mb-1">
                                 @foreach($footerCategories as $category)
                                     <li class="d-flex w-100 pt-1">
@@ -87,7 +87,7 @@
                         <hr class="d-sm-none my-0">
                     </div>
                 </div>
-                <div class="col-12">
+                <div class="col-12 py-3">
                     <p class="text-body fs-sm text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">Уважаемые посетители!
                         Данный сайт является каталогом товаров питомника растений и не является интернет-магазином.
                         Размещенная информация (включая цены, характеристики, изображения) представлена для ознакомления и не считается офертой (ст. 407 Гражданского кодекса Республики Беларусь).

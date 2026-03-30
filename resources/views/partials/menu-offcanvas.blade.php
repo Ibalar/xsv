@@ -82,12 +82,4 @@
 
 
     </div>
-
-    <!-- Account button visible on screens < 768px wide (md breakpoint) -->
-    <div class="offcanvas-header flex-column align-items-start d-md-none">
-        <a class="btn btn-lg btn-outline-secondary w-100 rounded-pill" href="#">
-            <i class="ci-user fs-lg ms-n1 me-2"></i>
-            Личный кабинет
-        </a>
-    </div>
 </nav>
