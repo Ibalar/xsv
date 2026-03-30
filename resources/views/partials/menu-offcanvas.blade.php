@@ -7,6 +7,11 @@
     </div>
     <div class="offcanvas-body pt-0 pb-3">
 
+        <div class="h6 fw-medium py-1 mb-0">
+            <a class="d-block animate-underline py-1" href="{{ route('home') }}">
+                <span class="d-inline-block animate-target py-1">Главная</span>
+            </a>
+        </div>
         <!-- Navbar nav -->
         <div class="accordion" id="navigation">
 
@@ -64,11 +69,7 @@
             <!-- Rest of the menu -->
 
         </div>
-        <div class="h6 fw-medium py-1 mb-0">
-            <a class="d-block animate-underline py-1" href="{{ route('home') }}">
-                <span class="d-inline-block animate-target py-1">Главная</span>
-            </a>
-        </div>
+
 
 
 

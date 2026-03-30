@@ -193,6 +193,10 @@ final class ProductFormPage extends FormPage
                             Text::make('SEO H1', 'seo_h1'),
 
                             Textarea::make('SEO Description', 'seo_description'),
+
+                            Text::make('Старый URL', 'legacy_url')
+                                ->nullable()
+                                ->placeholder('/katalog/listvennyie-rasteniya/.../tovar.html'),
                         ]),
                     ]),
                 ]),
@@ -207,6 +211,7 @@ final class ProductFormPage extends FormPage
             'category_id' => 'nullable',
             'supplier_id' => 'nullable',
             'country_id' => 'nullable',
+            'legacy_url' => 'nullable|string|max:255|unique:products,legacy_url,' . $item->getKey(),
             'sku' => 'nullable',
             'price' => 'nullable',
             'old_price' => 'nullable',

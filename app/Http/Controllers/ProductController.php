@@ -7,6 +7,22 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    public function redirectLegacy(string $legacyPath)
+    {
+        $normalizedPath = '/katalog/' . ltrim($legacyPath, '/');
+        $legacyCandidates = [
+            $normalizedPath,
+            ltrim($normalizedPath, '/'),
+        ];
+
+        $product = Product::query()
+            ->active()
+            ->whereIn('legacy_url', $legacyCandidates)
+            ->firstOrFail();
+
+        return redirect()->route('products.show', $product->slug, 301);
+    }
+
     public function show(string $slug)
     {
         $product = Product::with([

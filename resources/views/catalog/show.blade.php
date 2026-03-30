@@ -256,10 +256,6 @@
                                         </span>
                                     @endif
 
-                                    <button type="button" class="btn btn-icon btn-sm btn-secondary animate-pulse fs-sm bg-body border-0 position-absolute top-0 end-0 z-2 mt-1 mt-sm-2 me-1 me-sm-2" aria-label="Add to Wishlist">
-                                        <i class="ci-heart animate-target"></i>
-                                    </button>
-
                                     <a class="d-block p-2 p-lg-3" href="{{ route('products.show', $product->slug) }}">
                                         <div class="ratio" style="--cz-aspect-ratio: calc(160 / 191 * 100%)">
                                             <img src="{{ asset('storage/products/' . $product->image) ?? 'assets/img/placeholder.png' }}" alt="{{ $product->name }}">

@@ -143,16 +143,6 @@
                         <div class="swiper-slide">
                             <div class="product-card animate-underline hover-effect-opacity bg-body rounded">
                                 <div class="position-relative">
-                                    <!-- Wishlist / Compare кнопки -->
-                                    <div class="position-absolute top-0 end-0 z-2 hover-effect-target opacity-0 mt-3 me-3">
-                                        <div class="d-flex flex-column gap-2">
-                                            <button type="button" class="btn btn-icon btn-secondary animate-pulse d-none d-lg-inline-flex">
-                                                <i class="ci-heart fs-base animate-target"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-
-
 
                                     <!-- Изображение товара -->
                                     <a class="d-block rounded-top overflow-hidden p-3 p-sm-4"
@@ -261,17 +251,6 @@
                         <div class="swiper-slide">
                             <div class="product-card animate-underline hover-effect-opacity bg-body rounded">
                                 <div class="position-relative">
-                                    <!-- Wishlist / Compare кнопки -->
-                                    <div class="position-absolute top-0 end-0 z-2 hover-effect-target opacity-0 mt-3 me-3">
-                                        <div class="d-flex flex-column gap-2">
-                                            <button type="button" class="btn btn-icon btn-secondary animate-pulse d-none d-lg-inline-flex">
-                                                <i class="ci-heart fs-base animate-target"></i>
-                                            </button>
-
-                                        </div>
-                                    </div>
-
-
 
                                     <!-- Изображение товара -->
                                     <a class="d-block rounded-top overflow-hidden p-3 p-sm-4"
@@ -360,17 +339,6 @@
 
                         <!-- IMAGE -->
                         <div class="position-relative">
-
-                            <!-- Wishlist / Compare кнопки -->
-                            <div class="position-absolute top-0 end-0 z-2 hover-effect-target opacity-0 mt-3 me-3">
-                                <div class="d-flex flex-column gap-2">
-                                    <button type="button" class="btn btn-icon btn-secondary animate-pulse d-none d-lg-inline-flex">
-                                        <i class="ci-heart fs-base animate-target"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-
 
                             <a class="d-block rounded-top overflow-hidden p-3 p-sm-4"
                                href="{{ route('products.show', $product->slug ?? '#') }}">

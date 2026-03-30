@@ -19,6 +19,7 @@ class Product extends Model
         'country_id',
         'name',
         'slug',
+        'legacy_url',
         'sku',
         'short_description',
         'description',
@@ -216,6 +217,24 @@ class Product extends Model
     public function getSeoDescription(): ?string
     {
         return $this->seo_description ?: $this->short_description;
+    }
+
+    public function setLegacyUrlAttribute($value): void
+    {
+        if (blank($value)) {
+            $this->attributes['legacy_url'] = null;
+
+            return;
+        }
+
+        $value = trim((string) $value);
+        $path = parse_url($value, PHP_URL_PATH);
+
+        if (\is_string($path) && $path !== '') {
+            $value = $path;
+        }
+
+        $this->attributes['legacy_url'] = '/' . ltrim($value, '/');
     }
 
     public function getNameAttribute($value): string
