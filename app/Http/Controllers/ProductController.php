@@ -27,6 +27,7 @@ class ProductController extends Controller
     {
         $product = Product::with([
             'category',
+            'categories',
             'productAttributeValues.attributeValue.attribute'
         ])
             ->active()
@@ -55,20 +56,24 @@ class ProductController extends Controller
         // Категории
         $categoryIds = [];
 
-        if ($product->category) {
-            $ancestors = $product->category->getAncestorsAndSelf();
+        $productCategories = $product->categories->isNotEmpty()
+            ? $product->categories
+            : collect([$product->category])->filter();
+
+        foreach ($productCategories as $productCategory) {
+            $ancestors = $productCategory->getAncestorsAndSelf();
 
             foreach ($ancestors as $cat) {
                 $categoryIds = array_merge($categoryIds, $cat->getAllDescendantIds());
             }
-
-            $categoryIds = array_unique($categoryIds);
         }
+
+        $categoryIds = array_unique($categoryIds);
 
         // Связанные товары
         $relatedProducts = Product::active()
             ->when(!empty($categoryIds), function ($query) use ($categoryIds) {
-                $query->whereIn('category_id', $categoryIds);
+                $query->inCategories($categoryIds);
             })
             ->where('id', '!=', $product->id)
             ->inRandomOrder()

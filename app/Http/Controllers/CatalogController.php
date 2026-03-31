@@ -56,13 +56,13 @@ class CatalogController extends Controller
 
         // Базовый запрос товаров (только активные)
         $productsQuery = Product::query()
-            ->whereIn('category_id', $categoryIds)
+            ->inCategories($categoryIds)
             ->active();
 
         // ✅ Загружаем фильтруемые атрибуты (только те, что есть у товаров в категории)
         // 1. Получаем ID товаров в текущей категории и её потомках
         $productIds = Product::query()
-            ->whereIn('category_id', $categoryIds)
+            ->inCategories($categoryIds)
             ->active()
             ->pluck('id');
 
@@ -109,7 +109,7 @@ class CatalogController extends Controller
 
         // --- диапазон цен ---
         $priceRange = Product::query()
-            ->whereIn('category_id', $categoryIds)
+            ->inCategories($categoryIds)
             ->active()
             ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
             ->first();
@@ -164,7 +164,7 @@ class CatalogController extends Controller
             ->map(function ($cat) {
                 $allIds = $cat->getAllDescendantIds();
                 $cat->products_count = Product::query()
-                    ->whereIn('category_id', $allIds)
+                    ->inCategories($allIds)
                     ->active()
                     ->count();
                 return $cat;

@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
+use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
 use App\MoonShine\Resources\CategoryResource\CategoryResource;
 use App\MoonShine\Resources\CountryResource\CountryResource;
@@ -46,6 +47,12 @@ final class ProductIndexPage extends IndexPage
                 'category',
                 resource: CategoryResource::class,
             )->badge('info'),
+
+            BelongsToMany::make(
+                'Категории',
+                'categories',
+                resource: CategoryResource::class,
+            )->inLine(', '),
 
             Number::make('Цена', 'price')
                 ->sortable(),
@@ -85,7 +92,7 @@ final class ProductIndexPage extends IndexPage
                         $categoryIds = $category->getAllDescendantIds();
                     }
 
-                    return $query->whereIn('category_id', $categoryIds);
+                    return $query->inCategories($categoryIds);
                 }),
 
             BelongsTo::make(
@@ -192,7 +199,7 @@ final class ProductIndexPage extends IndexPage
         }
 
         $productIds = Product::query()
-            ->whereIn('category_id', $categoryIds)
+            ->inCategories($categoryIds)
             ->pluck('id');
 
         if ($productIds->isEmpty()) {
@@ -229,7 +236,7 @@ final class ProductIndexPage extends IndexPage
 
         if (! empty($categoryIds)) {
             $productIds = Product::query()
-                ->whereIn('category_id', $categoryIds)
+                ->inCategories($categoryIds)
                 ->pluck('id');
 
             if ($productIds->isEmpty()) {

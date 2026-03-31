@@ -13,7 +13,7 @@ class HomeController extends Controller
         $featuredProducts = Product::query()
             ->where('is_featured', true)
             ->where('in_stock', true)
-            ->with('category')
+            ->with(['category', 'categories'])
             ->take(12)
             ->get();
 
@@ -21,14 +21,14 @@ class HomeController extends Controller
             ->where('is_new', true)
             ->where('in_stock', true)
             ->where('is_active', true)
-            ->with('category')
+            ->with(['category', 'categories'])
             ->take(12)
             ->get();
 
         $inStockProducts = Product::query()
             ->where('is_active', true)
             ->where('in_stock', true)
-            ->with('category')
+            ->with(['category', 'categories'])
             ->latest()
             ->take(8)
             ->get();

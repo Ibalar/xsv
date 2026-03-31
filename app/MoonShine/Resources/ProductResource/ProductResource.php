@@ -12,6 +12,7 @@ use App\MoonShine\Resources\ProductResource\Pages\ProductIndexPage;
 use MoonShine\Contracts\Core\DependencyInjection\FieldsContract;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
+use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Fields\Slug;
 use MoonShine\Laravel\Resources\ModelResource;
 use MoonShine\ImportExport\Contracts\HasImportExportContract;
@@ -35,7 +36,7 @@ class ProductResource extends ModelResource implements HasImportExportContract
 
     protected string $column = 'name';
 
-    protected array $with = ['category', 'supplier', 'country', 'attributeValueOptions'];
+    protected array $with = ['category', 'categories', 'supplier', 'country', 'attributeValueOptions'];
 
     protected bool $simplePaginate = true;
 
@@ -84,6 +85,11 @@ class ProductResource extends ModelResource implements HasImportExportContract
                 'category',
                 resource: CategoryResource::class,
             ),
+            BelongsToMany::make(
+                'Дополнительные категории',
+                'categories',
+                resource: CategoryResource::class,
+            )->selectMode(),
         ];
     }
 

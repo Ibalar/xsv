@@ -105,6 +105,12 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class)
+            ->withTimestamps();
+    }
+
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);
@@ -165,6 +171,21 @@ class Product extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function scopeInCategories($query, array $categoryIds)
+    {
+        if ($categoryIds === []) {
+            return $query;
+        }
+
+        return $query->where(function ($builder) use ($categoryIds): void {
+            $builder
+                ->whereIn('category_id', $categoryIds)
+                ->orWhereHas('categories', function ($relation) use ($categoryIds): void {
+                    $relation->whereIn('categories.id', $categoryIds);
+                });
+        });
     }
 
     public function scopePopular($query)

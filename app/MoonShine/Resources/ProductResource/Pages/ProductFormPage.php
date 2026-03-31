@@ -17,6 +17,7 @@ use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
+use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Fields\Relationships\RelationRepeater;
 use MoonShine\Laravel\Fields\Slug;
 use MoonShine\Laravel\Pages\Crud\FormPage;
@@ -104,6 +105,17 @@ final class ProductFormPage extends FormPage
                                     static fn (Builder $q) => $q->active()->select(['id', 'name'])
                                 ),
                         ]),
+
+                        BelongsToMany::make(
+                            'Дополнительные категории',
+                            'categories',
+                            resource: CategoryResource::class,
+                        )
+                            ->selectMode()
+                            ->searchable()
+                            ->valuesQuery(
+                                static fn (Builder $q) => $q->active()->select(['id', 'name'])
+                            ),
 
                         Text::make('Артикул', 'sku'),
 
@@ -212,6 +224,8 @@ final class ProductFormPage extends FormPage
         return [
             'name' => 'required',
             'category_id' => 'nullable',
+            'categories' => 'nullable|array',
+            'categories.*' => 'integer|exists:categories,id',
             'supplier_id' => 'nullable',
             'country_id' => 'nullable',
             'legacy_url' => 'nullable|string|max:255|unique:products,legacy_url,' . $item->getKey(),
