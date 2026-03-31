@@ -1,5 +1,44 @@
 @extends('layouts.main')
 
+@php
+    $productImage = !empty($images[0]) ? asset('storage/products/' . $images[0]) : null;
+    $seo = [
+        'title' => $product->getSeoTitle() . ' - XSV.BY',
+        'description' => $product->getSeoDescription() ?: ('Товар ' . $product->name . ' в каталоге XSV.BY.'),
+        'canonical' => route('products.show', $product->slug),
+        'image' => $productImage,
+        'headline' => $product->getSeoH1(),
+        'type' => 'product',
+        'schema_type' => 'WebPage',
+        'json_ld' => [[
+            '@context' => 'https://schema.org',
+            '@type' => 'Product',
+            'name' => $product->name,
+            'description' => $product->getSeoDescription(),
+            'sku' => $product->sku,
+            'image' => array_map(
+                static fn (string $image): string => asset('storage/products/' . $image),
+                $images
+            ),
+            'brand' => $product->supplier?->name ? [
+                '@type' => 'Brand',
+                'name' => $product->supplier->name,
+            ] : null,
+            'category' => $product->category?->name,
+            'offers' => [
+                '@type' => 'Offer',
+                'url' => route('products.show', $product->slug),
+                'priceCurrency' => 'BYN',
+                'price' => (string) $product->price,
+                'availability' => $product->in_stock
+                    ? 'https://schema.org/InStock'
+                    : 'https://schema.org/OutOfStock',
+                'itemCondition' => 'https://schema.org/NewCondition',
+            ],
+        ]],
+    ];
+@endphp
+
 @section('title', 'Товар')
 
 @section('meta_description', ' ')
@@ -71,9 +110,14 @@
             <!-- Product details -->
             <div class="col-md-6 col-lg-5 position-relative">
                 <div class="ps-xxl-3">
-                    <h1 class="h5 mb-2">{{ $product->name }}</h1>
+                    <h1 class="h5 mb-2">{{ $product->getSeoH1() }}</h1>
 
-                    <div class="h3">{{ number_format($product->price, 2) }} BYN</div>
+                    <div class="h3">
+                        {{ number_format($product->price, 2) }} BYN
+                        @if($product->old_price)
+                            <del class="fs-lg fw-normal text-body-tertiary ms-1">{{ number_format($product->old_price, 2) }} BYN</del>
+                        @endif
+                    </div>
                     @if($product->wholesale_price)
                         <div class="border rounded-pill px-4 py-2 my-4">
                             <div class="text-dark-emphasis fs-sm py-1">

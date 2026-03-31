@@ -1,5 +1,15 @@
 @extends('layouts.main')
 
+@php
+    $seo = [
+        'title' => 'Заявка успешно отправлена - ' . config('app.name', 'XSV.BY'),
+        'description' => 'Ваша заявка успешно отправлена. Мы свяжемся с вами в ближайшее время.',
+        'canonical' => isset($order) ? route('orders.success', $order) : url()->current(),
+        'schema_type' => 'WebPage',
+        'robots' => 'noindex,follow',
+    ];
+@endphp
+
 @section('title', 'Заявка успешно отправлена')
 
 @section('meta_description', 'Ваша заявка успешно отправлена. Мы свяжемся с вами в ближайшее время.')

@@ -1,5 +1,21 @@
 @extends('layouts.main')
 
+@php
+    $pageDescription = \Illuminate\Support\Str::limit(
+        trim(preg_replace('/\s+/', ' ', strip_tags($page->content))),
+        160,
+        ''
+    );
+
+    $seo = [
+        'title' => $page->title . ' - ' . config('app.name', 'XSV.BY'),
+        'description' => $pageDescription,
+        'canonical' => route('pages.show', $page->slug),
+        'headline' => $page->title,
+        'schema_type' => 'WebPage',
+    ];
+@endphp
+
 @section('title', $page->title . ' - ' . config('app.name', 'XSV.BY'))
 
 @section('content')

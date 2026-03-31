@@ -1,5 +1,14 @@
 @extends('layouts.main')
 
+@php
+    $seo = [
+        'title' => 'Оформление заявки - ' . config('app.name', 'XSV.BY'),
+        'description' => 'Оформление заявки на покупку растений в XSV.BY.',
+        'canonical' => route('checkout.show'),
+        'schema_type' => 'WebPage',
+    ];
+@endphp
+
 @section('title', 'Оформление заявки')
 
 @section('meta_description', 'Оформление заявки на покупку растений')

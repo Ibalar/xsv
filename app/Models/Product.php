@@ -237,9 +237,40 @@ class Product extends Model
         $this->attributes['legacy_url'] = '/' . ltrim($value, '/');
     }
 
+    public function setImageAttribute($value): void
+    {
+        $this->attributes['image'] = self::normalizeImagePath($value);
+    }
+
+    public function setGalleryAttribute($value): void
+    {
+        $this->attributes['gallery'] = json_encode(
+            self::normalizeImagePath(\is_array($value) ? $value : []),
+            JSON_UNESCAPED_UNICODE
+        );
+    }
+
     public function getNameAttribute($value): string
     {
         return html_entity_decode($value);
+    }
+
+    public static function normalizeImagePath(null|string|array $path): null|string|array
+    {
+        if (\is_array($path)) {
+            return array_values(array_filter(array_map(
+                static fn (mixed $item): ?string => self::normalizeImagePath(
+                    \is_string($item) ? $item : null
+                ),
+                $path
+            )));
+        }
+
+        if (blank($path)) {
+            return null;
+        }
+
+        return basename((string) $path);
     }
 
     protected static function booted(): void

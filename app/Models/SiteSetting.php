@@ -93,14 +93,43 @@ class SiteSetting extends Model
 
     public static function contacts(): array
     {
-        $data = static::getCached('contacts', []);
+        $data = static::normalizeArray(static::getCached('contacts', []));
+
+        $phones = [];
+
+        if (isset($data['value']) && \is_array($data['value'])) {
+            $phones = $data['value'];
+        } elseif ($data !== []) {
+            foreach ($data as $key => $value) {
+                if (is_numeric($key) && \is_array($value) && isset($value['number'])) {
+                    $phones[] = $value;
+                }
+            }
+        }
 
         return [
-            'phones' => $data['phones'] ?? [],
+            'phones' => $data['phones'] ?? $phones,
             'email' => $data['email'] ?? null,
             'address' => $data['address'] ?? null,
             'working_hours' => $data['working_hours'] ?? null,
             'social_networks' => $data['social_networks'] ?? [],
         ];
+    }
+
+    public static function normalizeArray(mixed $value): array
+    {
+        if ($value instanceof \ArrayObject) {
+            return $value->getArrayCopy();
+        }
+
+        if (\is_array($value)) {
+            return $value;
+        }
+
+        if ($value instanceof \Traversable) {
+            return iterator_to_array($value);
+        }
+
+        return [];
     }
 }

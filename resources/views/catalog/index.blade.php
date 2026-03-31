@@ -1,5 +1,15 @@
 @extends('layouts.main')
 
+@php
+    $seo = [
+        'title' => 'Каталог товаров - XSV.BY',
+        'description' => 'Каталог растений XSV.BY: категории товаров, хвойные, лиственные и другие растения.',
+        'keywords' => 'каталог растений, купить растения, категории товаров',
+        'canonical' => route('catalog.index'),
+        'schema_type' => 'CollectionPage',
+    ];
+@endphp
+
 @section('title', 'Каталог товаров')
 
 @section('content')

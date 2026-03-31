@@ -1,5 +1,14 @@
 @extends('layouts.main')
 
+@php
+    $seo = [
+        'title' => 'Контакты - ' . config('app.name', 'XSV.BY'),
+        'description' => 'Контакты питомника растений XSV.BY: телефоны, email, адрес и форма обратной связи.',
+        'canonical' => route('contacts'),
+        'schema_type' => 'ContactPage',
+    ];
+@endphp
+
 @section('title', 'Контакты - ' . config('app.name', 'XSV.BY'))
 
 @section('content')

@@ -1,5 +1,27 @@
 @extends('layouts.main')
 
+@php
+    $seo = [
+        'title' => $category->getSeoTitle() . ' - XSV.BY',
+        'description' => $category->getSeoDescription() ?: 'Категория товаров ' . $category->name . ' в каталоге XSV.BY.',
+        'canonical' => route('catalog.show', $category->getFullPath()),
+        'image' => $category->image ? asset('storage/' . ltrim($category->image, '/')) : null,
+        'headline' => $category->getSeoH1(),
+        'schema_type' => 'CollectionPage',
+        'json_ld' => [[
+            '@context' => 'https://schema.org',
+            '@type' => 'CollectionPage',
+            'name' => $category->getSeoTitle(),
+            'description' => $category->getSeoDescription(),
+            'url' => route('catalog.show', $category->getFullPath()),
+            'mainEntity' => [
+                '@type' => 'ItemList',
+                'numberOfItems' => $products->count(),
+            ],
+        ]],
+    ];
+@endphp
+
 @section('title', 'Категория')
 
 @section('meta_description', ' ')
@@ -11,7 +33,7 @@
     <x-breadcrumb :items="$breadcrumbs" />
 
     <!-- Page title -->
-    <h1 class="h3 container pb-2 pb-md-3 pb-lg-4">{{ $category->name }}</h1>
+    <h1 class="h3 container pb-2 pb-md-3 pb-lg-4">{{ $category->getSeoH1() }}</h1>
 
 
     <!-- Products grid + Sidebar with filters -->
@@ -289,8 +311,8 @@
                                 <div class="card-body pt-0 px-1 px-md-2 px-lg-3 pb-2">
                                     <div class="h6 mb-2">
                                         {{ number_format($product->price, 2) }} BYN
-                                        @if($product->price_old)
-                                            <del class="fs-sm fw-normal text-body-tertiary ms-1">{{ number_format($product->price_old, 2) }} BYN</del>
+                                        @if($product->old_price)
+                                            <del class="fs-sm fw-normal text-body-tertiary ms-1">{{ number_format($product->old_price, 2) }} BYN</del>
                                         @endif
                                     </div>
 

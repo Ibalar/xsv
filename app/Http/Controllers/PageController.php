@@ -25,21 +25,7 @@ class PageController extends Controller
      */
     public function contacts()
     {
-        $data = (array) SiteSetting::get('contacts', []);
-
-        // Отбираем только числовые ключи как телефоны
-        $phones = [];
-        foreach ($data as $key => $value) {
-            if (is_numeric($key) && is_array($value) && isset($value['number'])) {
-                $phones[] = $value;
-            }
-        }
-
-        $contacts = [
-            'phones' => $phones,
-            'email' => $data['email'] ?? null,
-            'address' => $data['address'] ?? null,
-        ];
+        $contacts = SiteSetting::contacts();
 
         return view('pages.contacts', compact('contacts'));
     }

@@ -49,20 +49,11 @@ final class ProductIndexPage extends IndexPage
 
             Number::make('Цена', 'price')
                 ->sortable(),
-
-            Number::make('Старая цена', 'old_price'),
-
-            Text::make('Артикул', 'sku'),
-
-
-
             Switcher::make('Активен', 'is_active')
                 ->sortable(),
-
             Switcher::make('Хит', 'is_featured')
                 ->updateOnPreview()
                 ->sortable(),
-
             Switcher::make('Новинка', 'is_new')
                 ->updateOnPreview()
                 ->sortable(),

@@ -26,20 +26,32 @@ class AppServiceProvider extends ServiceProvider
         // View Composer для настроек сайта (контакты, соц. сети, реквизиты)
         View::composer(['partials.top-bar', 'partials.footer'], function ($view) {
             $siteSettings = cache()->remember('site_settings_all', 3600, function () {
-                $contacts = SiteSetting::getCached('contacts', []);
+                $contacts = SiteSetting::normalizeArray(SiteSetting::getCached('contacts', []));
 
                 return [
                     'phones' => $contacts,
                     'email' => $contacts['email'] ?? null,
                     'address' => $contacts['address'] ?? null,
-                    'social_links' => SiteSetting::getCached('social_links', []),
-                    'business_info' => SiteSetting::getCached('business_info', []),
+                    'social_links' => SiteSetting::normalizeArray(SiteSetting::getCached('social_links', [])),
+                    'business_info' => SiteSetting::normalizeArray(SiteSetting::getCached('business_info', [])),
                 ];
             });
 
             $view->with('siteSettings', $siteSettings);
         });
         View::composer('*', function ($view) {
+            $contacts = SiteSetting::contacts();
+            $businessInfo = SiteSetting::normalizeArray(SiteSetting::getCached('business_info', []));
+            $socialLinks = SiteSetting::normalizeArray(SiteSetting::getCached('social_links', []));
+
+            $view->with('globalSeo', [
+                'site_name' => config('app.name', 'XSV.BY'),
+                'site_url' => rtrim((string) url('/'), '/'),
+                'default_image' => asset('assets/app-icons/icon-180x180.png'),
+                'organization_name' => $businessInfo['company_name'] ?? config('app.name', 'XSV.BY'),
+                'contacts' => $contacts,
+                'social_links' => array_values(array_filter($socialLinks)),
+            ]);
 
             $categories = cache()->remember('menu_categories', 3600, function () {
                 return \App\Models\Category::query()

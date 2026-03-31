@@ -1,5 +1,15 @@
 @extends('layouts.main')
 
+@php
+    $seo = [
+        'title' => 'XSV.BY - Главная',
+        'description' => 'Питомник растений XSV.BY: хвойные, лиственные и многолетние растения с доставкой по Беларуси.',
+        'keywords' => 'питомник растений, купить растения, хвойные, лиственные, Беларусь',
+        'canonical' => route('home'),
+        'schema_type' => 'CollectionPage',
+    ];
+@endphp
+
 @section('title', 'XSV.BY - Главная')
 
 @section('meta_description', ' ')
@@ -167,7 +177,7 @@
                                         <div class="h5 lh-1 mb-0">
                                             {{ number_format($product->price, 2) }} BYN
                                             @if($product->old_price)
-                                                <del class="text-body-tertiary fs-sm fw-normal">{{ number_format($product->old_price, 2) }} BYN</del>
+                                                <del class="fs-sm fw-normal text-body-tertiary ms-1">{{ number_format($product->old_price, 2) }} BYN</del>
                                             @endif
                                         </div>
                                         <button type="button"
@@ -275,7 +285,7 @@
                                         <div class="h5 lh-1 mb-0">
                                             {{ number_format($product->price, 2) }} BYN
                                             @if($product->old_price)
-                                                <del class="text-body-tertiary fs-sm fw-normal">{{ number_format($product->old_price, 2) }} BYN</del>
+                                                <del class="fs-sm fw-normal text-body-tertiary ms-1">{{ number_format($product->old_price, 2) }} BYN</del>
                                             @endif
                                         </div>
                                         <button type="button"
@@ -377,7 +387,7 @@
                                     {{ number_format($price, 2) }} BYN
 
                                     @if($product->old_price)
-                                        <del class="text-body-tertiary fs-sm fw-normal">
+                                        <del class="fs-sm fw-normal text-body-tertiary ms-1">
                                             {{ number_format($product->old_price, 2) }} BYN
                                         </del>
                                     @endif

@@ -44,12 +44,12 @@ class ProductController extends Controller
                 : $product->image;
 
             if ($mainImage) {
-                $images[] = $mainImage;
+                $images[] = Product::normalizeImagePath($mainImage);
             }
         }
 
         if (!empty($product->gallery) && is_array($product->gallery)) {
-            $images = array_merge($images, $product->gallery);
+            $images = array_merge($images, Product::normalizeImagePath($product->gallery));
         }
 
         // Категории

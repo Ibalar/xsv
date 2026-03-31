@@ -12,6 +12,7 @@ use App\MoonShine\Resources\ProductAttributeValue\Support\HasProductAttributeFie
 use App\MoonShine\Resources\ProductResource\ProductResource;
 use App\MoonShine\Resources\SupplierResource\SupplierResource;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use MoonShine\Contracts\UI\ActionButtonContract;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
@@ -20,6 +21,8 @@ use MoonShine\Laravel\Fields\Relationships\RelationRepeater;
 use MoonShine\Laravel\Fields\Slug;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\TinyMce\Fields\TinyMce;
+use MoonShine\Support\ListOf;
+use MoonShine\UI\Components\ActionButton;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Components\Layout\Flex;
 use MoonShine\UI\Components\Tabs;
@@ -228,6 +231,39 @@ final class ProductFormPage extends FormPage
             'seo_h1' => 'nullable',
             'seo_description' => 'nullable',
         ];
+    }
+
+    protected function buttons(): ListOf
+    {
+        $buttons = new ListOf(ActionButtonContract::class, [
+            ActionButton::make(
+                'Открыть на сайте',
+                static fn (Product $product): string => route('products.show', $product->slug),
+            )
+                ->info()
+                ->icon('globe-alt')
+                ->blank()
+                ->customAttributes(['rel' => 'noopener noreferrer']),
+
+            ActionButton::make('Создать новый товар', $this->getResource()->getFormPageUrl())
+                ->primary()
+                ->icon('plus'),
+
+            $this->modifyDeleteButton(
+                $this->getResource()->getDeleteButton(
+                    redirectAfterDelete: $this->getResource()->getRedirectAfterDelete(),
+                    isAsync: false,
+                )
+            ),
+        ]);
+
+        if (! $this->isItemExists() || ! $this->getItem() instanceof Product) {
+            return $buttons->except(
+                static fn (ActionButtonContract $button): bool => $button->getLabel() === 'Открыть на сайте'
+            );
+        }
+
+        return $buttons;
     }
 
     protected function makeProductAttributeDependencyScript(): Preview
