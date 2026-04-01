@@ -47,12 +47,12 @@
                                     <ul class="nav flex-column gap-2 mt-n2 mb-3">
 
                                         @foreach($category->childrenRecursive as $child)
-                                            @include('components.category-menu', ['category' => $child])
+                                            @include('components.category-menu', ['category' => $child, 'path' => $category->slug])
                                         @endforeach
 
                                             <li class="pt-1">
                                                 <a class="nav-link p-0"
-                                                   href="{{ route('catalog.show', $category->getFullPath()) }}">
+                                                   href="{{ route('catalog.show', $category->slug) }}">
                                                     Смотреть все
                                                 </a>
                                             </li>
