@@ -260,7 +260,12 @@ class Product extends Model
 
     public function setImageAttribute($value): void
     {
-        $this->attributes['image'] = self::normalizeImagePath($value);
+        $normalized = self::normalizeImagePath($value);
+        if (is_array($normalized)) {
+            $this->attributes['image'] = json_encode($normalized, JSON_UNESCAPED_UNICODE);
+        } else {
+            $this->attributes['image'] = $normalized;
+        }
     }
 
     public function setGalleryAttribute($value): void
@@ -274,6 +279,35 @@ class Product extends Model
     public function getNameAttribute($value): string
     {
         return html_entity_decode($value);
+    }
+
+    public function getMainImageUrl(): string
+    {
+        $image = $this->image;
+
+        // Обработка случая, если в БД хранится JSON-массив в виде строки
+        if (is_string($image) && str_starts_with($image, '[')) {
+            $decoded = json_decode($image, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $image = $decoded;
+            }
+        }
+
+        // Если это массив, берем первое значение
+        if (is_array($image)) {
+            $image = reset($image);
+        }
+
+        // Fallback: если image пусто, пробуем взять первое из галереи
+        if (empty($image) && !empty($this->gallery) && is_array($this->gallery)) {
+            $image = reset($this->gallery);
+        }
+
+        if (empty($image)) {
+            return asset('no-image.jpg');
+        }
+
+        return asset("storage/products/{$image}");
     }
 
     public static function normalizeImagePath(null|string|array $path): null|string|array
@@ -298,8 +332,11 @@ class Product extends Model
     {
         static::saving(function ($product) {
             if ($product->image) {
-                // Обрезаем путь до имени файла
-                $product->image = basename($product->image);
+                if (is_array($product->image)) {
+                    $product->image = array_map(static fn ($img) => is_string($img) ? basename($img) : $img, $product->image);
+                } else if (is_string($product->image) && !str_starts_with($product->image, '[')) {
+                    $product->image = basename($product->image);
+                }
             }
         });
     }
