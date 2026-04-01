@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Order\Pages;
 
+use App\Models\Order;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\UI\Components\Boolean;
@@ -15,6 +16,7 @@ use MoonShine\UI\Fields\ID;
 use App\MoonShine\Resources\Order\OrderResource;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Fields\Json;
+use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use Throwable;
@@ -34,9 +36,21 @@ class OrderIndexPage extends IndexPage
     {
         return [
             ID::make(),
-            Json::make('Товары', 'products'),
+            Select::make('Статус', 'status')
+                ->options(Order::getStatusOptions())
+                ->badge(fn($value) => match($value) {
+                    Order::STATUS_NEW => 'blue',
+                    Order::STATUS_PROCESSING => 'orange',
+                    Order::STATUS_COMPLETED => 'green',
+                    Order::STATUS_CANCELLED => 'red',
+                    default => 'gray',
+                }),
+            Json::make('Товары', 'products')
+                ->onlyCount()
+                ->showOnIndex(),
             Text::make('Имя', 'name'),
             Text::make('Телефон', 'phone'),
+            Switcher::make('Telegram', 'telegram_sent'),
         ];
     }
 
