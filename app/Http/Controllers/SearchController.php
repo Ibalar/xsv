@@ -32,7 +32,7 @@ class SearchController extends Controller
 
         // Формируем полный путь к изображению
         $products->transform(function ($product) {
-            $product->image = $product->image ? asset("storage/products/{$product->image}") : asset('no-image.jpg');
+            $product->image = $product->getMainImageUrl();
             return $product;
         });
 
