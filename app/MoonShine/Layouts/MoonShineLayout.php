@@ -19,6 +19,7 @@ use MoonShine\ColorManager\Palettes\SkyPalette;
 use MoonShine\Contracts\ColorManager\ColorManagerContract;
 use MoonShine\Contracts\ColorManager\PaletteContract;
 use MoonShine\Laravel\Layouts\AppLayout;
+use MoonShine\MenuManager\MenuGroup;
 use MoonShine\MenuManager\MenuItem;
 
 final class MoonShineLayout extends AppLayout
@@ -38,16 +39,24 @@ final class MoonShineLayout extends AppLayout
     protected function menu(): array
     {
         return [
-            MenuItem::make(CategoryResource::class),
-            MenuItem::make(SupplierResource::class),
-            MenuItem::make(CountryResource::class),
-            MenuItem::make(ProductResource::class),
-            MenuItem::make(AttributeResource::class),
-            MenuItem::make(AttributeValueResource::class),
-            MenuItem::make(OrderResource::class, 'Заказы'),
-            MenuItem::make(PageResource::class, 'Страницы сайта'),
-            MenuItem::make(SiteSettingResource::class, 'Настройки сайта'),
-            MenuItem::make(static fn (): string => route('home'), 'Открыть сайт', 'globe-alt', true),
+            MenuGroup::make('Каталог')->setItems([
+                MenuItem::make(CategoryResource::class),
+                MenuItem::make(ProductResource::class),
+                MenuItem::make(SupplierResource::class),
+                MenuItem::make(CountryResource::class),
+            ])
+            ->icon('shopping-cart'),
+            MenuGroup::make('Характеристики')->setItems([
+                MenuItem::make(AttributeResource::class),
+                MenuItem::make(AttributeValueResource::class),
+            ])
+            ->icon('adjustments-horizontal'),
+            MenuItem::make(PageResource::class, 'Инфо. страницы')
+            ->icon('document-text'),
+            MenuItem::make(OrderResource::class, 'Заказы')
+            ->icon('banknotes'),
+            MenuItem::make(SiteSettingResource::class, 'Настройки сайта')
+            ->icon('wrench-screwdriver'),
             ...parent::menu(),
         ];
     }
@@ -61,4 +70,17 @@ final class MoonShineLayout extends AppLayout
 
         // $colorManager->primary('#000000');
     }
+
+    protected function getFooterMenu(): array
+    {
+        return [
+            'https://webart.by' => 'Разработка WebArt.by',
+        ];
+    }
+
+    protected function getFooterCopyright(): string
+    {
+        return 'Все права защищены. www.xsv.by';
+    }
+
 }
