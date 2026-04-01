@@ -10,6 +10,8 @@ use App\Models\Product;
 use App\Models\ProductAttributeValue;
 use Illuminate\Contracts\Database\Eloquent\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
@@ -31,6 +33,9 @@ use MoonShine\UI\Fields\Text;
  */
 final class ProductIndexPage extends IndexPage
 {
+    /** @var array<int, int>|null */
+    protected ?array $memoizedCategoryIds = null;
+
     /**
      * @return list<FieldContract>
      */
@@ -141,12 +146,21 @@ final class ProductIndexPage extends IndexPage
 
         $categoryIds = $this->getCategoryIdsFromRequest();
 
-        $attributes = $this->getAttributesForCategory($categoryIds);
+        // Get all filters data with caching
+        $filtersData = $this->getFiltersData($categoryIds);
+        $attributes = $filtersData['attributes'];
+        $valuesData = $filtersData['values'];
 
         foreach ($attributes as $attribute) {
             $filter = match ($attribute->type) {
-                Attribute::TYPE_SELECT => $this->createSelectFilter($attribute, $categoryIds),
-                Attribute::TYPE_BOOLEAN => $this->createBooleanFilter($attribute, $categoryIds),
+                Attribute::TYPE_SELECT => $this->createSelectFilter(
+                    $attribute,
+                    $valuesData[$attribute->id] ?? []
+                ),
+                Attribute::TYPE_BOOLEAN => $this->createBooleanFilter(
+                    $attribute,
+                    $valuesData[$attribute->id] ?? []
+                ),
                 Attribute::TYPE_NUMBER => $this->createNumberFilter($attribute),
                 default => $this->createTextFilter($attribute),
             };
@@ -166,21 +180,31 @@ final class ProductIndexPage extends IndexPage
      */
     protected function getCategoryIdsFromRequest(): array
     {
+        if ($this->memoizedCategoryIds !== null) {
+            return $this->memoizedCategoryIds;
+        }
+
         $request = request();
 
         $categoryId = $request->input('filters.category');
 
         if (empty($categoryId)) {
+            $this->memoizedCategoryIds = [];
+
             return [];
         }
 
         $category = Category::find($categoryId);
 
         if (! $category) {
+            $this->memoizedCategoryIds = [];
+
             return [];
         }
 
-        return $category->getAllDescendantIds();
+        $this->memoizedCategoryIds = $category->getAllDescendantIds();
+
+        return $this->memoizedCategoryIds;
     }
 
     /**
@@ -198,19 +222,24 @@ final class ProductIndexPage extends IndexPage
                 ->get();
         }
 
-        $productIds = Product::query()
-            ->inCategories($categoryIds)
-            ->pluck('id');
-
-        if ($productIds->isEmpty()) {
-            return new \Illuminate\Database\Eloquent\Collection();
-        }
-
+        // Use subquery instead of pluck('id')
         $attributeIds = ProductAttributeValue::query()
-            ->join('attribute_values', 'product_attribute_values.attribute_value_id', '=', 'attribute_values.id')
-            ->whereIn('product_id', $productIds)
+            ->whereExists(function ($query) use ($categoryIds): void {
+                $query->select(DB::raw(1))
+                    ->from('products')
+                    ->whereColumn('product_attribute_values.product_id', 'products.id')
+                    ->where(function ($q) use ($categoryIds): void {
+                        $q->whereIn('products.category_id', $categoryIds)
+                            ->orWhereExists(function ($subQ) use ($categoryIds): void {
+                                $subQ->select(DB::raw(1))
+                                    ->from('category_product')
+                                    ->whereColumn('category_product.product_id', 'products.id')
+                                    ->whereIn('category_product.category_id', $categoryIds);
+                            });
+                    });
+            })
             ->distinct()
-            ->pluck('attribute_values.attribute_id')
+            ->pluck('attribute_id')
             ->filter()
             ->values();
 
@@ -226,39 +255,86 @@ final class ProductIndexPage extends IndexPage
     }
 
     /**
-     * @return list<string>
+     * Get all filters data for attributes with caching.
+     *
+     * @param  array<int, int>  $categoryIds
+     * @return array{attributes: \Illuminate\Database\Eloquent\Collection<int, Attribute>, values: array<int, array<string>>}
      */
-    protected function getAttributeValues(Attribute $attribute, array $categoryIds = []): array
+    protected function getFiltersData(array $categoryIds): array
     {
-        $query = ProductAttributeValue::query()
-            ->join('attribute_values', 'product_attribute_values.attribute_value_id', '=', 'attribute_values.id')
-            ->where('attribute_values.attribute_id', $attribute->id);
+        $cacheKey = empty($categoryIds)
+            ? 'product_filters_all'
+            : 'product_filters_' . implode('_', $categoryIds);
 
-        if (! empty($categoryIds)) {
-            $productIds = Product::query()
-                ->inCategories($categoryIds)
-                ->pluck('id');
+        return Cache::remember(
+            $cacheKey,
+            now()->addHour(),
+            function () use ($categoryIds): array {
+                $attributes = $this->getAttributesForCategory($categoryIds);
 
-            if ($productIds->isEmpty()) {
-                return [];
+                if ($attributes->isEmpty()) {
+                    return [
+                        'attributes' => $attributes,
+                        'values' => [],
+                    ];
+                }
+
+                // Get filterable attribute IDs
+                $attributeIds = $attributes
+                    ->whereIn('type', [Attribute::TYPE_SELECT, Attribute::TYPE_BOOLEAN])
+                    ->pluck('id')
+                    ->values();
+
+                if ($attributeIds->isEmpty()) {
+                    return [
+                        'attributes' => $attributes,
+                        'values' => [],
+                    ];
+                }
+
+                // Get all values for these attributes in one query
+                $valuesQuery = ProductAttributeValue::query()
+                    ->whereIn('attribute_id', $attributeIds)
+                    ->whereNotNull('value')
+                    ->where('value', '!=', '')
+                    ->select(['attribute_id', 'value']);
+
+                if (! empty($categoryIds)) {
+                    $valuesQuery->whereExists(function ($query) use ($categoryIds): void {
+                        $query->select(DB::raw(1))
+                            ->from('products')
+                            ->whereColumn('product_attribute_values.product_id', 'products.id')
+                            ->where(function ($q) use ($categoryIds): void {
+                                $q->whereIn('products.category_id', $categoryIds)
+                                    ->orWhereExists(function ($subQ) use ($categoryIds): void {
+                                        $subQ->select(DB::raw(1))
+                                            ->from('category_product')
+                                            ->whereColumn('category_product.product_id', 'products.id')
+                                            ->whereIn('category_product.category_id', $categoryIds);
+                                    });
+                            });
+                    });
+                }
+
+                $values = $valuesQuery
+                    ->get()
+                    ->groupBy('attribute_id')
+                    ->map(fn ($group) => $group->pluck('value')->unique()->values()->all())
+                    ->all();
+
+                return [
+                    'attributes' => $attributes,
+                    'values' => $values,
+                ];
             }
-
-            $query->whereIn('product_id', $productIds);
-        }
-
-        return $query->distinct()
-            ->pluck('value')
-            ->filter(static fn ($value) => $value !== null && $value !== '')
-            ->map(static fn ($value) => (string) $value)
-            ->unique()
-            ->values()
-            ->all();
+        );
     }
 
-    protected function createSelectFilter(Attribute $attribute, array $categoryIds = []): ?Select
+    /**
+     * @param  list<string>  $values
+     */
+    protected function createSelectFilter(Attribute $attribute, array $values): ?Select
     {
-        $values = $this->getAttributeValues($attribute, $categoryIds);
-
         if ($values === []) {
             return null;
         }
@@ -279,19 +355,19 @@ final class ProductIndexPage extends IndexPage
 
                 $values = is_array($value) ? $value : [$value];
 
+                // Optimized: use direct where instead of nested whereHas
                 return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $values): void {
-                    $q->whereHas('attributeValue', function (Builder $aq) use ($attribute) {
-                        $aq->where('attribute_id', $attribute->id);
-                    })
+                    $q->where('attribute_id', $attribute->id)
                         ->whereIn('value', $values);
                 });
             });
     }
 
-    protected function createBooleanFilter(Attribute $attribute, array $categoryIds = []): ?Select
+    /**
+     * @param  list<string>  $values
+     */
+    protected function createBooleanFilter(Attribute $attribute, array $values): ?Select
     {
-        $values = $this->getAttributeValues($attribute, $categoryIds);
-
         $options = [];
 
         if (in_array('1', $values, true)) {
@@ -315,10 +391,9 @@ final class ProductIndexPage extends IndexPage
                     return $query;
                 }
 
+                // Optimized: use direct where instead of nested whereHas
                 return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $value): void {
-                    $q->whereHas('attributeValue', function (Builder $aq) use ($attribute) {
-                        $aq->where('attribute_id', $attribute->id);
-                    })
+                    $q->where('attribute_id', $attribute->id)
                         ->where('value', $value === '1' ? '1' : '0');
                 });
             });
@@ -333,10 +408,9 @@ final class ProductIndexPage extends IndexPage
                     return $query;
                 }
 
+                // Optimized: use direct where instead of nested whereHas
                 return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $value): void {
-                    $q->whereHas('attributeValue', function (Builder $aq) use ($attribute) {
-                        $aq->where('attribute_id', $attribute->id);
-                    })
+                    $q->where('attribute_id', $attribute->id)
                         ->where('value', $value);
                 });
             });
@@ -351,10 +425,9 @@ final class ProductIndexPage extends IndexPage
                     return $query;
                 }
 
+                // Optimized: use direct where instead of nested whereHas
                 return $query->whereHas('attributeValues', function (Builder $q) use ($attribute, $value): void {
-                    $q->whereHas('attributeValue', function (Builder $aq) use ($attribute) {
-                        $aq->where('attribute_id', $attribute->id);
-                    })
+                    $q->where('attribute_id', $attribute->id)
                         ->where('value', 'LIKE', "%{$value}%");
                 });
             });

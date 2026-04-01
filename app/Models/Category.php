@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class Category extends Model
@@ -185,11 +186,25 @@ class Category extends Model
      */
     public function getAllDescendantIds(): array
     {
+        return Cache::remember(
+            "category_descendants_{$this->id}",
+            now()->addHours(24),
+            fn (): array => $this->loadDescendantIds()
+        );
+    }
+
+    /**
+     * Load all descendant category IDs including self without caching.
+     *
+     * @return list<int>
+     */
+    protected function loadDescendantIds(): array
+    {
         $ids = [$this->id];
 
         $children = $this->children;
         foreach ($children as $child) {
-            $ids = array_merge($ids, $child->getAllDescendantIds());
+            $ids = array_merge($ids, $child->loadDescendantIds());
         }
 
         return $ids;
