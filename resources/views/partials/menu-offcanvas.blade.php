@@ -50,7 +50,8 @@
                                         <ul class="nav flex-column gap-2 mt-n2">
                                             @foreach($category->childrenRecursive as $child)
                                                 @include('components.mobile-category', [
-                                                    'category' => $child
+                                                    'category' => $child,
+                                                    'path' => $category->slug
                                                 ])
                                             @endforeach
 

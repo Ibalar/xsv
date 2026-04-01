@@ -24,25 +24,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // View Composer для настроек сайта (контакты, соц. сети, реквизиты)
-        View::composer(['partials.top-bar', 'partials.footer'], function ($view) {
-            $siteSettings = cache()->remember('site_settings_all', 3600, function () {
-                $contacts = SiteSetting::normalizeArray(SiteSetting::getCached('contacts', []));
-
-                return [
-                    'phones' => $contacts,
-                    'email' => $contacts['email'] ?? null,
-                    'address' => $contacts['address'] ?? null,
-                    'social_links' => SiteSetting::normalizeArray(SiteSetting::getCached('social_links', [])),
-                    'business_info' => SiteSetting::normalizeArray(SiteSetting::getCached('business_info', [])),
-                ];
-            });
-
-            $view->with('siteSettings', $siteSettings);
-        });
-
-        // Глобальное SEO только для основного макета
+        // Единый View Composer для layouts.main - все данные доступны во всех partials
         View::composer('layouts.main', function ($view) {
+            // ===== SEO данные =====
             $contacts = SiteSetting::contacts();
             $businessInfo = SiteSetting::normalizeArray(SiteSetting::getCached('business_info', []));
             $socialLinks = SiteSetting::normalizeArray(SiteSetting::getCached('social_links', []));
@@ -55,10 +39,21 @@ class AppServiceProvider extends ServiceProvider
                 'contacts' => $contacts,
                 'social_links' => array_values(array_filter($socialLinks)),
             ]);
-        });
 
-        // Категории и страницы для мобильного меню
-        View::composer('partials.menu-offcanvas', function ($view) {
+            // ===== Настройки сайта для top-bar и footer =====
+            $siteSettings = cache()->remember('site_settings_all', 3600, function () use ($contacts, $socialLinks, $businessInfo) {
+                return [
+                    'phones' => $contacts,
+                    'email' => $contacts['email'] ?? null,
+                    'address' => $contacts['address'] ?? null,
+                    'social_links' => $socialLinks,
+                    'business_info' => $businessInfo,
+                ];
+            });
+
+            $view->with('siteSettings', $siteSettings);
+
+            // ===== Категории для меню (переиспользуем кэш) =====
             $categories = cache()->remember('menu_categories', 3600, function () {
                 return Category::query()
                     ->active()
@@ -70,29 +65,7 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('headerCategories', $categories);
 
-            $menuPages = cache()->remember('menu_pages', 3600, function () {
-                return Page::query()
-                    ->where('is_active', true)
-                    ->where('in_menu', true)
-                    ->orderBy('sort')
-                    ->orderBy('title')
-                    ->get();
-            });
-
-            $view->with('menuPages', $menuPages);
-        });
-
-        // Колонки меню в хедере
-        View::composer('partials.header', function ($view) {
-            $categories = cache()->remember('menu_categories', 3600, function () {
-                return Category::query()
-                    ->active()
-                    ->whereNull('parent_id')
-                    ->with('childrenRecursive')
-                    ->ordered()
-                    ->get();
-            });
-
+            // ===== Колонки меню для хедера =====
             $columns = [];
             $count = $categories->count();
 
@@ -112,10 +85,20 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with('menuColumns', $columns);
-        });
 
-        // Категории в футере
-        View::composer('partials.footer', function ($view) {
+            // ===== Страницы для меню =====
+            $menuPages = cache()->remember('menu_pages', 3600, function () {
+                return Page::query()
+                    ->where('is_active', true)
+                    ->where('in_menu', true)
+                    ->orderBy('sort')
+                    ->orderBy('title')
+                    ->get();
+            });
+
+            $view->with('menuPages', $menuPages);
+
+            // ===== Категории для футера =====
             $footerCategories = cache()->remember('footer_categories', 3600, function () {
                 return Category::query()
                     ->active()
@@ -125,27 +108,45 @@ class AppServiceProvider extends ServiceProvider
             });
 
             $view->with('footerCategories', $footerCategories);
-        });
 
-        // Хлебные крошки только там, где они нужны
-        View::composer(['catalog.index', 'catalog.show', 'products.show', 'pages.show', 'pages.contacts', 'layouts.main'], function ($view) {
-            if ($view->offsetExists('breadcrumbs')) {
-                return;
-            }
+            // ===== Хлебные крошки =====
+            if (! $view->offsetExists('breadcrumbs')) {
+                $items = [];
 
-            $items = [];
+                // PRODUCT
+                if (isset($view->product)) {
+                    $product = $view->product;
 
-            // PRODUCT
-            if (isset($view->product)) {
-                $product = $view->product;
+                    $items[] = [
+                        'title' => 'Главная',
+                        'url' => route('home'),
+                    ];
 
-                $items[] = [
-                    'title' => 'Главная',
-                    'url' => route('home'),
-                ];
+                    if ($product->category) {
+                        foreach ($product->category->getAncestorsAndSelf() as $cat) {
+                            $items[] = [
+                                'title' => $cat->name,
+                                'url' => route('catalog.show', $cat->getFullPath()),
+                            ];
+                        }
+                    }
 
-                if ($product->category) {
-                    foreach ($product->category->getAncestorsAndSelf() as $cat) {
+                    $items[] = [
+                        'title' => $product->name,
+                        'url' => null,
+                    ];
+                }
+
+                // CATEGORY
+                elseif (isset($view->category)) {
+                    $category = $view->category;
+
+                    $items[] = [
+                        'title' => 'Главная',
+                        'url' => route('home'),
+                    ];
+
+                    foreach ($category->getAncestorsAndSelf() as $cat) {
                         $items[] = [
                             'title' => $cat->name,
                             'url' => route('catalog.show', $cat->getFullPath()),
@@ -153,58 +154,36 @@ class AppServiceProvider extends ServiceProvider
                     }
                 }
 
-                $items[] = [
-                    'title' => $product->name,
-                    'url' => null,
-                ];
-            }
+                // PAGE
+                elseif (isset($view->page)) {
+                    $page = $view->page;
 
-            // CATEGORY
-            elseif (isset($view->category)) {
-                $category = $view->category;
-
-                $items[] = [
-                    'title' => 'Главная',
-                    'url' => route('home'),
-                ];
-
-                foreach ($category->getAncestorsAndSelf() as $cat) {
                     $items[] = [
-                        'title' => $cat->name,
-                        'url' => route('catalog.show', $cat->getFullPath()),
+                        'title' => 'Главная',
+                        'url' => route('home'),
+                    ];
+
+                    $items[] = [
+                        'title' => $page->title,
+                        'url' => null,
                     ];
                 }
-            }
 
-            // PAGE ✅
-            elseif (isset($view->page)) {
-                $page = $view->page;
+                elseif ($view->name() === 'pages.contacts') {
+                    $items[] = [
+                        'title' => 'Главная',
+                        'url' => route('home'),
+                    ];
 
-                $items[] = [
-                    'title' => 'Главная',
-                    'url' => route('home'),
-                ];
+                    $items[] = [
+                        'title' => 'Контакты',
+                        'url' => null,
+                    ];
+                }
 
-                $items[] = [
-                    'title' => $page->title,
-                    'url' => null,
-                ];
-            }
-
-            elseif ($view->name() === 'pages.contacts') {
-                $items[] = [
-                    'title' => 'Главная',
-                    'url' => route('home'),
-                ];
-
-                $items[] = [
-                    'title' => 'Контакты',
-                    'url' => null,
-                ];
-            }
-
-            if (!empty($items)) {
-                $view->with('breadcrumbs', $items);
+                if (!empty($items)) {
+                    $view->with('breadcrumbs', $items);
+                }
             }
         });
     }

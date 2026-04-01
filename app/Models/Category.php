@@ -14,7 +14,10 @@ class Category extends Model
 {
     use HasFactory;
 
+    /** @var array<int, array<int, Category>> */
     protected static array $requestAncestors = [];
+
+    /** @var array<int, string> */
     protected static array $requestPaths = [];
 
     /**
