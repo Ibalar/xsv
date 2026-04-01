@@ -24,14 +24,26 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Единый View Composer для layouts.main - все данные доступны во всех partials
-        View::composer('layouts.main', function ($view) {
+        // View Composer для основных страниц - гарантирует наличие данных до рендеринга дочерних шаблонов
+        View::composer([
+            'layouts.main',
+            'products.show',
+            'catalog.show',
+            'pages.show',
+            'pages.contacts'
+        ], function ($view) {
+            static $alreadyComposed = false;
+            if ($alreadyComposed) {
+                return;
+            }
+            $alreadyComposed = true;
+
             // ===== SEO данные =====
             $contacts = SiteSetting::contacts();
             $businessInfo = SiteSetting::normalizeArray(SiteSetting::getCached('business_info', []));
             $socialLinks = SiteSetting::normalizeArray(SiteSetting::getCached('social_links', []));
 
-            $view->with('globalSeo', [
+            View::share('globalSeo', [
                 'site_name' => config('app.name', 'XSV.BY'),
                 'site_url' => rtrim((string) url('/'), '/'),
                 'default_image' => asset('assets/app-icons/icon-180x180.png'),
@@ -51,7 +63,7 @@ class AppServiceProvider extends ServiceProvider
                 ];
             });
 
-            $view->with('siteSettings', $siteSettings);
+            View::share('siteSettings', $siteSettings);
 
             // ===== Категории для меню (переиспользуем кэш) =====
             $categories = cache()->remember('menu_categories', 3600, function () {
@@ -63,7 +75,7 @@ class AppServiceProvider extends ServiceProvider
                     ->get();
             });
 
-            $view->with('headerCategories', $categories);
+            View::share('headerCategories', $categories);
 
             // ===== Колонки меню для хедера =====
             $columns = [];
@@ -84,7 +96,7 @@ class AppServiceProvider extends ServiceProvider
                 $columns[] = $chunks[1] ?? collect();
             }
 
-            $view->with('menuColumns', $columns);
+            View::share('menuColumns', $columns);
 
             // ===== Страницы для меню =====
             $menuPages = cache()->remember('menu_pages', 3600, function () {
@@ -96,7 +108,7 @@ class AppServiceProvider extends ServiceProvider
                     ->get();
             });
 
-            $view->with('menuPages', $menuPages);
+            View::share('menuPages', $menuPages);
 
             // ===== Категории для футера =====
             $footerCategories = cache()->remember('footer_categories', 3600, function () {
@@ -107,12 +119,11 @@ class AppServiceProvider extends ServiceProvider
                     ->get();
             });
 
-            $view->with('footerCategories', $footerCategories);
+            View::share('footerCategories', $footerCategories);
 
             // ===== Хлебные крошки =====
+            $items = [];
             if (! $view->offsetExists('breadcrumbs')) {
-                $items = [];
-
                 // PRODUCT
                 if (isset($view->product)) {
                     $product = $view->product;
@@ -180,11 +191,11 @@ class AppServiceProvider extends ServiceProvider
                         'url' => null,
                     ];
                 }
-
-                if (!empty($items)) {
-                    $view->with('breadcrumbs', $items);
-                }
+            } else {
+                $items = $view->breadcrumbs;
             }
+
+            View::share('breadcrumbs', $items);
         });
     }
 }
