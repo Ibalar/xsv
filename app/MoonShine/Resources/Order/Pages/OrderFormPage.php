@@ -51,8 +51,7 @@ class OrderFormPage extends FormPage
                         Text::make('Название', 'name'),
                         Text::make('Цена', 'price'),
                         Text::make('Количество', 'quantity'),
-                    ])
-                    ->hideOnIndex(),
+                    ]),
             ]),
             Box::make('Системная информация', [
                 Textarea::make('Заметки админа', 'admin_notes'),
