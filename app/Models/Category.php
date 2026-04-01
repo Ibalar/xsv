@@ -14,6 +14,9 @@ class Category extends Model
 {
     use HasFactory;
 
+    protected static array $requestAncestors = [];
+    protected static array $requestPaths = [];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -116,13 +119,8 @@ class Category extends Model
 
     public function ancestors(): array
     {
-        $ancestors = [];
-        $parent = $this->parent;
-
-        while ($parent) {
-            array_unshift($ancestors, $parent);
-            $parent = $parent->parent;
-        }
+        $ancestors = $this->getAncestorsAndSelf();
+        array_pop($ancestors);
 
         return $ancestors;
     }
@@ -157,11 +155,19 @@ class Category extends Model
 
     public function getFullPath(): string
     {
-        $slugs = collect($this->ancestors())
-            ->pluck('slug')
-            ->push($this->slug);
+        if (isset(static::$requestPaths[$this->id])) {
+            return static::$requestPaths[$this->id];
+        }
 
-        return $slugs->implode('/');
+        $ancestors = $this->getAncestorsAndSelf();
+        $path = '';
+
+        foreach ($ancestors as $cat) {
+            $path = $path === '' ? $cat->slug : $path . '/' . $cat->slug;
+            static::$requestPaths[$cat->id] = $path;
+        }
+
+        return static::$requestPaths[$this->id];
     }
 
     public function getSeoTitle(): string
@@ -220,16 +226,31 @@ class Category extends Model
      */
     public function getAncestorsAndSelf(): array
     {
-        $categories = [];
-        $category = $this;
-
-        // собираем всех родителей
-        while ($category) {
-            array_unshift($categories, $category); // вставляем в начало
-            $category = $category->parent;
+        if (isset(static::$requestAncestors[$this->id])) {
+            return static::$requestAncestors[$this->id];
         }
 
-        return $categories;
+        $categories = [];
+        $current = $this;
+
+        while ($current) {
+            if (isset(static::$requestAncestors[$current->id])) {
+                $categories = array_merge(static::$requestAncestors[$current->id], $categories);
+                break;
+            }
+
+            array_unshift($categories, $current);
+            $current = $current->parent;
+        }
+
+        // Заполняем кэш для всей цепочки
+        $chain = [];
+        foreach ($categories as $cat) {
+            $chain[] = $cat;
+            static::$requestAncestors[$cat->id] = $chain;
+        }
+
+        return static::$requestAncestors[$this->id];
     }
 
 }
