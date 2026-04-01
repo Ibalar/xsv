@@ -565,7 +565,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        container.querySelectorAll('.remove-item').forEach(btn => {
+        container.querySelectorAll('.remove-item-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
                 removeItem(id);
