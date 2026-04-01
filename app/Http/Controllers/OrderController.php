@@ -125,11 +125,24 @@ class OrderController extends Controller
             'parse_mode' => 'HTML',
         ]);
 
+        // Расширенное логирование ответа
+        \Log::info("Telegram API response for order #{$order->id}:", [
+            'status' => $response->status(),
+            'body' => $response->json()
+        ]);
+
         // Проверка успешности отправки и обновление полей
         if ($response->successful() && $response->json('ok')) {
-            $order->update([
+            $updated = $order->forceFill([
                 'telegram_sent' => true,
                 'telegram_sent_at' => now(),
+            ])->save();
+
+            \Log::info("Database update for order #{$order->id} (telegram_sent): " . ($updated ? 'success' : 'failed'));
+        } else {
+            \Log::error("Telegram notification failed for order #{$order->id}", [
+                'status' => $response->status(),
+                'response' => $response->json()
             ]);
         }
     }
