@@ -94,7 +94,7 @@
                         </svg>
                     </a>
                 @endif
-                @if(!empty($siteSettings['social_links']['value']['telegram']))
+                @if(!empty($siteSettings['social_links']['telegram']))
                     <a class="border-0 rounded-circle animate-shake d-none d-lg-inline-flex" href="{{ $siteSettings['social_links']['value']['telegram'] }}">
                         <svg width="28" height="26" viewBox="0 0 28 26" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <g clip-path="url(#clip0_1_42)">
@@ -112,7 +112,7 @@
                 @endif
             @else
                 {{-- Fallback на хардкод если настройки не заполнены --}}
-                <a class=" border-0 rounded-circle animate-shake d-none d-lg-inline-flex" href="#" target="_blank">
+                <a class=" border-0 rounded-circle animate-shake d-none d-lg-inline-flex" href="https://wa.me/375296403709" target="_blank">
                     <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M8.96145 15.5808C6.35308 12.4794 5.92846 10.0166 6.38341 8.58751C6.59572 7.85777 6.80803 7.18885 7.56628 6.58073C8.47617 5.851 8.8098 6.03343 9.20409 6.42871L10.0533 8.64832C10.2353 9.25644 9.81069 9.68212 9.53772 9.95577C9.1131 10.3814 8.71881 10.7767 8.71881 10.7767C8.71881 10.7767 9.26475 12.5403 10.5993 13.8781L10.9632 14.243C12.2977 15.5808 13.9962 15.9761 13.9962 15.9761C13.9962 15.9761 14.6938 15.2768 15.1184 14.8511C15.3914 14.5774 15.6947 14.0909 16.4226 14.4254L18.667 15.3984C19.0613 15.7937 19.1826 16.3106 18.2121 17.2835C16.3923 19.0471 12.4494 19.0471 8.96145 15.5808Z" stroke="#14990A" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
                         <path d="M23.945 12.1454C23.945 18.5914 18.7283 23.7908 12.3287 23.7908C10.1752 23.7908 8.17346 23.2131 6.44466 22.1793L0.5 23.9428L2.44111 18.1961C1.34924 16.463 0.742639 14.365 0.742639 12.1454C0.742639 5.72978 5.92905 0.5 12.359 0.5C18.7889 0.5 23.945 5.72978 23.945 12.1454Z" stroke="#14990A" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
