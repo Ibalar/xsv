@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Category;
+use App\Models\Page;
 use App\Models\Product;
 use App\Models\SiteSetting;
 use Illuminate\Support\ServiceProvider;
@@ -39,7 +40,9 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('siteSettings', $siteSettings);
         });
-        View::composer('*', function ($view) {
+
+        // Глобальное SEO только для основного макета
+        View::composer('layouts.main', function ($view) {
             $contacts = SiteSetting::contacts();
             $businessInfo = SiteSetting::normalizeArray(SiteSetting::getCached('business_info', []));
             $socialLinks = SiteSetting::normalizeArray(SiteSetting::getCached('social_links', []));
@@ -52,9 +55,12 @@ class AppServiceProvider extends ServiceProvider
                 'contacts' => $contacts,
                 'social_links' => array_values(array_filter($socialLinks)),
             ]);
+        });
 
+        // Категории и страницы для мобильного меню
+        View::composer('partials.menu-offcanvas', function ($view) {
             $categories = cache()->remember('menu_categories', 3600, function () {
-                return \App\Models\Category::query()
+                return Category::query()
                     ->active()
                     ->whereNull('parent_id')
                     ->with('childrenRecursive')
@@ -62,22 +68,10 @@ class AppServiceProvider extends ServiceProvider
                     ->get();
             });
 
-            // 👉 для мобильного меню
             $view->with('headerCategories', $categories);
 
-            $footerCategories = cache()->remember('footer_categories', 3600, function () {
-                return \App\Models\Category::query()
-                    ->active()
-                    ->whereNull('parent_id')
-                    ->ordered()
-                    ->get();
-            });
-
-            $view->with('footerCategories', $footerCategories);
-
-            // 👉 ДОБАВИЛИ СТРАНИЦЫ
             $menuPages = cache()->remember('menu_pages', 3600, function () {
-                return \App\Models\Page::query()
+                return Page::query()
                     ->where('is_active', true)
                     ->where('in_menu', true)
                     ->orderBy('sort')
@@ -86,10 +80,20 @@ class AppServiceProvider extends ServiceProvider
             });
 
             $view->with('menuPages', $menuPages);
+        });
 
-            // 👉 логика колонок
+        // Колонки меню в хедере
+        View::composer('partials.header', function ($view) {
+            $categories = cache()->remember('menu_categories', 3600, function () {
+                return Category::query()
+                    ->active()
+                    ->whereNull('parent_id')
+                    ->with('childrenRecursive')
+                    ->ordered()
+                    ->get();
+            });
+
             $columns = [];
-
             $count = $categories->count();
 
             if ($count <= 4) {
@@ -110,8 +114,21 @@ class AppServiceProvider extends ServiceProvider
             $view->with('menuColumns', $columns);
         });
 
-        View::composer('*', function ($view) {
+        // Категории в футере
+        View::composer('partials.footer', function ($view) {
+            $footerCategories = cache()->remember('footer_categories', 3600, function () {
+                return Category::query()
+                    ->active()
+                    ->whereNull('parent_id')
+                    ->ordered()
+                    ->get();
+            });
 
+            $view->with('footerCategories', $footerCategories);
+        });
+
+        // Хлебные крошки только там, где они нужны
+        View::composer(['catalog.index', 'catalog.show', 'products.show', 'pages.show', 'pages.contacts', 'layouts.main'], function ($view) {
             if ($view->offsetExists('breadcrumbs')) {
                 return;
             }
@@ -143,7 +160,7 @@ class AppServiceProvider extends ServiceProvider
             }
 
             // CATEGORY
-            if (isset($view->category)) {
+            elseif (isset($view->category)) {
                 $category = $view->category;
 
                 $items[] = [
@@ -160,7 +177,7 @@ class AppServiceProvider extends ServiceProvider
             }
 
             // PAGE ✅
-            if (isset($view->page)) {
+            elseif (isset($view->page)) {
                 $page = $view->page;
 
                 $items[] = [
@@ -174,7 +191,7 @@ class AppServiceProvider extends ServiceProvider
                 ];
             }
 
-            if ($view->name() === 'pages.contacts') {
+            elseif ($view->name() === 'pages.contacts') {
                 $items[] = [
                     'title' => 'Главная',
                     'url' => route('home'),
@@ -186,7 +203,9 @@ class AppServiceProvider extends ServiceProvider
                 ];
             }
 
-            $view->with('breadcrumbs', $items);
+            if (!empty($items)) {
+                $view->with('breadcrumbs', $items);
+            }
         });
     }
 }

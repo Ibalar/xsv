@@ -13,6 +13,8 @@ class SiteSetting extends Model
 
     protected const CACHE_KEY_PREFIX = 'site_setting_';
 
+    protected static array $requestCache = [];
+
     protected $fillable = [
         'key',
         'value',
@@ -57,9 +59,13 @@ class SiteSetting extends Model
 
     public static function getCached(string $key, mixed $default = null): mixed
     {
+        if (isset(static::$requestCache[$key])) {
+            return static::$requestCache[$key];
+        }
+
         $cacheKey = static::CACHE_KEY_PREFIX . $key;
 
-        return Cache::rememberForever($cacheKey, function () use ($key, $default) {
+        return static::$requestCache[$key] = Cache::rememberForever($cacheKey, function () use ($key, $default) {
             return static::get($key, $default);
         });
     }
@@ -69,12 +75,13 @@ class SiteSetting extends Model
         $keys = static::pluck('key');
 
         foreach ($keys as $key) {
-            Cache::forget(static::CACHE_KEY_PREFIX . $key);
+            static::flushCacheByKey($key);
         }
     }
 
     protected static function flushCacheByKey(string $key): void
     {
+        unset(static::$requestCache[$key]);
         Cache::forget(static::CACHE_KEY_PREFIX . $key);
     }
 
