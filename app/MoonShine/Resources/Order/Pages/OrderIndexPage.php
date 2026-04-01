@@ -50,8 +50,7 @@ class OrderIndexPage extends IndexPage
                     Text::make('Название', 'name'),
                     Text::make('Цена', 'price'),
                     Text::make('Количество', 'quantity'),
-                ])
-                ->showOnIndex(),
+                ]),
             Text::make('Имя', 'name'),
             Text::make('Телефон', 'phone'),
             Switcher::make('Telegram', 'telegram_sent'),
