@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Order\Pages;
 
+use App\Models\Order;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FormBuilderContract;
@@ -15,7 +16,10 @@ use MoonShine\Support\ListOf;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Fields\Json;
+use MoonShine\UI\Fields\Select;
+use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
+use MoonShine\UI\Fields\Textarea;
 use Throwable;
 
 
@@ -30,10 +34,29 @@ class OrderFormPage extends FormPage
     protected function fields(): iterable
     {
         return [
-            Box::make([
+            Box::make('Информация о заказе', [
                 ID::make(),
+                Select::make('Статус', 'status')
+                    ->options(Order::getStatusOptions())
+                    ->default(Order::STATUS_NEW),
+            ]),
+            Box::make('Данные клиента', [
                 Text::make('Имя', 'name'),
                 Text::make('Телефон', 'phone'),
+                Textarea::make('Комментарий клиента', 'comment'),
+            ]),
+            Box::make('Товары', [
+                Json::make('Товары', 'products')
+                    ->fields([
+                        Text::make('Название', 'name'),
+                        Text::make('Цена', 'price'),
+                        Text::make('Количество', 'quantity'),
+                    ])
+                    ->hideOnIndex(),
+            ]),
+            Box::make('Системная информация', [
+                Textarea::make('Заметки админа', 'admin_notes'),
+                Switcher::make('Telegram отправлен', 'telegram_sent')->readonly(),
             ]),
         ];
     }

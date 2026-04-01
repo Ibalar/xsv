@@ -119,10 +119,18 @@ class OrderController extends Controller
         $message .= "\n<i>" . now()->format('d.m.Y H:i') . "</i>";
 
         // Отправка через Telegram Bot API
-        Http::get("https://api.telegram.org/bot{$token}/sendMessage", [
+        $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
             'chat_id' => $chat_id,
             'text' => $message,
             'parse_mode' => 'HTML',
         ]);
+
+        // Проверка успешности отправки и обновление полей
+        if ($response->successful() && $response->json('ok')) {
+            $order->update([
+                'telegram_sent' => true,
+                'telegram_sent_at' => now(),
+            ]);
+        }
     }
 }
