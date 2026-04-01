@@ -33,7 +33,7 @@
                     <span id="cart-offcanvas-total" class="h4 mb-0 fw-bold text-primary">0.00 BYN</span>
                 </div>
                 <a class="btn btn-lg btn-primary w-100 rounded-pill" href="{{ route('checkout.show') }}">
-                    Оформить заказ
+                    Оформить заявку
                     <i class="ci-arrow-right ms-2"></i>
                 </a>
             </div>

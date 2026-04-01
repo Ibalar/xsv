@@ -14,6 +14,8 @@ use App\MoonShine\Resources\Order\OrderResource;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Components\Layout\Box;
+use MoonShine\UI\Fields\Json;
+use MoonShine\UI\Fields\Text;
 use Throwable;
 
 
@@ -30,6 +32,8 @@ class OrderFormPage extends FormPage
         return [
             Box::make([
                 ID::make(),
+                Text::make('Имя', 'name'),
+                Text::make('Телефон', 'phone'),
             ]),
         ];
     }

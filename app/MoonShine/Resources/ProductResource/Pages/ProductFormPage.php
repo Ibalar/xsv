@@ -83,6 +83,17 @@ final class ProductFormPage extends FormPage
                                     static fn (Builder $q) => $q->active()->select(['id', 'name'])
                                 ),
 
+                            BelongsToMany::make(
+                                'Дополнительные категории',
+                                'categories',
+                                resource: CategoryResource::class,
+                            )
+                                ->selectMode()
+                                ->searchable()
+                                ->valuesQuery(
+                                    static fn (Builder $q) => $q->active()->select(['id', 'name'])
+                                ),
+
                             BelongsTo::make(
                                 'Поставщик',
                                 'supplier',
@@ -106,16 +117,7 @@ final class ProductFormPage extends FormPage
                                 ),
                         ]),
 
-                        BelongsToMany::make(
-                            'Дополнительные категории',
-                            'categories',
-                            resource: CategoryResource::class,
-                        )
-                            ->selectMode()
-                            ->searchable()
-                            ->valuesQuery(
-                                static fn (Builder $q) => $q->active()->select(['id', 'name'])
-                            ),
+
 
                         Text::make('Артикул', 'sku'),
 

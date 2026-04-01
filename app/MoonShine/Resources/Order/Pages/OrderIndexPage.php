@@ -34,10 +34,9 @@ class OrderIndexPage extends IndexPage
     {
         return [
             ID::make(),
-            Json::make('Products', 'products'),
-            Text::make('Name', 'name'),
-            Text::make('Phone', 'phone'),
-            Switcher::make('Agree', 'agree'),
+            Json::make('Товары', 'products'),
+            Text::make('Имя', 'name'),
+            Text::make('Телефон', 'phone'),
         ];
     }
 
