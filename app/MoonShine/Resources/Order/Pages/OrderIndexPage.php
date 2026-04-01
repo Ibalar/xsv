@@ -46,7 +46,11 @@ class OrderIndexPage extends IndexPage
                     default => 'gray',
                 }),
             Json::make('Товары', 'products')
-                ->onlyCount()
+                ->fields([
+                    Text::make('Название', 'name'),
+                    Text::make('Цена', 'price'),
+                    Text::make('Количество', 'quantity'),
+                ])
                 ->showOnIndex(),
             Text::make('Имя', 'name'),
             Text::make('Телефон', 'phone'),

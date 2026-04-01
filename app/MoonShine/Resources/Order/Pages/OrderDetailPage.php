@@ -42,6 +42,20 @@ class OrderDetailPage extends DetailPage
                     Order::STATUS_CANCELLED => 'red',
                     default => 'gray',
                 }),
+            Text::make('Имя', 'name'),
+            Text::make('Телефон', 'phone'),
+            Textarea::make('Комментарий', 'comment'),
+            Json::make('Товары', 'products')
+                ->fields([
+                    Text::make('Название', 'name'),
+                    Text::make('Цена', 'price'),
+                    Text::make('Количество', 'quantity'),
+                ]),
+            Textarea::make('Заметки админа', 'admin_notes'),
+            Switcher::make('Telegram отправлен', 'telegram_sent'),
+            Date::make('Дата отправки', 'telegram_sent_at'),
+            Date::make('Создан', 'created_at'),
+            Date::make('Обновлён', 'updated_at'),
         ];
     }
 
