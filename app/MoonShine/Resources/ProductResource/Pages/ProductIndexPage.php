@@ -42,11 +42,6 @@ final class ProductIndexPage extends IndexPage
                 resource: CategoryResource::class,
             )->badge('info'),
 
-            BelongsToMany::make(
-                'Категории',
-                'categories',
-                resource: CategoryResource::class,
-            )->inLine(', '),
 
             Number::make('Цена', 'price')
                 ->sortable(),
