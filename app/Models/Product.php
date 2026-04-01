@@ -285,7 +285,7 @@ class Product extends Model
     {
         $image = $this->image;
 
-        // Обработка случая, если в БД хранится JSON-массив в виде строки
+        // если в БД JSON-массив
         if (is_string($image) && str_starts_with($image, '[')) {
             $decoded = json_decode($image, true);
             if (json_last_error() === JSON_ERROR_NONE) {
@@ -293,20 +293,23 @@ class Product extends Model
             }
         }
 
-        // Если это массив, берем первое значение
+        // если массив, берем первый элемент
         if (is_array($image)) {
             $image = reset($image);
         }
 
-        // Fallback: если image пусто, пробуем взять первое из галереи
-        if (empty($image) && !empty($this->gallery) && is_array($this->gallery)) {
-            $image = reset($this->gallery);
+        // если пусто, берем первую картинку из галереи
+        $gallery = $this->gallery;
+        if (empty($image) && is_array($gallery)) {
+            $image = reset($gallery);
         }
 
+        // если всё ещё пусто, fallback
         if (empty($image)) {
             return asset('no-image.jpg');
         }
 
+        // ✅ здесь добавляем путь к storage/products/
         return asset("storage/products/{$image}");
     }
 
@@ -340,5 +343,6 @@ class Product extends Model
             }
         });
     }
+
 
 }
