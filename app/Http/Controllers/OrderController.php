@@ -69,7 +69,7 @@ class OrderController extends Controller
         try {
             $this->sendTelegram($order);
         } catch (\Exception $e) {
-            \Log::error('Failed to send Telegram notification: ' . $e->getMessage());
+            // Silently fail - order is still valid
         }
 
         // Редирект на страницу успеха
@@ -125,25 +125,12 @@ class OrderController extends Controller
             'parse_mode' => 'HTML',
         ]);
 
-        // Расширенное логирование ответа
-        \Log::info("Telegram API response for order #{$order->id}:", [
-            'status' => $response->status(),
-            'body' => $response->json()
-        ]);
-
         // Проверка успешности отправки и обновление полей
         if ($response->successful() && $response->json('ok')) {
-            $updated = $order->forceFill([
+            $order->forceFill([
                 'telegram_sent' => true,
                 'telegram_sent_at' => now(),
             ])->save();
-
-            \Log::info("Database update for order #{$order->id} (telegram_sent): " . ($updated ? 'success' : 'failed'));
-        } else {
-            \Log::error("Telegram notification failed for order #{$order->id}", [
-                'status' => $response->status(),
-                'response' => $response->json()
-            ]);
         }
     }
 }
