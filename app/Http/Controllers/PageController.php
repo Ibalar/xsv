@@ -4,13 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Page;
 use App\Models\SiteSetting;
+use App\Services\TelegramNotifier;
 use Illuminate\Http\Request;
 
 class PageController extends Controller
 {
-    /**
-     * Display a static page by slug
-     */
     public function show(string $slug)
     {
         $page = Page::where('slug', $slug)
@@ -20,9 +18,6 @@ class PageController extends Controller
         return view('pages.show', compact('page'));
     }
 
-    /**
-     * Display contacts page
-     */
     public function contacts()
     {
         $contacts = SiteSetting::contacts();
@@ -30,10 +25,7 @@ class PageController extends Controller
         return view('pages.contacts', compact('contacts'));
     }
 
-    /**
-     * Send contact form
-     */
-    public function sendContactForm(Request $request)
+    public function sendContactForm(Request $request, TelegramNotifier $telegramNotifier)
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -54,8 +46,11 @@ class PageController extends Controller
             'agree.accepted' => 'Необходимо согласие на обработку персональных данных',
         ]);
 
-        // Here you can save to database or send to Telegram
-        // Example: LeadRequest::create($data);
+        try {
+            $telegramNotifier->sendContactForm($data);
+        } catch (\Throwable $e) {
+            // Silently fail. The form should still be accepted.
+        }
 
         return redirect()
             ->route('contacts')
