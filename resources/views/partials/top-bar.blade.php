@@ -1,7 +1,7 @@
 <div class="bg-dark">
     <div class="container position-relative d-flex align-items-center justify-content-center justify-content-xxl-between z-1 py-3">
         <div class="nav animate-underline d-none d-xxl-inline-flex">
-            <span class="text-white fs-xs me-1">{{ $siteSettings['address'] ?? 'Минская обл. Логойский р-н д.Зелёный сад, ул.Подлесная, 20' }}</span>
+            <span class="text-white fs-xs me-1">{{ $siteSettings['address'] ?? 'Минская обл. Логойский р-н, д.Зелёный сад, ул.Подлесная, 20' }}</span>
         </div>
         <ul class="nav gap-4 justify-content-center">
             @if(!empty($siteSettings['phones']['value']))

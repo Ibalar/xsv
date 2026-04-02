@@ -22,7 +22,7 @@
 
         <!-- Categories dropdown visible on screens > 991px wide (lg breakpoint) -->
         <div class="dropdown d-none d-lg-block w-100 me-4" style="max-width: 200px">
-            <button type="button" class="btn btn-lg btn-secondary w-100 border-0 rounded-pill" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <button type="button" class="btn btn-lg btn-success w-100 border-0 rounded-pill fs-5" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="ci-grid fs-lg me-2 ms-n1"></i>
                 Каталог
                 <i class="ci-chevron-down fs-lg me-2 ms-auto me-n1"></i>
@@ -172,3 +172,37 @@
         </div>
     </div>
 </header>
+
+<section class="border-top">
+    <div class="container py-lg-1">
+        <div class="overflow-auto" data-simplebar>
+            <div class="nav flex-nowrap justify-content-between gap-4 py-2">
+                @foreach($headerCategories as $category)
+                    @php
+                        $categoryImage = $category->image
+                            ? asset('storage/' . ltrim($category->image, '/'))
+                            : null;
+                    @endphp
+
+                    <a class="nav-link align-items-center animate-underline gap-2 p-0"
+                       href="{{ route('catalog.show', $category->getFullPath()) }}">
+                        <span class="d-flex align-items-center justify-content-center bg-body-tertiary rounded-circle overflow-hidden flex-shrink-0"
+                              style="width: 40px; height: 40px">
+                            @if($categoryImage)
+                                <img src="{{ $categoryImage }}"
+                                     width="30"
+                                     height="30"
+                                     alt="{{ $category->name }}"
+                                     loading="lazy"
+                                     class="object-fit-cover">
+                            @else
+                                <i class="ci-grid text-primary fs-xl"></i>
+                            @endif
+                        </span>
+                        <span class="d-block animate-target fw-semibold text-nowrap ms-1">{{ $category->name }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</section>

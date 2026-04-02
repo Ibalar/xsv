@@ -144,6 +144,7 @@
     <!-- Bootstrap + Theme styles -->
     <link rel="preload" href="{{ asset('assets/css/theme.css') }}" as="style">
     <link rel="stylesheet" href="{{ asset('assets/css/theme.css') }}" id="theme-styles">
+    <link rel="stylesheet" href="{{ asset('assets/css/site.css') }}">
 
 
 
