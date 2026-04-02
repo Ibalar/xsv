@@ -89,24 +89,30 @@
                                     </div>
                                 @endif
 
-                                <ul class="list-unstyled pb-sm-2 mb-0">
-                                    <li class="nav btn btn-outline-warning rounded-pill">
-                                        <a class="nav-link animate-underline fw-semibold px-0 " href="https://yandex.ru/maps/?rtext=~54.171193, 27.774528" target="_blank">
+                                <div class="row g-3 pb-sm-2 mb-0">
+                                    <div class="col-12 ">
+                                        <a class="footer-route-link nav btn btn-outline-warning rounded-pill px-3 justify-content-center h-100"
+                                           href="https://yandex.ru/maps/?rtext=~54.171193, 27.774528"
+                                           target="_blank"
+                                           rel="noreferrer">
                                             <i class="ci-send fs-lg me-2" style="margin-top: .1875rem"></i>
                                             <span class="animate-target">Построить маршрут в Яндекс.Карты</span>
                                             <svg width="9" height="18" viewBox="0 0 9 18" fill="none" xmlns="http://www.w3.org/2000/svg" class="ms-2">
                                                 <path d="M8.20626 0H5.69812C3.15705 0 0.592979 1.91327 0.592979 6.18771C0.592979 8.40178 1.51326 10.1262 3.20025 11.1068L0.112583 16.8054C-0.0338148 17.0749 -0.0376421 17.3803 0.102308 17.6224C0.238949 17.8588 0.488818 18 0.770442 18H2.33238C2.6872 18 2.96386 17.8251 3.09654 17.5188L5.99157 11.745H6.20285V17.2804C6.20285 17.6705 6.52568 18 6.90781 18H8.27229C8.70082 18 9 17.6949 9 17.2581V0.787605C9.00007 0.323895 8.67369 0 8.20626 0ZM6.20285 9.18021H5.83014C4.38495 9.18021 3.52218 7.97737 3.52218 5.96261C3.52218 3.45741 4.61206 2.56482 5.63209 2.56482H6.20285V9.18021Z" fill="#D7143A" />
                                             </svg>
                                         </a>
-                                    </li>
-                                    <li class="nav btn btn-outline-success rounded-pill">
-                                        <a class="nav-link animate-underline fw-semibold px-0" href="https://www.google.com/maps?saddr=My+Location&daddr=54.171193, 27.774528" target="_blank">
+                                    </div>
+                                    <div class="col-12">
+                                        <a class="footer-route-link nav btn btn-outline-success rounded-pill px-3 justify-content-center h-100"
+                                           href="https://www.google.com/maps?saddr=My+Location&daddr=54.171193, 27.774528"
+                                           target="_blank"
+                                           rel="noreferrer">
                                             <i class="ci-send fs-lg me-2"></i>
                                             <span class="animate-target">Построить маршрут в Google Maps</span>
                                             <i class="ci-google fs-lg ms-2" style="margin-top: .1875rem"></i>
                                         </a>
-                                    </li>
-                                </ul>
+                                    </div>
+                                </div>
 
                             </div>
                         </div>
