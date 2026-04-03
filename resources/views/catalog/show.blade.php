@@ -233,28 +233,6 @@
             <!-- Product grid -->
             <div class="col-lg-9">
 
-                <!-- Sorting -->
-                <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                    <div class="fs-sm text-body-emphasis text-nowrap mb-2 mb-sm-0">
-                        Всего товаров: <span class="fw-semibold">{{ $products->total() }}</span>
-                    </div>
-                    <div class="d-flex align-items-center text-nowrap mb-3">
-                        <label class="form-label fw-semibold mb-0 me-2">Сортировать:</label>
-                        <div style="width: 200px">
-                            <form method="GET" id="sortForm">
-                                <select name="sort" class="form-select rounded-pill" onchange="document.getElementById('sortForm').submit()">
-                                    <option value="Relevance" {{ $sort === 'Relevance' ? 'selected' : '' }}>Релевантность</option>
-                                    <option value="Alphabet" {{ $sort === 'Alphabet' ? 'selected' : '' }}>Название А-Я</option>
-                                    <option value="Price: Low to High" {{ $sort === 'Price: Low to High' ? 'selected' : '' }}>Сначала дешевле</option>
-                                    <option value="Price: High to Low" {{ $sort === 'Price: High to Low' ? 'selected' : '' }}>Сначала дороже</option>
-                                    <option value="Popularity" {{ $sort === 'Popularity' ? 'selected' : '' }}>Только хиты</option>
-                                    <option value="Newest Arrivals" {{ $sort === 'Newest Arrivals' ? 'selected' : '' }}>Только новинки</option>
-                                </select>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
                 @if($subcategories->isNotEmpty())
                     <div class="d-flex flex-wrap gap-2 mb-4">
                         @foreach($subcategories as $sub)
@@ -284,6 +262,30 @@
                         @endforeach
                     </div>
                 @endif
+
+                <!-- Sorting -->
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <div class="fs-sm text-body-emphasis text-nowrap mb-2 mb-sm-0">
+                        Всего товаров: <span class="fw-semibold">{{ $products->total() }}</span>
+                    </div>
+                    <div class="d-flex align-items-center text-nowrap mb-3">
+                        <label class="form-label fw-semibold mb-0 me-2">Сортировать:</label>
+                        <div style="width: 200px">
+                            <form method="GET" id="sortForm">
+                                <select name="sort" class="form-select rounded-pill" onchange="document.getElementById('sortForm').submit()">
+                                    <option value="Relevance" {{ $sort === 'Relevance' ? 'selected' : '' }}>Релевантность</option>
+                                    <option value="Alphabet" {{ $sort === 'Alphabet' ? 'selected' : '' }}>Название А-Я</option>
+                                    <option value="Price: Low to High" {{ $sort === 'Price: Low to High' ? 'selected' : '' }}>Сначала дешевле</option>
+                                    <option value="Price: High to Low" {{ $sort === 'Price: High to Low' ? 'selected' : '' }}>Сначала дороже</option>
+                                    <option value="Popularity" {{ $sort === 'Popularity' ? 'selected' : '' }}>Только хиты</option>
+                                    <option value="Newest Arrivals" {{ $sort === 'Newest Arrivals' ? 'selected' : '' }}>Только новинки</option>
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+
 
                 <!-- Grid -->
                 <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-3 row-cols-xl-4 g-4">
