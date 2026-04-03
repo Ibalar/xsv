@@ -258,9 +258,28 @@
                 @if($subcategories->isNotEmpty())
                     <div class="d-flex flex-wrap gap-2 mb-4">
                         @foreach($subcategories as $sub)
-                            <a href="{{ route('catalog.show', $sub->getFullPath()) }}" class="btn btn-sm btn-secondary">
-                                <i class="ci-corner-down-right fs-sm ms-n1 me-1"></i>
-                                {{ $sub->name }}
+                            @php
+                                $subcategoryImage = $sub->image
+                                    ? asset('storage/' . ltrim($sub->image, '/'))
+                                    : null;
+                            @endphp
+
+                            <a href="{{ route('catalog.show', $sub->getFullPath()) }}"
+                               class="btn btn-sm btn-light d-inline-flex align-items-center gap-2">
+                                <span class="d-flex align-items-center justify-content-center bg-body-tertiary rounded-circle overflow-hidden flex-shrink-0"
+                                      style="width: 30px; height: 30px">
+                                    @if($subcategoryImage)
+                                        <img src="{{ $subcategoryImage }}"
+                                             width="30"
+                                             height="30"
+                                             alt="{{ $sub->name }}"
+                                             loading="lazy"
+                                             class="object-fit-cover">
+                                    @else
+                                        <i class="ci-leaf fs-sm text-info"></i>
+                                    @endif
+                                </span>
+                                <span class="fs-lg">{{ $sub->name }}</span>
                             </a>
                         @endforeach
                     </div>

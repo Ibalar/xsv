@@ -21,14 +21,14 @@
 
 
         <!-- Categories dropdown visible on screens > 991px wide (lg breakpoint) -->
-        <div class="dropdown d-none d-lg-block w-100 me-4" style="max-width: 200px">
+        <div id="headerCatalogDropdown" class="dropdown d-none d-lg-block w-100 me-4" style="max-width: 200px">
             <button type="button" class="btn btn-lg btn-success w-100 border-0 rounded-pill fs-5" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="ci-grid fs-lg me-2 ms-n1"></i>
                 Каталог
                 <i class="ci-chevron-down fs-lg me-2 ms-auto me-n1"></i>
             </button>
-            <div class="dropdown-menu rounded-4 p-4" style="margin-left: -195px">
-                <div class="d-flex gap-4">
+            <div id="headerCatalogDropdownMenu" class="dropdown-menu rounded-4 p-4 header-catalog-dropdown-menu" style="margin-left: -195px">
+                <div id="headerCatalogDropdownScroll" class="header-catalog-dropdown-scroll d-flex gap-4">
 
                     @foreach($menuColumns as $column)
                         <div style="min-width: 200px">
@@ -173,7 +173,7 @@
     </div>
 </header>
 
-<section class="border-top">
+<section class="header-categories-bar border-top">
     <div class="container py-lg-1">
         <div class="overflow-auto" data-simplebar>
             <div class="nav flex-nowrap justify-content-between gap-4 py-2">
@@ -206,3 +206,96 @@
         </div>
     </div>
 </section>
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropdown = document.getElementById('headerCatalogDropdown');
+            const dropdownMenu = document.getElementById('headerCatalogDropdownMenu');
+            const dropdownScroll = document.getElementById('headerCatalogDropdownScroll');
+
+            if (!dropdown || !dropdownMenu || !dropdownScroll) {
+                return;
+            }
+
+            const isDesktopViewport = () => window.innerWidth >= 992;
+            const getOverlayTop = () => {
+                const selectors = ['.top-bar', 'header[data-sticky-element]', '.header-categories-bar'];
+
+                return selectors.reduce((maxBottom, selector) => {
+                    const element = document.querySelector(selector);
+
+                    if (!element) {
+                        return maxBottom;
+                    }
+
+                    const rect = element.getBoundingClientRect();
+                    return Math.max(maxBottom, rect.bottom);
+                }, 0);
+            };
+
+            const lockPageScroll = () => {
+                if (!isDesktopViewport() || document.body.classList.contains('desktop-catalog-lock')) {
+                    return;
+                }
+
+                const scrollY = window.scrollY || window.pageYOffset || 0;
+                document.body.style.top = `-${scrollY}px`;
+                document.body.style.setProperty('--catalog-overlay-top', `${Math.max(0, getOverlayTop())}px`);
+                document.body.dataset.desktopCatalogScrollY = String(scrollY);
+                document.body.classList.add('desktop-catalog-lock');
+                document.body.classList.add('catalog-overlay-active');
+            };
+
+            const unlockPageScroll = () => {
+                if (!document.body.classList.contains('desktop-catalog-lock')) {
+                    return;
+                }
+
+                const scrollY = parseInt(document.body.dataset.desktopCatalogScrollY || '0', 10);
+                document.body.classList.remove('desktop-catalog-lock');
+                document.body.classList.remove('catalog-overlay-active');
+                document.body.style.top = '';
+                document.body.style.removeProperty('--catalog-overlay-top');
+                delete document.body.dataset.desktopCatalogScrollY;
+                window.scrollTo(0, scrollY);
+            };
+
+            const syncDropdownHeight = () => {
+                if (!isDesktopViewport() || !dropdownMenu.classList.contains('show')) {
+                    dropdownScroll.style.removeProperty('--desktop-catalog-max-height');
+                    return;
+                }
+
+                const rect = dropdownScroll.getBoundingClientRect();
+                const maxHeight = Math.max(220, window.innerHeight - rect.top - 16);
+                dropdownScroll.style.setProperty('--desktop-catalog-max-height', `${maxHeight}px`);
+            };
+
+            dropdown.addEventListener('shown.bs.dropdown', () => {
+                lockPageScroll();
+                syncDropdownHeight();
+            });
+
+            dropdown.addEventListener('hidden.bs.dropdown', () => {
+                dropdownScroll.style.removeProperty('--desktop-catalog-max-height');
+                unlockPageScroll();
+            });
+
+            window.addEventListener('resize', () => {
+                if (!dropdownMenu.classList.contains('show')) {
+                    return;
+                }
+
+                if (!isDesktopViewport()) {
+                    dropdownScroll.style.removeProperty('--desktop-catalog-max-height');
+                    unlockPageScroll();
+                    return;
+                }
+
+                document.body.style.setProperty('--catalog-overlay-top', `${Math.max(0, getOverlayTop())}px`);
+                syncDropdownHeight();
+            });
+        });
+    </script>
+@endpush

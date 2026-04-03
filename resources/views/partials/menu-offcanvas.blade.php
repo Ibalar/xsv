@@ -28,12 +28,12 @@
                 </div>
 
                 <div id="categoriesMenu"
-                     class="accordion-collapse collapse"
+                     class="accordion-collapse collapse mobile-catalog-collapse"
                      data-bs-parent="#navigation">
 
                     <div class="accordion-body pb-3">
 
-                        <div class="d-flex flex-column gap-4">
+                        <div id="mobileCatalogScroll" class="mobile-catalog-scroll d-flex flex-column gap-4">
 
                             @foreach($headerCategories as $category)
                                 <div>
@@ -85,3 +85,112 @@
 
     </div>
 </nav>
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const offcanvas = document.getElementById('navbarNav');
+            const categoriesMenu = document.getElementById('categoriesMenu');
+            const mobileCatalogScroll = document.getElementById('mobileCatalogScroll');
+
+            if (!offcanvas || !categoriesMenu || !mobileCatalogScroll) {
+                return;
+            }
+
+            let scrollY = 0;
+
+            const isMobileViewport = () => window.innerWidth < 992;
+            const getOverlayTop = () => {
+                const selectors = ['.top-bar', 'header[data-sticky-element]', '.header-categories-bar'];
+
+                return selectors.reduce((maxBottom, selector) => {
+                    const element = document.querySelector(selector);
+
+                    if (!element) {
+                        return maxBottom;
+                    }
+
+                    const rect = element.getBoundingClientRect();
+                    return Math.max(maxBottom, rect.bottom);
+                }, 0);
+            };
+
+            const lockPageScroll = () => {
+                if (!isMobileViewport() || document.body.classList.contains('mobile-catalog-lock')) {
+                    return;
+                }
+
+                scrollY = window.scrollY || window.pageYOffset || 0;
+                document.body.style.top = `-${scrollY}px`;
+                document.body.style.setProperty('--catalog-overlay-top', `${Math.max(0, getOverlayTop())}px`);
+                document.body.classList.add('mobile-catalog-lock');
+                document.body.classList.add('catalog-overlay-active');
+                offcanvas.classList.add('mobile-catalog-active');
+            };
+
+            const unlockPageScroll = () => {
+                if (!document.body.classList.contains('mobile-catalog-lock')) {
+                    offcanvas.classList.remove('mobile-catalog-active');
+                    return;
+                }
+
+                const bodyTop = parseInt(document.body.style.top || '0', 10);
+
+                document.body.classList.remove('mobile-catalog-lock');
+                document.body.classList.remove('catalog-overlay-active');
+                document.body.style.top = '';
+                document.body.style.removeProperty('--catalog-overlay-top');
+                offcanvas.classList.remove('mobile-catalog-active');
+                window.scrollTo(0, Math.abs(bodyTop));
+            };
+
+            const syncCatalogHeight = () => {
+                if (!isMobileViewport() || !categoriesMenu.classList.contains('show')) {
+                    mobileCatalogScroll.style.removeProperty('--mobile-catalog-max-height');
+                    return;
+                }
+
+                const rect = mobileCatalogScroll.getBoundingClientRect();
+                const maxHeight = Math.max(160, window.innerHeight - rect.top - 16);
+                mobileCatalogScroll.style.setProperty('--mobile-catalog-max-height', `${maxHeight}px`);
+            };
+
+            categoriesMenu.addEventListener('shown.bs.collapse', () => {
+                lockPageScroll();
+                syncCatalogHeight();
+            });
+
+            categoriesMenu.addEventListener('hidden.bs.collapse', () => {
+                mobileCatalogScroll.style.removeProperty('--mobile-catalog-max-height');
+                unlockPageScroll();
+            });
+
+            offcanvas.addEventListener('shown.bs.offcanvas', () => {
+                if (categoriesMenu.classList.contains('show')) {
+                    lockPageScroll();
+                    syncCatalogHeight();
+                }
+            });
+
+            offcanvas.addEventListener('hidden.bs.offcanvas', () => {
+                mobileCatalogScroll.style.removeProperty('--mobile-catalog-max-height');
+                unlockPageScroll();
+            });
+
+            window.addEventListener('resize', () => {
+                if (!categoriesMenu.classList.contains('show')) {
+                    return;
+                }
+
+                if (!isMobileViewport()) {
+                    mobileCatalogScroll.style.removeProperty('--mobile-catalog-max-height');
+                    unlockPageScroll();
+                    return;
+                }
+
+                document.body.style.setProperty('--catalog-overlay-top', `${Math.max(0, getOverlayTop())}px`);
+                syncCatalogHeight();
+            });
+        });
+    </script>
+@endpush

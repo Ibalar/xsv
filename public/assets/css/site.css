@@ -38,6 +38,81 @@
     overflow-wrap: anywhere;
 }
 
+body.catalog-overlay-active::before {
+    content: "";
+    position: fixed;
+    top: var(--catalog-overlay-top, 0);
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(15, 23, 42, .45);
+    z-index: 1040;
+    pointer-events: none;
+}
+
+body.catalog-overlay-active header[data-sticky-element] {
+    z-index: 1046 !important;
+}
+
+@media (max-width: 991.98px) {
+    body.mobile-catalog-lock {
+        position: fixed;
+        left: 0;
+        right: 0;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    #navbarNav.mobile-catalog-active .offcanvas-body {
+        overflow: hidden;
+    }
+
+    #navigation {
+        min-height: 0;
+    }
+
+    .mobile-catalog-collapse {
+        overflow: hidden;
+    }
+
+    .mobile-catalog-scroll {
+        max-height: var(--mobile-catalog-max-height, 60vh);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding-right: .25rem;
+    }
+
+    #navbarNav {
+        z-index: 1045;
+    }
+}
+
+@media (min-width: 992px) {
+    body.desktop-catalog-lock {
+        position: fixed;
+        left: 0;
+        right: 0;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .header-catalog-dropdown-menu {
+        width: min(960px, calc(100vw - 2rem));
+        max-width: min(960px, calc(100vw - 2rem));
+        overflow: hidden;
+        z-index: 1050;
+    }
+
+    .header-catalog-dropdown-scroll {
+        max-height: var(--desktop-catalog-max-height, 70vh);
+        overflow: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding-right: .25rem;
+    }
+}
+
 @media (max-width: 991.98px) {
     .footer .accordion.py-5 {
         padding-top: 2rem !important;
