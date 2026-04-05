@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\SitemapCache;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -61,19 +62,28 @@ class Product extends Model
     {
         parent::boot();
 
-        static::creating(function (self $product) {
+        static::creating(function (self $product): void {
             if (empty($product->slug)) {
                 $product->slug = static::generateUniqueSlug($product->name);
             }
+
             if (empty($product->sku)) {
                 $product->sku = static::generateUniqueSku();
             }
         });
 
-        static::updating(function (self $product) {
+        static::updating(function (self $product): void {
             if ($product->isDirty('name') && empty($product->slug)) {
                 $product->slug = static::generateUniqueSlug($product->name);
             }
+        });
+
+        static::saved(function (): void {
+            SitemapCache::forget();
+        });
+
+        static::deleted(function (): void {
+            SitemapCache::forget();
         });
     }
 
@@ -261,11 +271,14 @@ class Product extends Model
     public function setImageAttribute($value): void
     {
         $normalized = self::normalizeImagePath($value);
+
         if (is_array($normalized)) {
             $this->attributes['image'] = json_encode($normalized, JSON_UNESCAPED_UNICODE);
-        } else {
-            $this->attributes['image'] = $normalized;
+
+            return;
         }
+
+        $this->attributes['image'] = $normalized;
     }
 
     public function setGalleryAttribute($value): void
@@ -285,7 +298,6 @@ class Product extends Model
     {
         $image = $this->image;
 
-        // если в БД JSON-массив
         if (is_string($image) && str_starts_with($image, '[')) {
             $decoded = json_decode($image, true);
             if (json_last_error() === JSON_ERROR_NONE) {
@@ -293,23 +305,19 @@ class Product extends Model
             }
         }
 
-        // если массив, берем первый элемент
         if (is_array($image)) {
             $image = reset($image);
         }
 
-        // если пусто, берем первую картинку из галереи
         $gallery = $this->gallery;
         if (empty($image) && is_array($gallery)) {
             $image = reset($gallery);
         }
 
-        // если всё ещё пусто, fallback
         if (empty($image)) {
             return asset('no-image.jpg');
         }
 
-        // ✅ здесь добавляем путь к storage/products/
         return asset("storage/products/{$image}");
     }
 
@@ -333,16 +341,23 @@ class Product extends Model
 
     protected static function booted(): void
     {
-        static::saving(function ($product) {
-            if ($product->image) {
-                if (is_array($product->image)) {
-                    $product->image = array_map(static fn ($img) => is_string($img) ? basename($img) : $img, $product->image);
-                } else if (is_string($product->image) && !str_starts_with($product->image, '[')) {
-                    $product->image = basename($product->image);
-                }
+        static::saving(function (self $product): void {
+            if (! $product->image) {
+                return;
+            }
+
+            if (is_array($product->image)) {
+                $product->image = array_map(
+                    static fn ($image) => is_string($image) ? basename($image) : $image,
+                    $product->image
+                );
+
+                return;
+            }
+
+            if (is_string($product->image) && ! str_starts_with($product->image, '[')) {
+                $product->image = basename($product->image);
             }
         });
     }
-
-
 }

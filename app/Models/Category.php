@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\SitemapCache;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,8 +22,6 @@ class Category extends Model
     protected static array $requestPaths = [];
 
     /**
-     * The attributes that are mass assignable.
-     *
      * @var list<string>
      */
     protected $fillable = [
@@ -41,8 +40,6 @@ class Category extends Model
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
      * @return array<string, string>
      */
     protected function casts(): array
@@ -57,16 +54,28 @@ class Category extends Model
     {
         parent::boot();
 
-        static::creating(function (self $category) {
+        static::creating(function (self $category): void {
             if (empty($category->slug)) {
                 $category->slug = static::generateUniqueSlug($category->name);
             }
         });
 
-        static::updating(function (self $category) {
+        static::updating(function (self $category): void {
             if ($category->isDirty('name') && empty($category->slug)) {
                 $category->slug = static::generateUniqueSlug($category->name);
             }
+        });
+
+        static::saved(function (self $category): void {
+            static::flushRuntimeCaches();
+            Cache::forget("category_descendants_{$category->id}");
+            SitemapCache::forget();
+        });
+
+        static::deleted(function (self $category): void {
+            static::flushRuntimeCaches();
+            Cache::forget("category_descendants_{$category->id}");
+            SitemapCache::forget();
         });
     }
 
@@ -86,12 +95,12 @@ class Category extends Model
 
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(Category::class, 'parent_id');
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
     public function children(): HasMany
     {
-        return $this->hasMany(Category::class, 'parent_id');
+        return $this->hasMany(self::class, 'parent_id');
     }
 
     public function products(): BelongsToMany
@@ -130,23 +139,18 @@ class Category extends Model
 
     public function getBreadcrumbs(): array
     {
-        $breadcrumbs = [];
-
-        // Главная
-        $breadcrumbs[] = [
-            'name' => 'Главная',
-            'url' => route('home'),
+        $breadcrumbs = [
+            [
+                'name' => 'Главная',
+                'url' => route('home'),
+            ],
+            [
+                'name' => 'Каталог',
+                'url' => route('catalog.index'),
+            ],
         ];
 
-        // Каталог (если есть)
-        $breadcrumbs[] = [
-            'name' => 'Каталог',
-            'url' => route('catalog.index'),
-        ];
-
-        $categories = $this->getAncestorsAndSelf();
-
-        foreach ($categories as $category) {
+        foreach ($this->getAncestorsAndSelf() as $category) {
             $breadcrumbs[] = [
                 'name' => $category->name,
                 'url' => route('catalog.show', $category->getFullPath()),
@@ -165,9 +169,9 @@ class Category extends Model
         $ancestors = $this->getAncestorsAndSelf();
         $path = '';
 
-        foreach ($ancestors as $cat) {
-            $path = $path === '' ? $cat->slug : $path . '/' . $cat->slug;
-            static::$requestPaths[$cat->id] = $path;
+        foreach ($ancestors as $category) {
+            $path = $path === '' ? $category->slug : $path . '/' . $category->slug;
+            static::$requestPaths[$category->id] = $path;
         }
 
         return static::$requestPaths[$this->id];
@@ -189,8 +193,6 @@ class Category extends Model
     }
 
     /**
-     * Get all descendant category IDs including self.
-     *
      * @return list<int>
      */
     public function getAllDescendantIds(): array
@@ -203,16 +205,13 @@ class Category extends Model
     }
 
     /**
-     * Load all descendant category IDs including self without caching.
-     *
      * @return list<int>
      */
     protected function loadDescendantIds(): array
     {
         $ids = [$this->id];
 
-        $children = $this->children;
-        foreach ($children as $child) {
+        foreach ($this->children as $child) {
             $ids = array_merge($ids, $child->loadDescendantIds());
         }
 
@@ -224,9 +223,6 @@ class Category extends Model
         return $this->children()->with('childrenRecursive');
     }
 
-    /**
-     * Возвращает массив всех родителей до корня (от корня к текущей категории)
-     */
     public function getAncestorsAndSelf(): array
     {
         if (isset(static::$requestAncestors[$this->id])) {
@@ -246,14 +242,18 @@ class Category extends Model
             $current = $current->parent;
         }
 
-        // Заполняем кэш для всей цепочки
         $chain = [];
-        foreach ($categories as $cat) {
-            $chain[] = $cat;
-            static::$requestAncestors[$cat->id] = $chain;
+        foreach ($categories as $category) {
+            $chain[] = $category;
+            static::$requestAncestors[$category->id] = $chain;
         }
 
         return static::$requestAncestors[$this->id];
     }
 
+    protected static function flushRuntimeCaches(): void
+    {
+        static::$requestAncestors = [];
+        static::$requestPaths = [];
+    }
 }

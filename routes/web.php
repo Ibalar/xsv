@@ -3,12 +3,33 @@
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
+use App\Services\SitemapService;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\PageController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/robots.txt', function () {
+    $lines = [
+        'User-agent: *',
+        'Allow: /',
+        'Disallow: /admin',
+        'Disallow: /search',
+        'Disallow: /checkout',
+        'Disallow: /orders/success/',
+        '',
+        'Sitemap: ' . route('sitemap'),
+    ];
+
+    return response(implode("\n", $lines) . "\n")
+        ->header('Content-Type', 'text/plain; charset=UTF-8');
+})->name('robots');
+Route::get('/sitemap.xml', function (SitemapService $sitemapService) {
+    return response()
+        ->view('sitemap.xml', ['urls' => $sitemapService->build()])
+        ->header('Content-Type', 'application/xml; charset=UTF-8');
+})->name('sitemap');
 
 Route::get('/katalog', [CatalogController::class, 'index'])->name('catalog.index');
 

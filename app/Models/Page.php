@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\SitemapCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -20,23 +21,20 @@ class Page extends Model
     {
         parent::boot();
 
-        // Генерация slug
-        static::saving(function ($page) {
+        static::saving(function (self $page): void {
             if (empty($page->slug)) {
-                $page->slug = \Illuminate\Support\Str::slug($page->title);
+                $page->slug = Str::slug($page->title);
             }
         });
 
-        // 👉 Сброс кеша меню при сохранении
-        static::saved(function () {
+        static::saved(function (): void {
             cache()->forget('menu_pages');
+            SitemapCache::forget();
         });
 
-        // 👉 Сброс кеша при удалении
-        static::deleted(function () {
+        static::deleted(function (): void {
             cache()->forget('menu_pages');
+            SitemapCache::forget();
         });
     }
-
-
 }
