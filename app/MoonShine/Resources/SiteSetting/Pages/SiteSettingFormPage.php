@@ -41,8 +41,37 @@ class SiteSettingFormPage extends FormPage
             'contacts' => $this->contactsFields(),
             'social_links' => $this->socialLinksFields(),
             'business_info' => $this->businessInfoFields(),
+            'top_bar_alerts' => $this->topBarAlertsFields(),
             default => $this->defaultFields(),
         };
+    }
+
+    /**
+     * Поля для верхнего alert-слайдера.
+     * @return list<ComponentContract|FieldContract>
+     */
+    protected function topBarAlertsFields(): array
+    {
+        return [
+            Box::make([
+                ID::make(),
+                Text::make('Ключ', 'key')
+                    ->readonly()
+                    ->sortable(),
+                Json::make('Сообщения в верхней плашке', 'value')
+                    ->fields([
+                        Textarea::make('Текст', 'text')
+                            ->required()
+                            ->placeholder('Например: Бесплатная доставка при заказе от 250 BYN'),
+                    ])
+                    ->removable()
+                    ->creatable()
+                    ->default([]),
+                Textarea::make('Описание', 'description')
+                    ->readonly()
+                    ->default('Тексты для слайдера в верхней alert-плашке сайта. Если список пустой, блок не выводится.'),
+            ]),
+        ];
     }
 
     /**

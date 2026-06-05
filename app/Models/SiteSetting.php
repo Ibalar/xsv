@@ -83,6 +83,7 @@ class SiteSetting extends Model
     {
         unset(static::$requestCache[$key]);
         Cache::forget(static::CACHE_KEY_PREFIX . $key);
+        Cache::forget('site_settings_all');
     }
 
     protected static function boot(): void

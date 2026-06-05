@@ -1,10 +1,10 @@
 {
-  "name": "XSV.BY - Птимник растений",
+  "name": "XSV.BY - Питомник растений",
   "short_name": "XSV.BY",
   "description": "Сайт-каталог питомника растений",
   "lang" : "ru",
   "dir": "ltr",
-  "start_url": "/index.html",
+  "start_url": "/",
   "scope": "/",
   "icons": [
     {

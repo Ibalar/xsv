@@ -10,7 +10,10 @@ use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\QueryTags\QueryTag;
 use MoonShine\UI\Components\Metrics\Wrapped\Metric;
+use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Preview;
+use MoonShine\UI\Fields\Text;
 use App\MoonShine\Resources\SiteSetting\SiteSettingResource;
 use MoonShine\Support\ListOf;
 use Throwable;
@@ -29,7 +32,39 @@ class SiteSettingIndexPage extends IndexPage
     protected function fields(): iterable
     {
         return [
-            ID::make(),
+            ID::make()->sortable(),
+
+            Text::make('Ключ', 'key')
+                ->sortable()
+                ->badge('info'),
+
+            Text::make('Описание', 'description')
+                ->changePreview(static function (mixed $value): string {
+                    return filled($value) ? (string) $value : 'Без описания';
+                }),
+
+            Preview::make('Значение', 'value')
+                ->changePreview(static function (mixed $value): string {
+                    $data = \App\Models\SiteSetting::normalizeArray($value);
+
+                    if ($data === []) {
+                        return 'Не задано';
+                    }
+
+                    $preview = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+                    if ($preview === false) {
+                        return 'Не удалось отобразить значение';
+                    }
+
+                    return mb_strlen($preview) > 140
+                        ? mb_substr($preview, 0, 140) . '...'
+                        : $preview;
+                }),
+
+            Date::make('Обновлено', 'updated_at')
+                ->format('d.m.Y H:i')
+                ->sortable(),
         ];
     }
 
@@ -72,7 +107,7 @@ class SiteSettingIndexPage extends IndexPage
      */
     protected function modifyListComponent(ComponentContract $component): ComponentContract
     {
-        return $component;
+        return $component->columnSelection();
     }
 
     /**

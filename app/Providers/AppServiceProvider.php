@@ -42,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
             $contacts = SiteSetting::contacts();
             $businessInfo = SiteSetting::normalizeArray(SiteSetting::getCached('business_info', []));
             $socialLinks = SiteSetting::normalizeArray(SiteSetting::getCached('social_links', []));
+            $topBarAlerts = SiteSetting::normalizeArray(SiteSetting::getCached('top_bar_alerts', []));
 
             View::share('globalSeo', [
                 'site_name' => config('app.name', 'XSV.BY'),
@@ -53,13 +54,14 @@ class AppServiceProvider extends ServiceProvider
             ]);
 
             // ===== Настройки сайта для top-bar и footer =====
-            $siteSettings = cache()->remember('site_settings_all', 3600, function () use ($contacts, $socialLinks, $businessInfo) {
+            $siteSettings = cache()->remember('site_settings_all', 3600, function () use ($contacts, $socialLinks, $businessInfo, $topBarAlerts) {
                 return [
                     'phones' => $contacts,
                     'email' => $contacts['email'] ?? null,
                     'address' => $contacts['address'] ?? null,
                     'social_links' => $socialLinks,
                     'business_info' => $businessInfo,
+                    'top_bar_alerts' => $topBarAlerts,
                 ];
             });
 
