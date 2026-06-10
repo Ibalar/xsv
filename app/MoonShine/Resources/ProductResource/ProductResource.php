@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\ProductResource;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\MoonShine\Resources\CategoryResource\CategoryResource;
 use App\MoonShine\Resources\ProductResource\Pages\ProductDetailPage;
 use App\MoonShine\Resources\ProductResource\Pages\ProductFormPage;
 use App\MoonShine\Resources\ProductResource\Pages\ProductIndexPage;
-use MoonShine\Contracts\Core\DependencyInjection\FieldsContract;
-use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
+use Illuminate\Contracts\Database\Eloquent\Builder;
+use MoonShine\ImportExport\Contracts\HasImportExportContract;
+use MoonShine\ImportExport\Traits\ImportExportConcern;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Fields\Slug;
 use MoonShine\Laravel\Resources\ModelResource;
-use MoonShine\ImportExport\Contracts\HasImportExportContract;
-use MoonShine\ImportExport\Traits\ImportExportConcern;
 use MoonShine\TinyMce\Fields\TinyMce;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Image;
@@ -27,7 +27,6 @@ use MoonShine\UI\Fields\Text;
 /**
  * @extends ModelResource<Product, ProductIndexPage, ProductFormPage, ProductDetailPage>
  */
-
 class ProductResource extends ModelResource implements HasImportExportContract
 {
     use ImportExportConcern;
@@ -63,6 +62,23 @@ class ProductResource extends ModelResource implements HasImportExportContract
         ];
     }
 
+    protected function modifyQueryBuilder(Builder $builder): Builder
+    {
+        $categoryId = (int) $this->getCore()->getRequest()->get('category_id', 0);
+
+        if ($categoryId < 1) {
+            return $builder;
+        }
+
+        $category = Category::find($categoryId);
+
+        if (! $category) {
+            return $builder;
+        }
+
+        return $builder->inCategories($category->getAllDescendantIds());
+    }
+
     protected function importFields(): iterable
     {
         return [
@@ -92,5 +108,4 @@ class ProductResource extends ModelResource implements HasImportExportContract
             )->selectMode(),
         ];
     }
-
 }

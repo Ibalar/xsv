@@ -34,6 +34,7 @@ final class ProductIndexPage extends IndexPage
             ID::make()->sortable(),
 
             Text::make('Название', 'name')
+                ->withoutTextWrap()
                 ->sortable(),
 
             BelongsTo::make(
